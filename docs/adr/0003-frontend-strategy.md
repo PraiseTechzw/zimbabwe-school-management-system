@@ -22,11 +22,13 @@ The following are permitted as foundation infrastructure:
 The following remain frozen until this ADR is Accepted:
 
 - Any UI framework or component strategy (Livewire, Inertia, React, Vue, Alpine, or similar).
-- Application views, screens, routes or interactive behaviour.
+- Application views, screens, routes or interactive behaviour, except the default Laravel welcome page, its default route and the boot smoke test explicitly permitted below.
 - UI component libraries, remote fonts, themes or design systems.
 - New frontend dependencies that are not required by the minimal build above.
 
 `concurrently` and `@laravel/multiplex` were removed during Sprint 0.1 because they were unused by any committed script or source file. Remote font registration was removed because it is a design choice and an external network dependency, not required build infrastructure. No UI functionality was removed.
+
+Clarification: the default Laravel welcome page, its default route and the boot smoke test that asserts the framework welcome page are permitted foundation scaffolding. They are not approved application UI and do not constitute a frontend architecture decision; this ADR remains Proposed.
 
 ## Options
 
