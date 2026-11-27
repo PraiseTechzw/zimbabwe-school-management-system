@@ -21,7 +21,8 @@ npm-debug.log*
 yarn-error.log*
 
 # Laravel storage / local DB
-/public/storage/
+# The storage link is created at runtime by `php artisan storage:link`.
+/public/storage
 /storage/*.key
 /database/database.sqlite
 
