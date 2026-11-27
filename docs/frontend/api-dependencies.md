@@ -1,6 +1,6 @@
 # Frontend API dependency tracker
 
-Updated: 2026-11-27. Only endpoints verified by reading this repository are listed. Provisional contracts are labelled and must not be treated as backend promises.
+Updated: 2026-11-27. This list covers Stage B frontend consumers. Only endpoints verified by reading this repository are listed. Provisional contracts are labelled and must not be treated as backend promises.
 
 Stage B uses server-side adapters that call the same domain actions as the JSON controllers. “Integrated in-process” below means the UI has a verified adapter in this branch; it does **not** claim an extra browser HTTP request.
 
@@ -29,6 +29,8 @@ Stage B uses server-side adapters that call the same domain actions as the JSON 
 | `/api/role-assignments/{roleAssignment}` | DELETE | `web`, `auth`, `school.context`, `roles.manage`; numeric route ID scoped to current school | HTTP 204, no body; `Cache-Control: no-store`, `Vary: X-School-Id, school_id` | Planned role assignment removal | Available — contract verified; no UI built |
 
 ### Academic Structure contracts (verified, no frontend UI)
+
+Field-level request and response contracts, status codes and validation rules are recorded in the [Academic Structure API](../api/academic-structure.md). This section records the frontend readiness view of the same verified surface.
 
 `app/Providers/AcademicStructureServiceProvider.php` registers `routes/academic-structure.php` under `web`, `auth` and `school.context` with the `/api` prefix. Reads require `academic_structure.view`; writes require `academic_structure.manage`. Tenant-varying responses send `Cache-Control: no-store` and `Vary: X-School-Id, school_id`. `php artisan route:list --path=api/academic-structure --json` returned 16 route objects on this base.
 
@@ -69,5 +71,5 @@ Integration constraints verified from the controller, FormRequests, domain actio
 
 - No endpoint for school switching, notifications, dashboards aggregates, or a module availability catalogue. Navigation uses local configuration and honest "not available yet" states.
 - No delete/archive calendar endpoints were verified; the management screen does not offer those actions.
-- School Settings, Role Assignment and Academic Structure HTTP contracts are verified on this base but have no frontend UI in Stage B; Audit endpoints remain absent from this branch. Contracts found in unmerged backend work are not treated as available here.
+- School Settings, Role Assignment and Academic Structure HTTP contracts are verified on this base but have no frontend UI in Stage B. Audit has no HTTP read endpoint. Contracts from unmerged backend work remain unavailable until merged and verified here.
 - No frontend permission map yet; backend authorization remains authoritative.

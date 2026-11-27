@@ -30,3 +30,5 @@ Positive: fast CI and simple local testing. Negative: SQLite/MySQL behavioural d
 ## Verification / review trigger
 
 Revisit when a feature relies on MySQL-specific behaviour (full-text search, generated columns, locking clauses) or when CI adds a MySQL integration job.
+
+The Academic Structure foundation uses `lockForUpdate()` in `GuardsAcademicStructure`. SQLite tests do not prove concurrent MySQL lock behaviour; the manual MySQL 8 checks on PR #59 covered migrations only. See [Academic Structure](../../modules/academic-structure.md) for the recorded limitation.

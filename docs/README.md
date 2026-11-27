@@ -1,6 +1,6 @@
 # Documentation index
 
-Sprint 0 established the engineering foundation. Phase 1 school-scoped backend foundation is in progress; discovery documents remain historical/proposed where labelled, and the [Phase 1 decision log](modules/platform-foundation/decision-log.md) records implementation status.
+Sprint 0 established the engineering foundation. All seven Phase 1 foundation slices are merged; the Academic Structure backend foundation was subsequently merged in #59 and its frontend contract notes in #60. Discovery documents remain historical/proposed where labelled, and the [Phase 1 decision log](modules/platform-foundation/decision-log.md) records implementation status.
 
 ## Architecture and decisions
 
@@ -29,6 +29,7 @@ Sprint 0 established the engineering foundation. Phase 1 school-scoped backend f
 
 - [Testing strategy](testing/strategy.md)
 - [School Settings API](api/school-settings.md) — school-scoped settings, provenance and revisions
+- [Academic Structure API](api/academic-structure.md) — configurable school structure endpoints merged in #59
 - [Deployment strategy](operations/deployment.md)
 - [Backup and restore](operations/backup-and-restore.md)
 - [GitHub project board guidance](github/project-board.md)
@@ -38,7 +39,7 @@ Sprint 0 established the engineering foundation. Phase 1 school-scoped backend f
 
 - [Verification evidence](reports/sprint-0-verification.md) — actual command output and GitHub checks
 
-## Phase 1 — Platform Foundation discovery (PROPOSED, not approved)
+## Phase 1 — Platform Foundation discovery (historical; D-08 released the execution gate)
 
 - [Phase 1 Discovery Report](modules/platform-foundation/discovery-report.md) — board, research and next task
 - [Research index](research/README.md) — all discovery artefacts
@@ -48,9 +49,10 @@ Sprint 0 established the engineering foundation. Phase 1 school-scoped backend f
 - [Phase 1 decision log](modules/platform-foundation/decision-log.md) — authoritative implementation status and decisions
 - [Academic calendar](modules/platform-foundation/academic-calendar.md) — implemented backend slice
 - [Auth and users](modules/platform-foundation/auth-user-foundation.md) — implemented backend slice
-- [Roles and permissions](modules/platform-foundation/roles-and-permissions.md) — config-driven authorization foundation for #37
+- [Roles and permissions](modules/platform-foundation/roles-and-permissions.md) — merged authorization foundation for #37
 - [School settings](modules/platform-foundation/school-settings.md) — implemented backend settings mechanism for #38
 - [Audit trail](modules/platform-foundation/audit-trail.md) — append-only, privacy-minimised audit foundation for #40
+- [Academic structure](modules/academic-structure.md) — merged backend foundation, no UI
 - [Research coverage matrix](research/research-coverage-matrix.md) — evidence classes and gaps
 
 ## Templates

@@ -122,6 +122,6 @@ PR #56 was merged into `main` as commit `a466d17` by `PraiseTechzw` at `2026-11-
 
 ## Awaiting contracts
 
-- School Settings, Role Assignment and Academic Structure HTTP contracts are verified on this base but have no frontend UI in Stage B; Audit endpoints remain unverified here. Contracts seen in unmerged backend work are deliberately not imported or invented here.
+- School Settings, Role Assignment and Academic Structure HTTP contracts are verified on this base but have no frontend UI in Stage B. Audit has no HTTP read endpoint. Contracts from unmerged backend work remain unavailable until merged and verified here.
 - Role-assignment and Academic Structure endpoints enforce backend permissions (`roles.view` / `roles.manage` and `academic_structure.view` / `academic_structure.manage`), but no verified frontend permission map exists. UI visibility is never treated as authorisation; backend authorization remains authoritative.
 - No further school module can be started without an accepted specification and an endpoint contract present in this branch.
