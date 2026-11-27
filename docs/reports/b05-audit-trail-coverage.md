@@ -60,7 +60,7 @@ The 42 application route objects include reads; the write inventory above is the
 | Inventory layer | Count | Notes |
 | --- | --- | --- |
 | Application route declarations in `routes/*.php` | 42 objects / 50 explicit verbs | 8 calendar, 16 structure, 3 auth, 3 roles, 3 settings, 9 web |
-| Runtime application bindings from `php artisan route:list --json` | 42 objects / 73 method–path bindings | `GET|HEAD` and `PUT|PATCH` aliases expanded |
+| Runtime application bindings from `php artisan route:list --json` | 42 objects / 73 method–path bindings | `GET\|HEAD` and `PUT\|PATCH` aliases expanded |
 | Framework/package routes | 8 objects / 13 bindings | Livewire update transport, storage, health check |
 | Full runtime total | 50 objects / 86 bindings | Includes implicit `HEAD` on `GET` |
 | Successful mutations with deliberate audit events | 15 declarations / 23 verb bindings | 4 calendar + 10 structure + 1 settings; 23 runtime audited bindings |
@@ -86,7 +86,7 @@ Additional unaudited operations found by the read-only sweep:
 | Append-only | Model `updating`/`deleting` hooks throw; builder blocks mutation methods; no HTTP write/delete route | `app/Domains/AuditTrail/Models/AuditEvent.php:66-83`; `ImmutableAuditEventBuilder.php`; `tests/Feature/Domains/AuditTrail/AuditTrailTest.php` |
 | Tenant scope | `AuditScope::forSchool()` requires a resolved `School`; `system()` is the only null-school path; query action always filters by school | `AuditScope.php`; `app/Domains/AuditTrail/Actions/QueryAuditEvents.php:19-36`; `AuditTrailIsolationTest.php` |
 | Actor | Explicit actor wins; otherwise `Auth::user()` → user id, else `system`. No names/emails/tokens stored | `AuditEventRecorder.php:31,69-74`; `Support/AuthenticatedActorResolver.php`; `AuditActor.php` |
-| Source/correlation | Allow-listed `domain|http|cli|job|import`; correlation header allow-list and format validation | `config/audit.php:24-30,43-46,65-71`; `Support/RequestCorrelationResolver.php` |
+| Source/correlation | Allow-listed `domain\|http\|cli\|job\|import`; correlation header allow-list and format validation | `config/audit.php:24-30,43-46,65-71`; `Support/RequestCorrelationResolver.php` |
 | Payload safety | Recursive key redaction to `[REDACTED]`; objects, oversized structures and invalid keys rejected; domain snapshots select named scalar fields and replace structure JSON with a presence flag | `Support/SanitizeAuditData.php`; `app/Domains/AcademicStructure/Concerns/RecordsAcademicStructureAudit.php:57-123`; `tests/.../AuditTrailTest.php:90-150` |
 | Timestamps | `occurred_at` caller-supplied or now; `created_at` server now; both immutable casts | `AuditEventRecorder.php:45-62`; `AuditEvent.php:54-59` |
 | Transactions | Recorder opens no transaction; all 14 baseline call sites write after the domain save inside the caller's transaction, so audit failure rolls the domain write back | Calendar/structure action files; `docs/.../audit-trail.md:52-58` |
