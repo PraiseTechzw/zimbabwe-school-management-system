@@ -47,6 +47,7 @@ Sprint 0 established the engineering foundation. Phase 1 school-scoped backend f
 - [Phase 1 decision log](modules/platform-foundation/decision-log.md) — authoritative implementation status and decisions
 - [Academic calendar](modules/platform-foundation/academic-calendar.md) — implemented backend slice
 - [Auth and users](modules/platform-foundation/auth-user-foundation.md) — implemented backend slice
+- [Roles and permissions](modules/platform-foundation/roles-and-permissions.md) — config-driven authorization foundation for #37
 - [School settings](modules/platform-foundation/school-settings.md) — implemented backend settings mechanism for #38
 - [Research coverage matrix](research/research-coverage-matrix.md) — evidence classes and gaps
 
