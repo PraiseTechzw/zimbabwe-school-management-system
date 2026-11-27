@@ -2,7 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Domains\AcademicCalendar\Models\AcademicYear;
+use App\Domains\AcademicStructure\Models\ClassDefinition;
+use App\Domains\AcademicStructure\Models\ClassOffering;
 use App\Domains\AcademicStructure\Models\EducationalLevel;
+use App\Domains\AcademicStructure\Models\GradeLevel;
+use App\Domains\AcademicStructure\Models\Stream;
 use App\Domains\Authorization\Models\RoleAssignment;
 use App\Domains\School\Models\School;
 use App\Http\Middleware\EnsurePermission;
@@ -189,4 +194,96 @@ it('applies the expected permission to every registered academic structure route
     ksort($actual);
 
     expect($actual)->toBe($expected);
+});
+
+/**
+ * @return array<string, mixed>
+ */
+function structurePermissionFixture(School $school): array
+{
+    $level = EducationalLevel::factory()->for($school)->create();
+    $grade = GradeLevel::factory()->inLevel($level)->create();
+    $class = ClassDefinition::factory()->inGrade($grade)->create();
+    $year = AcademicYear::factory()->for($school)->create();
+    $offering = ClassOffering::factory()->forClassAndYear($class, $year)->create();
+
+    return compact('level', 'grade', 'class', 'year', 'offering');
+}
+
+it('applies academic structure permissions to nested and offering write routes', function (): void {
+    $school = School::factory()->create();
+    $user = structurePermissionUser($school, 'school_member');
+    $fixture = structurePermissionFixture($school);
+
+    $cases = [
+        ['post', '/api/academic-structure/levels/'.$fixture['level']->id.'/grade-levels', [
+            'name' => 'Denied grade', 'code' => 'DG', 'display_order' => 2, 'is_active' => true,
+        ]],
+        ['post', '/api/academic-structure/grade-levels/'.$fixture['grade']->id.'/classes', [
+            'name' => 'Denied class', 'code' => 'DC', 'display_order' => 2, 'is_active' => true,
+        ]],
+        ['post', '/api/academic-structure/classes/'.$fixture['class']->id.'/streams', [
+            'name' => 'Denied stream', 'code' => 'DS', 'display_order' => 2, 'is_active' => true,
+        ]],
+        ['post', '/api/academic-structure/class-offerings', [
+            'class_definition_id' => $fixture['class']->id,
+            'academic_year_id' => $fixture['year']->id,
+            'name' => 'Denied offering',
+        ]],
+        ['put', '/api/academic-structure/class-offerings/'.$fixture['offering']->id, [
+            'name' => 'Tampered offering',
+        ]],
+    ];
+
+    foreach ($cases as [$method, $endpoint, $payload]) {
+        $this->actingAs($user)
+            ->json(strtoupper($method), $endpoint, $payload)
+            ->assertForbidden();
+    }
+
+    expect(GradeLevel::query()->forSchool($school)->count())->toBe(1)
+        ->and(ClassDefinition::query()->forSchool($school)->count())->toBe(1)
+        ->and(Stream::query()->forSchool($school)->count())->toBe(0)
+        ->and(ClassOffering::query()->forSchool($school)->count())->toBe(1);
+});
+
+it('lets school editors use nested and offering write routes', function (): void {
+    $school = School::factory()->create();
+    $user = structurePermissionUser($school, 'school_editor');
+    $fixture = structurePermissionFixture($school);
+    $offeringClass = ClassDefinition::factory()->inGrade($fixture['grade'])->create();
+
+    $this->actingAs($user)
+        ->postJson('/api/academic-structure/levels/'.$fixture['level']->id.'/grade-levels', [
+            'name' => 'Allowed grade', 'code' => 'AG', 'display_order' => 2, 'is_active' => true,
+        ])
+        ->assertCreated();
+
+    $this->actingAs($user)
+        ->postJson('/api/academic-structure/grade-levels/'.$fixture['grade']->id.'/classes', [
+            'name' => 'Allowed class', 'code' => 'AC', 'display_order' => 2, 'is_active' => true,
+        ])
+        ->assertCreated();
+
+    $this->actingAs($user)
+        ->postJson('/api/academic-structure/classes/'.$fixture['class']->id.'/streams', [
+            'name' => 'Allowed stream', 'code' => 'AS', 'display_order' => 2, 'is_active' => true,
+        ])
+        ->assertCreated();
+
+    $offering = $this->actingAs($user)
+        ->postJson('/api/academic-structure/class-offerings', [
+            'class_definition_id' => $offeringClass->id,
+            'academic_year_id' => $fixture['year']->id,
+            'name' => 'Allowed offering',
+        ])
+        ->assertCreated()
+        ->json('class_offering');
+
+    $this->actingAs($user)
+        ->patchJson('/api/academic-structure/class-offerings/'.$offering['id'], [
+            'name' => 'Renamed allowed offering',
+        ])
+        ->assertOk()
+        ->assertJsonPath('class_offering.name', 'Renamed allowed offering');
 });
