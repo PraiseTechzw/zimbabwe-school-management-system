@@ -106,6 +106,6 @@ All checks below were run locally on 2026-11-27. No remote GitHub Actions result
 
 ## Awaiting contracts
 
-- School Settings, Academic Structure, Roles/Permissions and Audit endpoints are not verified in this branch. Contracts seen in unmerged backend work are deliberately not imported or invented here.
-- No verified frontend permission map exists. UI visibility is never treated as authorisation; backend authorization remains authoritative.
+- School Settings and Role Assignment HTTP contracts are verified on this base but have no frontend UI in Stage B; Academic Structure and Audit endpoints remain unverified here. Contracts seen in unmerged backend work are deliberately not imported or invented here.
+- Role-assignment endpoints enforce `roles.view` and `roles.manage` in the backend, but no verified frontend permission map exists. UI visibility is never treated as authorisation; backend authorization remains authoritative.
 - No further school module can be started without an accepted specification and an endpoint contract present in this branch.
