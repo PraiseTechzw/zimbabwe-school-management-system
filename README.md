@@ -1,6 +1,6 @@
 # Zimbabwe School Management System
 
-An open-source, Zimbabwe-first school management platform. **Sprint 0 status: engineering foundation only.** No school features (admissions, attendance, fees, learner records, assessment, reporting, HR, boarding) are implemented in this repository yet.
+An open-source, Zimbabwe-first school management platform. **Phase 1 — Platform Foundation is in progress.** The engineering foundation and four foundation slices (school identity, server-side school isolation, authentication/users, academic calendar) are merged into `main`. Roles/permissions, school configuration and audit trail are not yet implemented. No end-user school features (admissions, attendance, fees, learner records, assessment, reporting, HR, boarding) are implemented yet.
 
 ## Principles
 
@@ -21,6 +21,7 @@ An open-source, Zimbabwe-first school management platform. **Sprint 0 status: en
 | Deployment/backups | Documented strategy (ADR-0004); no production deployment configured |
 | Docker development | Available via `docker compose`; **DEVELOPMENT ONLY**, never use as production |
 | CI | GitHub Actions: tests, formatting, static analysis, Composer audit, npm audit and asset build |
+| Phase 1 — Platform Foundation | School identity (#34), isolation (#35), auth/users (#36) and academic calendar (#39) merged; roles/permissions (#37), school configuration (#38) and audit trail (#40) pending |
 
 ## Quick start (Docker — reproducible environment)
 
@@ -51,7 +52,7 @@ make assets     # Host Node 24: npm ci + npm run build
 make npm-audit  # Host Node 24: npm audit --audit-level=high
 ```
 
-Production requirements are documented in [deployment](docs/operations/deployment.md). No production stack, TLS endpoint, backup job or release tag exists in Sprint 0.
+Production requirements are documented in [deployment](docs/operations/deployment.md). No production stack, TLS endpoint, backup job or release tag exists yet; the Compose stack remains development-only.
 
 ## Documentation
 

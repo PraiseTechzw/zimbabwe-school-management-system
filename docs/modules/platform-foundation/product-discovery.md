@@ -1,5 +1,7 @@
 # Platform Foundation — product discovery (PROPOSED)
 
+> **Post-discovery update (2026-11-27):** this document is retained as the discovery-time proposal. The Product Owner subsequently released `P1-G01` for execution (D-08 in [decision-log.md](decision-log.md)) and four foundation slices have merged. The approval statement in section 13 is historical, not a current status claim.
+
 **Status:** EVERYTHING IN THIS DOCUMENT IS PROPOSED UNTIL THE PRODUCT OWNER APPROVES `P1-G01`. **Date:** 2026-11-27.
 
 ## 1. Problem definition (PROPOSED)

@@ -1,6 +1,6 @@
 # Platform Foundation module — discovery documents
 
-**Status:** PROPOSED / AWAITING PRODUCT OWNER APPROVAL.
+**Status:** EXECUTION RELEASED — four of seven foundation slices merged into `main`.
 
 This directory holds product discovery and traceability artefacts for Phase 1 — Platform Foundation.
 
@@ -8,10 +8,11 @@ This directory holds product discovery and traceability artefacts for Phase 1 �
 | --- | --- |
 | [product-discovery.md](product-discovery.md) | Problem definition, stakeholders, scope, candidates, rules, risks, exclusions |
 | [phase-1-specification-proposed.md](phase-1-specification-proposed.md) | Candidate specification presented to the Product Owner approval gate |
-| [traceability-matrix.md](traceability-matrix.md) | SOURCE → FINDING → WORKFLOW → REQUIREMENT → PROPOSED DESIGN links; future steps blank |
+| [traceability-matrix.md](traceability-matrix.md) | Discovery-time SOURCE → FINDING → WORKFLOW → REQUIREMENT → PROPOSED DESIGN links; implementation columns were intentionally blank |
 | [discovery-report.md](discovery-report.md) | Comprehensive milestone report |
+| [decision-log.md](decision-log.md) | Authoritative record of the gate release and implemented slices |
 | [academic-calendar.md](academic-calendar.md) | Implemented backend foundation for school-scoped academic years and periods (issue #39) |
 
 Research evidence lives under [../../research/README.md](../../research/README.md).
 
-**Gate:** Issue `P1-G01` must be approved before implementation begins. No implementation, migrations or UI are authorised by these discovery documents. Implemented slices are recorded separately in their module records.
+**Gate:** `P1-G01` was released for execution by the Product Owner's direct instruction, recorded as D-08 in [decision-log.md](decision-log.md). The documents listed above remain discovery artefacts and are not authority for new scope; implemented behaviour is recorded in the decision log and module records.

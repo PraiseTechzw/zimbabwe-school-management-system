@@ -4,7 +4,19 @@
 **Gate source:** `docs/modules/platform-foundation/phase-1-specification-proposed.md` (`D-01`–`D-08`) and issue `P1-G01` (#31).
 **Approval basis:** the Product Owner's direct execution instruction to implement the researched Phase 1 foundation using existing evidence. This log limits implementation to the evidence-backed foundation and records uncertainty rather than converting it into confirmed requirements.
 
-The proposed specification and research documents live on branch `docs/phase-1-discovery` (PR #33) at the time of this implementation and are not yet merged into `main`. This log records decisions against that proposal; the in-repo cross-links will resolve once PR #33 is merged.
+The proposed specification and research documents were merged into `main` as PR #33 (`f00018d`), so the cross-links in this log resolve against in-repo documents.
+
+## Implementation status
+
+| Slice | Issue | PR | Status |
+| --- | --- | --- | --- |
+| 1 — School identity | #34 | #41 | Merged |
+| 2 — School isolation | #35 | #43 | Merged |
+| 3 — Authentication/users | #36 | #44 | Merged |
+| 4 — Roles/permissions | #37 | — | Not started |
+| 5 — School configuration | #38 | — | Not started |
+| 6 — Academic calendar | #39 | #45 | Merged |
+| 7 — Audit trail | #40 | — | Not started |
 
 ## Decisions
 
@@ -29,7 +41,7 @@ The proposed specification and research documents live on branch `docs/phase-1-d
 
 ## Known limitations to resolve before exposing domain actions over HTTP
 
-- School relationship actions currently validate that the related school exists but do not yet check caller authorization or school context. They remain internal until Slice 2 tenancy and Slice 4 permissions are in place.
+- School relationship actions validate that the related school exists. Caller authorization and role/permission enforcement (Slice 4) are not yet in place, so these actions remain internal.
 - Identifier values are unique case-insensitively after trimming. The syntax itself remains unverified and configurable.
 - Status periods cannot overlap for a school. `currentStatus()` resolves ties deterministically by effective date, creation time and ID.
 
