@@ -53,7 +53,29 @@ The audit foundation (`docs/modules/platform-foundation/audit-trail.md`, `docs/m
 | Sensitive-data access | school/identifier reads, audit query action | No access-event audit; NFR-007 is PROPOSED only |
 | Delete/archive | no HTTP delete/archive API for calendar or structure; school deletion is not an exposed workflow | No event; out of scope |
 
-The 42 application route objects include reads and framework-adjacent endpoints; the write inventory above is the meaningful denominator for deliberate audit coverage, not raw route count.
+The 42 application route objects include reads; the write inventory above is the meaningful denominator for deliberate audit coverage, not raw route count. A read-only re-inventory of every route file, controller, domain action, console provider and frontend adapter confirmed those boundaries.
+
+### 2.3 Verified operation inventory detail
+
+| Inventory layer | Count | Notes |
+| --- | --- | --- |
+| Application route declarations in `routes/*.php` | 42 objects / 50 explicit verbs | 8 calendar, 16 structure, 3 auth, 3 roles, 3 settings, 9 web |
+| Runtime application bindings from `php artisan route:list --json` | 42 objects / 73 method–path bindings | `GET|HEAD` and `PUT|PATCH` aliases expanded |
+| Framework/package routes | 8 objects / 13 bindings | Livewire update transport, storage, health check |
+| Full runtime total | 50 objects / 86 bindings | Includes implicit `HEAD` on `GET` |
+| Successful mutations with deliberate audit events | 15 declarations / 23 verb bindings | 4 calendar + 10 structure + 1 settings; 23 runtime audited bindings |
+| Unaudited authority-changing writes | 3 | HTTP role assign, HTTP role remove, CLI `roles:assign` |
+
+Additional unaudited operations found by the read-only sweep:
+
+- Authentication/session writes: `POST /api/auth/login` (success, failure, lockout and failed-attempt counters, session regeneration), `POST /api/auth/logout`, and non-HTTP `CreateUser` with school-membership sync.
+- School context selection/rejection in `ResolveSchoolContext` (missing membership, conflicting or malformed identifiers, stale Livewire context) and tenant-switching requests via `X-School-Id`/session.
+- School identity domain writes not exposed by HTTP: `CreateSchool`, `AddSchoolIdentifier`, `RecordSchoolStatus`, `RecordSchoolRelationship`.
+- Authorization denial paths in `EnsurePermission` and cross-school role checks; role-assignment listing is unaudited because roles/permissions are explicitly excluded from the implemented slice.
+- Sensitive reads: `/api/auth/me`, `/api/school`, `/api/school/identifiers`, frontend dashboard/profile, role listing, settings reads and revisions, calendar and structure reads. NFR-007 covers these only as a PROPOSED candidate.
+- Rejected security-sensitive mutations in calendar, structure and settings correctly produce **no** event (documented behavior); rejected auth, role and tenant-selection mutations produce no event and remain proposed gaps.
+- No queued jobs, events, listeners, observers, schedulers or `ShouldQueue` usage exist in `app/`; there is no asynchronous data-changing surface to cover in this slice.
+- Financial operations do not exist; the only finance-like text is demo placeholder data explicitly marked as demo.
 
 ## 3. Existing audit architecture — verified facts
 
@@ -89,6 +111,11 @@ Legend: **Policy** = supported by the existing audit foundation decision; **Prop
 | First settings save | SchoolSettings | Policy — yes (B-05 integration) | `school_settings.created` (added) | Auth user via resolver | Locked server-resolved `School` | Existing `snapshot()` shape; no `school_id` | `SchoolSettingsAuditTest` (new) | None; revisions remain separate provenance |
 | Settings update | SchoolSettings | Policy — yes (B-05 integration) | `school_settings.updated` (added) | Same | Same | Before/after snapshots, no tenant id | Same | None |
 | Rejected settings write | SchoolSettings | Policy — no event expected | None | n/a | n/a | n/a | `SchoolSettingsAuditTest` (new) | None |
+| Domain user create / membership sync | Auth | Proposed — no approved rule | None | Would need explicit/system actor | Server-resolved school | Undecided | `AuthenticationTest` covers behavior, not audit | No requirement; not invented |
+| Role listing (`GET /api/role-assignments`) | Authorization | Excluded by foundation scope / Proposed NFR-007 | None | n/a | Filtered by `SchoolContext` | n/a | `RolesPermissionsTest` covers authorization, not audit | No approved rule |
+| Permission denial (`EnsurePermission`, cross-school) | Authorization | Proposed — NFR-007 | None | n/a | n/a | n/a | Permission tests cover denial, not audit | No approved rule |
+| Sensitive identity/school reads (`/auth/me`, `/school`, `/school/identifiers`, frontend profile) | Auth / School / Frontend | Proposed — NFR-007 | None | n/a | Server-resolved school | n/a | `AuthenticationTest`, `SchoolIsolationTest`, `FrontendFoundationTest` | No approved rule |
+| School context rejection (no membership, conflicting/malformed ID, stale Livewire) | HTTP / School | Proposed — no approved rule | None | n/a | Server-resolved context | n/a | `SchoolIsolationTest`, `CalendarAdministrationTest` | No requirement; not invented |
 | Assign school role (HTTP) | Authorization | Proposed — D-05 open | None | Would be controller actor | Would be `SchoolContext` | Privacy-safe fields undecided | `RolesPermissionsTest` covers authorization, not audit | **Policy decision required** |
 | Remove school role (HTTP) | Authorization | Proposed — D-05 open | None | Same | Same | Undecided | Same | **Policy decision required** |
 | CLI role bootstrap | Authorization | Proposed — D-06 open | None | Would need explicit `system`/`cli` actor | Server-resolved school | Undecided | Console test covers `source=cli`, not audit | **Policy decision required** |
@@ -102,6 +129,8 @@ Legend: **Policy** = supported by the existing audit foundation decision; **Prop
 | Audit query access | AuditTrail | Proposed — NFR-007 | None | n/a | Query filters by school | n/a | `AuditTrailIsolationTest` | No HTTP endpoint by design |
 | Delete/archive operations | Calendar/Structure | Out of scope — no exposed API | None | n/a | n/a | n/a | Cascade behavior documented | Do not invent delete events |
 | Financial operations | None implemented | Out of scope | None | n/a | n/a | n/a | n/a | No financial module in scope |
+
+Livewire calendar writes call the same audited domain actions and therefore inherit their events; rejected Livewire writes return UI errors without an event, consistent with the documented no-event-on-rejection rule. No HTTP audit endpoint exists by design, and no queued/async mutation surface exists in this slice.
 
 ## 5. Reconciliation with B-04 (PR #63, D-01–D-11)
 
@@ -193,6 +222,8 @@ A single “percentage of all security-sensitive operations” would mix documen
 | Denominator | Covered | Percentage |
 | --- | --- | --- |
 | Deliberate configuration write actions following the documented #40 pattern (4 calendar + 10 structure + 1 settings) | 15 | **100%** |
+| Audited successful mutations as a share of application route declarations | 15/42 | 35.7%; scope context only, not a security percentage |
+| Audited successful mutations as a share of explicit application verb bindings | 23/50 | 46.0%; 23/73 runtime application bindings (31.5%); scope context only |
 | Those 15 plus the 3 authority-changing writes with an open audit decision (HTTP role assign, HTTP role remove, CLI bootstrap) | 15 of 18 | 83.3% if the proposed rule is assumed; **not claimed as a compliance figure** |
 | Application route objects with `EnsurePermission` (authorization, not audit) | 19/42 on baseline; 29/42 on PR #63 head | 45.2% / 69.0%; context only |
 
@@ -214,5 +245,5 @@ Recommended next backend task: **B-06 — owner decision on role-change and CLI 
 ## 11. Change identity
 
 - Branch: `audit/b05-audit-trail-coverage`.
-- Commits: three conventional commits on the branch — append-only builder fix, settings audit feature, coverage documentation. Final SHAs are recorded in the task handoff rather than in this self-referential file.
+- Commits: conventional commits on the branch — append-only builder fix, settings audit feature, coverage documentation, inventory consolidation and PR link. Final SHAs are available in `git log` rather than in this self-referential file.
 - PR: pending (filled after push).
