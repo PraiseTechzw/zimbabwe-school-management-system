@@ -16,7 +16,7 @@
 | Review | `844f84ae` | PR open and CI reported | Approved and merged |
 | Done | `c2c39d68` | Merged, verified, docs updated | Archived from active views |
 
-**Phase 1 rule (superseded):** the original rule held during discovery — no item moved to Ready, In Progress, Review or Done until `P1-G01` was resolved. The gate was subsequently released by the Product Owner's direct execution instruction (decision log D-08), and slices 1, 2, 3 and 6 merged via PRs #41, #43, #44 and #45. Board item statuses have not yet been reconciled with those merges; [decision-log.md](../modules/platform-foundation/decision-log.md) is the authoritative slice status record.
+**Phase 1 rule (superseded):** the original rule held during discovery — no item moved to Ready, In Progress, Review or Done until `P1-G01` was resolved. The gate was subsequently released by the Product Owner's direct execution instruction (decision log D-08). All seven foundation items (#34–#40) are now Done, with merges recorded in [decision-log.md](../modules/platform-foundation/decision-log.md) and [integration-tracker.md](integration-tracker.md). Open research and governance items remain on the board.
 
 ## Fields
 
