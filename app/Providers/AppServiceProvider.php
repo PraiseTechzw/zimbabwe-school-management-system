@@ -5,12 +5,16 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Domains\School\Context\SchoolContext;
+use App\Frontend\Contracts\CalendarManagementGateway;
 use App\Frontend\Contracts\FrontendDataProvider;
 use App\Frontend\DemoFrontendDataProvider;
+use App\Frontend\DomainCalendarManagementGateway;
 use App\Frontend\ServerFrontendDataProvider;
+use App\Http\Middleware\ResolveSchoolContext;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -28,6 +32,8 @@ class AppServiceProvider extends ServiceProvider
                 ? new DemoFrontendDataProvider($provider)
                 : $provider;
         });
+
+        $this->app->bind(CalendarManagementGateway::class, DomainCalendarManagementGateway::class);
     }
 
     /**
@@ -36,5 +42,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Blade::component('layouts.guest', 'guest-layout');
+
+        // Livewire updates bypass the original page route. Re-run the school
+        // context resolver so writes remain tenant-scoped on every update.
+        Livewire::addPersistentMiddleware(ResolveSchoolContext::class);
     }
 }

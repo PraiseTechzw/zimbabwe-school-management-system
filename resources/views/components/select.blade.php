@@ -13,7 +13,9 @@
     @if($label !== null)
         <label for="{{ $id }}" class="fs-label">{{ $label }}</label>
     @endif
-    <select id="{{ $id }}" name="{{ $name }}" {{ $attributes->merge(['class' => 'fs-input']) }}>
+    <select id="{{ $id }}" name="{{ $name }}"
+            @if($error !== null) aria-invalid="true" aria-describedby="{{ $id }}-error" @endif
+            {{ $attributes->merge(['class' => 'fs-input']) }}>
         @if($placeholder !== null)
             <option value="">{{ $placeholder }}</option>
         @endif
@@ -22,6 +24,6 @@
         @endforeach
     </select>
     @if($error !== null)
-        <p class="fs-error" role="alert">{{ $error }}</p>
+        <p id="{{ $id }}-error" class="fs-error" role="alert">{{ $error }}</p>
     @endif
 </div>
