@@ -1,10 +1,10 @@
 # Phase 1 integration tracker
 
-**Verified:** 2026-11-27. **Scope:** current `origin/main` and the active platform-foundation PRs/branches. This record distinguishes local evidence from GitHub-verified remote state; a local pass is never reported as remote CI success.
+**Verified:** 2026-11-27 (final post-merge pass). **Scope:** current `origin/main` and all shipped platform-foundation/frontend PRs. This record distinguishes local evidence from GitHub-verified remote state; a local pass is never reported as remote CI success.
 
 ## Current remote baseline
 
-- `origin/main`: `64cf7e84286234db464b6a2a2071333bfeb641cd` — merge of PR #52 (integration docs sync) at `2026-11-27T18:06:43Z`; it contains the merged frontend Stage A commit `9f8f712`.
+- `origin/main`: `28079f5b9f6dbb1173ffde1585eedfd84269fb3a` — merge of PR #54 (post-merge tracker correction), after PRs #52, #48 and the seven foundation slices.
 - Branch protection on `main`: required checks `quality`, `tests`, `docker`, strict; required conversation resolution enabled; required approving reviews `0`; `enforce_admins` enabled.
 - Remote reads used: `git ls-remote`, `git fetch --prune`, `gh pr view`, `gh api .../check-runs`, GraphQL review-thread queries, `gh project item-list`.
 
@@ -21,7 +21,7 @@
 | Audit trail | #40 / [#50](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/50) | head `1154c3b`; merge `ccb25a7` | Yes | Yes | Yes | Opened | `quality`, `tests`, `docker`, GitGuardian SUCCESS at final head | No approval claimed | Yes, `2026-11-27T17:53:39Z` | Done |
 | Frontend Stage A | — / [#48](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/48) | head `588ddd1`; merge `9f8f712` | Yes | Yes | Yes | Opened | `quality`, `tests`, `docker`, GitGuardian SUCCESS at final head | Six automated threads resolved; no approval count required | Yes, `2026-11-27T18:03:31Z` | Not on board |
 | Integration docs sync | — / [#52](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/52) | head `90b8330`; merge `64cf7e8` | Yes | Yes | Yes | Opened | `quality`, `tests`, `docker`, GitGuardian SUCCESS at final head | No approval claimed | Yes, `2026-11-27T18:06:43Z` | Not on board |
-| Post-merge tracker correction | — / this PR | branch `docs/p1-integration-status-postmerge` | Yes | Yes | Yes | Opened | Pending at this tracker commit | No approval claimed | No | Not on board |
+| Post-merge tracker correction | — / [#54](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/54) | head `bc6ad65`; merge `28079f5` | Yes | Yes | Yes | Opened | `quality`, `tests`, `docker`, CodeRabbit, GitGuardian SUCCESS | No approval claimed | Yes, `2026-11-27T18:11:05Z` | Not on board |
 | Academic structure (canonical) | — / none | local `d1370300b066b97acfc8472666e0bc02efeac6fa` | Yes | Yes | No | No | Not applicable | No | No | Not on board |
 | Admissions application foundation (canonical) | — / none | local `8a7a21d404f627430dce0d9b7e8d852f2045ed02` | Yes | Yes | No | No | Not applicable | No | No | Not on board |
 
@@ -38,20 +38,20 @@ All entries below are local runs, not GitHub Actions results.
 | `p1-admissions-canonical` at `8a7a21d` | Pint, PHPStan, Composer audit, `php artisan test`, `migrate:fresh`, route list, `docker compose config -q`, `git diff --check` | All exit 0; 212 tests / 790 assertions |
 | `p1-integration-tracker` after merging merged `main` | `make verify` via isolated Compose project and `docker compose config -q` | Exit 0; 180 tests / 675 assertions |
 
-Logs are retained under `/tmp/opencode/` with the prefixes `roles-integration-verify`, `audit-secret-fix-verify`, `frontend-pr48-review`, `structure-canonical-final`, `admissions-canonical` and `integration-docs-verify`.
+Logs are retained under `/tmp/opencode/` with the prefixes `roles-integration-verify`, `audit-secret-fix-verify`, `frontend-pr48-review`, `structure-canonical-final`, `admissions-canonical`, `integration-docs-verify` and `integration-docs-postmerge-verify`.
 
 ## Dependency and duplication notes
 
-- PRs #51, #49, #50, #48 and #52 merged in that order; every later branch must contain all five merge commits. Frontend head `588ddd1` was merged into `main` as `9f8f712`; PR #52 was merged as `64cf7e8`.
+- PRs #51, #49, #50, #48, #52 and #54 merged in that order; no implementation PR remains open. Frontend head `588ddd1` was merged into `main` as `9f8f712`; the tracker corrections followed as `64cf7e8` and `28079f5`.
 - The audit trail was reconciled with merged roles work and its inert redaction fixtures were rewritten so GitGuardian scans only the clean single commit; the final check result is SUCCESS.
-- Academic structure has two competing local lines. Canonical is the `d602e88` line replayed onto the then-current `main`; the stale `77d2f9a` line duplicates merged school/calendar/auth work and is excluded. That canonical branch is now two commits behind `64cf7e8` and must be replayed again if authorized.
-- Admissions has two local lines. Canonical is the clean `3ade1f3` commit replayed onto the then-current `main` as `8a7a21d`; the other worktree remains uncommitted and is not eligible for integration. The canonical replay removes the apparent school-settings duplication caused by the old `9e6db32` base. It is also two commits behind `64cf7e8` and must be replayed again if authorized.
+- Academic structure has two competing local lines. Canonical is the `d602e88` line replayed onto the then-current `main`; the stale `77d2f9a` line duplicates merged school/calendar/auth work and is excluded. The canonical branch is behind current `main` and must be replayed again if authorized.
+- Admissions has two local lines. Canonical is the clean `3ade1f3` commit replayed onto the then-current `main` as `8a7a21d`; the other worktree remains uncommitted and is not eligible for integration. The canonical replay removes the apparent school-settings duplication caused by the old `9e6db32` base. It is behind current `main` and must be replayed again if authorized.
 - Admissions tenant isolation is covered by `AdmissionsIsolationTest.php`: client `school_id` is prohibited, `X-School-Id` only selects authorised memberships, foreign applications return 404, cross-school academic-year references return a generic 422, and all writes resolve the school server-side.
-- No duplicate open PR exists for academic structure or admissions. No admissions issue exists; both remain held pending an explicit scope decision.
+- No duplicate remote branch or PR exists for academic structure or admissions. Admissions evidence is tracked as research issue #53; both canonical branches remain local pending an explicit scope decision.
 
 ## Remaining actions
 
-1. Monitor this post-merge documentation correction. Merge it only after its CI is verified; no self-approval or remote merge is claimed here.
-2. Record a dedicated scope decision/issue before pushing academic structure or admissions. Until then, keep both canonical branches local and open no PR.
-3. If authorized, replay the two canonical branches onto current `main` (`64cf7e8` or later), re-run verification, then open one PR per slice and update this tracker with exact statuses.
+1. No implementation PRs remain open. `main` is green; required checks and branch protection were satisfied for every merge.
+2. Board items #34–#40 are Done. Research items #6–#24 and #53 and governance items #31/#32 remain open and are not implementation deliverables.
+3. Academic structure and admissions remain local-only pending an explicit scope decision. Do not push either canonical branch or open a PR without authorization.
 4. Do not push directly to `main`; do not merge unverified work.

@@ -1,6 +1,6 @@
 # Platform Foundation module — discovery documents
 
-**Status:** EXECUTION RELEASED — implementation in progress; see [decision-log.md](decision-log.md) for authoritative slice status.
+**Status:** EXECUTION COMPLETE for the seven foundation slices; all are merged into `main`. See [decision-log.md](decision-log.md) for authoritative slice status and unresolved decisions.
 
 This directory holds product discovery and traceability artefacts for Phase 1 — Platform Foundation.
 
