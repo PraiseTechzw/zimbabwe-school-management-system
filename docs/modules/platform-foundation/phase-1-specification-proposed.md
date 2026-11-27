@@ -1,6 +1,8 @@
 # Phase 1 specification — PROPOSED FOR PRODUCT OWNER APPROVAL
 
-**Status:** PROPOSED. **Approval gate:** issue `P1-G01` (open). **Date:** 2026-11-27.
+> **Post-discovery update (2026-11-27):** this specification is retained as the discovery-time proposal. The Product Owner subsequently released `P1-G01` for execution (D-08 in [decision-log.md](decision-log.md)); the decision log, not this document, records what was implemented.
+
+**Status:** PROPOSED. **Approval gate:** issue `P1-G01` (open at the time of this proposal). **Date:** 2026-11-27.
 
 This document is the candidate specification presented to the Product Owner. **It does not authorise implementation.** Approval must be explicit and recorded on `P1-G01` before any item moves to Ready.
 

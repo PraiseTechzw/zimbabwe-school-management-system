@@ -1,6 +1,8 @@
 # Requirements traceability matrix — Phase 1 (PLANNED LINKS ONLY)
 
-**Status:** Discovery traceability. The last two columns are intentionally blank: **no implementation or test exists in this milestone**. Access date for sources: `2026-11-27`.
+> **Post-discovery update (2026-11-27):** this matrix is retained as the discovery-time record. Implementation was subsequently released at `P1-G01` (D-08) and four slices merged via PRs #41, #43, #44 and #45. Implemented behaviour and decisions are recorded in [decision-log.md](decision-log.md), not here. The blank columns below are not a current status claim.
+
+**Status:** Discovery traceability. At the time of discovery the last two columns were intentionally blank: no implementation or test existed in that milestone. Access date for sources: `2026-11-27`.
 
 All requirement IDs below are **PROPOSED** and await Product Owner approval (`P1-G01`). Evidence classes are defined in [../../research/evidence-classification.md](../../research/evidence-classification.md).
 

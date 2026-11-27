@@ -16,7 +16,7 @@
 | Review | `844f84ae` | PR open and CI reported | Approved and merged |
 | Done | `c2c39d68` | Merged, verified, docs updated | Archived from active views |
 
-**Phase 1 rule:** no item was moved to Ready, In Progress, Review or Done. `P1-G01` (approval gate) must be resolved first.
+**Phase 1 rule (superseded):** the original rule held during discovery — no item moved to Ready, In Progress, Review or Done until `P1-G01` was resolved. The gate was subsequently released by the Product Owner's direct execution instruction (decision log D-08), and slices 1, 2, 3 and 6 merged via PRs #41, #43, #44 and #45. Board item statuses have not yet been reconciled with those merges; [decision-log.md](../modules/platform-foundation/decision-log.md) is the authoritative slice status record.
 
 ## Fields
 
