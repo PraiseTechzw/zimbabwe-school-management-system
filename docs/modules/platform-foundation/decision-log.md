@@ -13,10 +13,10 @@ The proposed specification and research documents were merged into `main` as PR 
 | 1 — School identity | #34 | #41 | Merged |
 | 2 — School isolation | #35 | #43 | Merged |
 | 3 — Authentication/users | #36 | #44 | Merged |
-| 4 — Roles/permissions | #37 | — | Not started |
-| 5 — School configuration | #38 | — | Implemented on `feat/p1-school-settings`; PR pending |
+| 4 — Roles/permissions | #37 | #49 | Implemented, PR pending |
+| 5 — School configuration | #38 | #51 | Merged |
 | 6 — Academic calendar | #39 | #45 | Merged |
-| 7 — Audit trail | #40 | — | Not started |
+| 7 — Audit trail | #40 | #50 | Implemented, PR pending |
 
 ## Decisions
 
@@ -72,4 +72,14 @@ The proposed specification and research documents were merged into `main` as PR 
 - Year updates must keep existing periods inside the year. Calendar writes lock the school row inside the transaction to serialise concurrent integrity checks; database unique constraints remain the final guard.
 - Year references on period writes are scoped to the current school so ownership cannot be probed through validation errors. Tenant JSON responses vary on both tenant selection inputs.
 - Review before publication, auditable revisions, permissions and examination windows are deferred; see [academic-calendar.md](academic-calendar.md) for the full rules, interfaces and implementation decisions.
+
+## Slice 7: implemented audit trail foundation
+
+- `audit_events` is append-only: no `updated_at`, Eloquent model events and the model query builder reject updates/deletes, and the school foreign key uses `RESTRICT`.
+- Writes are deliberate domain calls through `RecordAuditEvent`; there is no automatic request logging, no generic model observer and no HTTP write surface.
+- `AuditScope::forSchool()` only accepts a server-resolved `School` model. `AuditScope::system()` is the only null-school path; client-supplied school identifiers are not accepted by the audit domain.
+- Actor identity is resolved through an extensible contract using the existing auth guard, with explicit `system` and `job` actors for non-request contexts. No names, email addresses or credentials are stored.
+- Metadata is allow-listed and recursively redacted using `config/audit.php`; unsupported objects and oversized structures are rejected before persistence.
+- Calendar year/period create and update actions now emit configuration audit events inside their existing transactions. This is the integration pattern for later modules, not an expansion of audit scope.
+- Read access is exposed only as a server-side, school-scoped query action. HTTP retrieval is deferred until roles/permissions exist; retention, legal hold and raw-SQL tamper controls remain owner decisions. See [audit-trail.md](audit-trail.md).
 

@@ -41,6 +41,7 @@ Sprint 0 established the engineering foundation. Phase 1 school-scoped backend f
 - [Academic calendar](modules/platform-foundation/academic-calendar.md) — implemented backend slice
 - [Auth and users](modules/platform-foundation/auth-user-foundation.md) — implemented backend slice
 - [School settings](modules/platform-foundation/school-settings.md) — implemented backend settings mechanism for #38
+- [Audit trail](modules/platform-foundation/audit-trail.md) — append-only, privacy-minimised audit foundation for #40
 - [Research coverage matrix](research/research-coverage-matrix.md) — evidence classes and gaps
 
 ## Templates

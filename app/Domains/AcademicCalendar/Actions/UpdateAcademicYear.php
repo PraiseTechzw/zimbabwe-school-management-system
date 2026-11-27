@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\AcademicCalendar\Actions;
 
 use App\Domains\AcademicCalendar\Concerns\GuardsCalendarIntegrity;
+use App\Domains\AcademicCalendar\Concerns\RecordsCalendarAudit;
 use App\Domains\AcademicCalendar\Models\AcademicYear;
 use App\Domains\School\Models\School;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -15,6 +16,7 @@ use Illuminate\Validation\Rule;
 final class UpdateAcademicYear
 {
     use GuardsCalendarIntegrity;
+    use RecordsCalendarAudit;
 
     /**
      * @param  array<string, mixed>  $data
@@ -49,12 +51,27 @@ final class UpdateAcademicYear
             $this->assertYearRangeAvailable($school, $startDate, $endDate, (int) $current->id);
             $this->assertPeriodsFitYear($current, $startDate, $endDate);
 
+            $before = $this->yearAuditSnapshot($current);
+
             $current->update(array_merge([
                 'name' => $name,
                 'start_date' => $startDate,
                 'end_date' => $endDate,
                 'status' => isset($validated['status']) ? (string) $validated['status'] : $current->status,
             ], $this->calendarMetadata($validated)));
+
+            $this->recordCalendarAudit(
+                $school,
+                'academic_year.updated',
+                'academic_year',
+                (string) $current->id,
+                $before,
+                $this->yearAuditSnapshot($current),
+                [
+                    'source' => (string) $current->source,
+                    'source_reference' => $current->source_reference === null ? null : (string) $current->source_reference,
+                ],
+            );
 
             return $current;
         });
