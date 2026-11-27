@@ -1,6 +1,9 @@
 <x-app-shell title="Academic calendar" :user="$user"
              :breadcrumbs="[['label' => 'School', 'url' => route('frontend.school-profile')], ['label' => 'Academic calendar']]">
     <x-card title="Years" subtitle="Dates and terms come from the school's calendar records.">
+        <x-slot:action>
+            <a href="{{ route('frontend.calendar-manage') }}" class="fs-btn fs-btn-secondary fs-btn-compact">Manage calendar</a>
+        </x-slot:action>
         @if($years === [])
             <x-empty-state title="No academic years"
                            message="An academic year has not been added to this school yet." />

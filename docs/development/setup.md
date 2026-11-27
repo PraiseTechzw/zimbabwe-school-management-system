@@ -61,7 +61,11 @@ npm audit --audit-level=high
 
 ## Frontend development
 
-Stage A provides three working screens behind the existing session middleware: `/login`, `/app`, `/app/school` and `/app/academic-calendar` (plus honest "not built yet" notices for planned modules). Sign-in and sign-out call the documented `/api/auth/login` and `/api/auth/logout` endpoints; server-rendered screens read school, identifier and calendar data through `app/Frontend/ServerFrontendDataProvider`, which mirrors the verified JSON payloads without extra HTTP round trips.
+Stage A provides the working screens behind the existing session middleware: `/login`, `/app`, `/app/school` and `/app/academic-calendar` (plus honest "not built yet" notices for planned modules). Stage B adds `/app/academic-calendar/manage`, linked from the read-only calendar. Sign-in and sign-out call the documented `/api/auth/login` and `/api/auth/logout` endpoints; server-rendered screens read school, identifier and calendar data through `app/Frontend/ServerFrontendDataProvider`, which mirrors the verified JSON payloads without extra HTTP round trips.
+
+Calendar writes use `app/Frontend/DomainCalendarManagementGateway`, which calls the same domain actions as the verified JSON calendar endpoints. It takes the school only from `SchoolContext`; the browser never sends a trusted `school_id`. There are no mock calendar records. For a quick local smoke test, sign in, open the academic calendar, follow “Manage calendar”, run the calendar check, create a period, then log out.
+
+For users who belong to more than one school, the existing `school.context` middleware still requires a `school_id` query parameter or `X-School-Id` header on the initial page request. It stores that server-authorised selection for subsequent Livewire update requests, rechecking it against current memberships each time. If the membership is removed, the update fails closed instead of falling back to another school. This preserves tenant context across Livewire writes; it is not a school switcher and never widens access.
 
 Real data is always authoritative. The dashboard's cross-module figures are opt-in demo values controlled by `FRONTEND_DEMO` in `.env`; the committed default is `false`. When enabled for a local demo, the UI labels them `Demo data`. Never enable demo mode in a deployment that presents figures as school records.
 
@@ -73,7 +77,7 @@ make COMPOSE="docker compose -p school-fe-check" verify
 docker compose -p school-fe-check down
 ```
 
-ADR-0003 was accepted on 2026-11-27. The Vite/Laravel plugin/Tailwind build is now part of the approved Blade + Livewire + Alpine + Tailwind frontend; Livewire is installed through Composer, not Node. See `docs/frontend/progress.md` for verification evidence and `DESIGN.md` for the visual system.
+ADR-0003 was accepted on 2026-11-27. The Vite/Laravel plugin/Tailwind build is now part of the approved Blade + Livewire + Alpine + Tailwind frontend; Livewire is installed through Composer, not Node. Stage B adds a Livewire management screen but no new frontend framework or runtime dependency. See `docs/frontend/progress.md` for verification evidence and `DESIGN.md` for the visual system.
 
 ## Environment variables
 
