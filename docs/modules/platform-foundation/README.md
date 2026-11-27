@@ -15,6 +15,7 @@ This directory holds product discovery and traceability artefacts for Phase 1 â€
 | [auth-user-foundation.md](auth-user-foundation.md) | Implemented backend authentication and user lifecycle foundation (issue #36) |
 | [roles-and-permissions.md](roles-and-permissions.md) | Implemented config-driven authorization foundation with school-scoped role assignments (issue #37) |
 | [school-settings.md](school-settings.md) | Implemented backend settings mechanism, provenance and revisions (issue #38) |
+| [audit-trail.md](audit-trail.md) | Implemented append-only, privacy-minimised audit foundation (issue #40) |
 
 Research evidence lives under [../../research/README.md](../../research/README.md).
 

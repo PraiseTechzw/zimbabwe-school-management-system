@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\AcademicCalendar\Actions;
 
 use App\Domains\AcademicCalendar\Concerns\GuardsCalendarIntegrity;
+use App\Domains\AcademicCalendar\Concerns\RecordsCalendarAudit;
 use App\Domains\AcademicCalendar\Models\AcademicPeriod;
 use App\Domains\School\Models\School;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +15,7 @@ use Illuminate\Validation\Rule;
 final class CreateAcademicPeriod
 {
     use GuardsCalendarIntegrity;
+    use RecordsCalendarAudit;
 
     /**
      * @param  array<string, mixed>  $data
@@ -62,6 +64,19 @@ final class CreateAcademicPeriod
             ], $this->calendarMetadata($validated)));
             $period->school_id = $school->id;
             $period->save();
+
+            $this->recordCalendarAudit(
+                $school,
+                'academic_period.created',
+                'academic_period',
+                (string) $period->id,
+                null,
+                $this->periodAuditSnapshot($period),
+                [
+                    'source' => (string) $period->source,
+                    'source_reference' => $period->source_reference === null ? null : (string) $period->source_reference,
+                ],
+            );
 
             return $period;
         });
