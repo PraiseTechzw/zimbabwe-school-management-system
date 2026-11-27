@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Domains\AcademicCalendar\Models\AcademicPeriod;
 use App\Domains\AcademicCalendar\Models\AcademicYear;
+use App\Domains\Authorization\Models\RoleAssignment;
 use App\Domains\School\Context\SchoolContext;
 use App\Domains\School\Models\School;
 use App\Frontend\Contracts\CalendarManagementGateway;
@@ -22,10 +23,21 @@ uses(RefreshDatabase::class);
 
 beforeEach(fn (): mixed => $this->withoutVite());
 
-function stageBUserWithSchool(School $school): User
+function stageBUserWithSchool(School $school, ?string $role = 'school_editor'): User
 {
     $user = User::factory()->create();
     $user->schools()->attach($school);
+
+    if ($role !== null) {
+        RoleAssignment::query()->forceCreate([
+            'school_id' => (int) $school->id,
+            'user_id' => (int) $user->id,
+            'role' => $role,
+            'source' => 'domain',
+            'created_at' => now(),
+        ]);
+    }
+
     app(SchoolContext::class)->set($school);
     Auth::login($user);
 
@@ -34,6 +46,28 @@ function stageBUserWithSchool(School $school): User
 
 it('requires authentication for calendar administration', function (): void {
     $this->get('/app/academic-calendar/manage')->assertRedirect('/login');
+});
+
+it('denies the calendar management screen to members without the manage permission', function (): void {
+    $school = School::factory()->create();
+    stageBUserWithSchool($school, 'school_member');
+
+    $this->get('/app/academic-calendar/manage')->assertForbidden();
+});
+
+it('rejects roleless Livewire calendar writes even when invoked directly', function (): void {
+    $school = School::factory()->create();
+    stageBUserWithSchool($school, null);
+
+    Livewire::test(CalendarAdministration::class)
+        ->set('yearName', 'Unauthorised year')
+        ->set('yearStartDate', '2028-01-01')
+        ->set('yearEndDate', '2028-12-31')
+        ->set('yearSource', 'Untrusted member')
+        ->call('saveYear')
+        ->assertSet('formError', 'You do not hold permission to manage the academic calendar.');
+
+    expect(AcademicYear::query()->where('name', 'Unauthorised year')->count())->toBe(0);
 });
 
 it('links to administration from the read-only calendar and scopes the management screen', function (): void {

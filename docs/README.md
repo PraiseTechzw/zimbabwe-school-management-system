@@ -35,9 +35,10 @@ Sprint 0 established the engineering foundation. All seven Phase 1 foundation sl
 - [GitHub project board guidance](github/project-board.md)
 - [Phase 1 integration tracker](github/integration-tracker.md) — verified PR, CI, board and merge states
 
-## Sprint 0 report
+## Reports
 
 - [Verification evidence](reports/sprint-0-verification.md) — actual command output and GitHub checks
+- [B-04 authorization, RBAC and tenant-isolation audit](reports/b04-authorization-rbac-tenant-audit.md) — route coverage, findings, risk register and unresolved decisions
 
 ## Phase 1 — Platform Foundation discovery (historical; D-08 released the execution gate)
 

@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace App\Livewire;
 
+use App\Domains\Authorization\Services\SchoolPermissions;
+use App\Domains\School\Context\SchoolContext;
 use App\Frontend\Contracts\CalendarManagementGateway;
 use App\Frontend\Contracts\FrontendDataProvider;
+use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 
@@ -124,6 +128,13 @@ final class CalendarAdministration extends Component
 
     public function saveYear(): void
     {
+        if (! $this->canManageCalendar()) {
+            $this->clearMessages();
+            $this->formError = 'You do not hold permission to manage the academic calendar.';
+
+            return;
+        }
+
         $wasEditing = $this->editingYearId !== null;
         $this->yearErrors = [];
         $this->clearMessages();
@@ -184,6 +195,13 @@ final class CalendarAdministration extends Component
 
     public function savePeriod(): void
     {
+        if (! $this->canManageCalendar()) {
+            $this->clearMessages();
+            $this->formError = 'You do not hold permission to manage the academic calendar.';
+
+            return;
+        }
+
         if ($this->selectedYearId === 0) {
             $this->formError = 'Select an academic year before adding a period.';
 
@@ -359,6 +377,27 @@ final class CalendarAdministration extends Component
         }
 
         return $errors;
+    }
+
+    /**
+     * Livewire updates do not replay the originating page route, so write
+     * methods must re-check the same permission the management route requires.
+     */
+    private function canManageCalendar(): bool
+    {
+        $user = Auth::user();
+
+        if (! $user instanceof User) {
+            return false;
+        }
+
+        $school = app(SchoolContext::class)->current();
+
+        if ($school === null) {
+            return false;
+        }
+
+        return app(SchoolPermissions::class)->has($user, $school, 'academic_calendar.manage');
     }
 
     private function gateway(): CalendarManagementGateway

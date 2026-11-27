@@ -20,7 +20,7 @@ final class StoreClassDefinitionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'school_id' => ['prohibited'],
+            'school_id' => ['missing'],
             'name' => AcademicStructureRules::name(),
             'code' => AcademicStructureRules::code(),
             'display_order' => AcademicStructureRules::displayOrder(),

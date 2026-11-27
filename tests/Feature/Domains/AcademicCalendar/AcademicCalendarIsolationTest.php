@@ -7,6 +7,7 @@ use App\Domains\AcademicCalendar\Actions\UpdateAcademicPeriod;
 use App\Domains\AcademicCalendar\Actions\UpdateAcademicYear;
 use App\Domains\AcademicCalendar\Models\AcademicPeriod;
 use App\Domains\AcademicCalendar\Models\AcademicYear;
+use App\Domains\Authorization\Models\RoleAssignment;
 use App\Domains\School\Models\School;
 use App\Models\User;
 use Carbon\Carbon;
@@ -16,10 +17,20 @@ use Illuminate\Validation\ValidationException;
 
 uses(RefreshDatabase::class);
 
-function calendarHttpUser(School $school): User
+function calendarHttpUser(School $school, ?string $role = 'school_editor'): User
 {
     $user = User::factory()->create();
     $user->schools()->attach($school);
+
+    if ($role !== null) {
+        RoleAssignment::query()->forceCreate([
+            'school_id' => (int) $school->id,
+            'user_id' => (int) $user->id,
+            'role' => $role,
+            'source' => 'domain',
+            'created_at' => Carbon::now(),
+        ]);
+    }
 
     return $user;
 }
@@ -229,9 +240,8 @@ it('rejects an authorised school selection the user cannot access', function ():
 
 it('requires an explicit school selection for multi-school calendar access', function (): void {
     $selected = School::factory()->create();
-    $user = User::factory()->create();
+    $user = calendarHttpUser($selected, 'school_member');
     $user->schools()->attach(School::factory()->create());
-    $user->schools()->attach($selected);
 
     $this->actingAs($user)
         ->getJson('/api/academic-years')

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Domains\AcademicCalendar\Models\AcademicPeriod;
 use App\Domains\AcademicCalendar\Models\AcademicYear;
+use App\Domains\Authorization\Models\RoleAssignment;
 use App\Domains\School\Models\School;
 use App\Domains\School\Models\SchoolIdentifier;
 use App\Models\User;
@@ -15,10 +16,20 @@ uses(RefreshDatabase::class);
 // require a manifest for these view-rendering assertions.
 beforeEach(fn (): mixed => $this->withoutVite());
 
-function frontendUserWithSchool(School $school): User
+function frontendUserWithSchool(School $school, ?string $role = 'school_member'): User
 {
     $user = User::factory()->create();
     $user->schools()->attach($school);
+
+    if ($role !== null) {
+        RoleAssignment::query()->forceCreate([
+            'school_id' => (int) $school->id,
+            'user_id' => (int) $user->id,
+            'role' => $role,
+            'source' => 'domain',
+            'created_at' => now(),
+        ]);
+    }
 
     return $user;
 }
