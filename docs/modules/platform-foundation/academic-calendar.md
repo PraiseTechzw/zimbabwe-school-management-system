@@ -2,7 +2,7 @@
 
 **Status:** implemented backend foundation for issue #39.
 **Evidence basis:** research topic 7 in [../../research/findings/03-calendar-and-access.md](../../research/findings/03-calendar-and-access.md), workflow WF-02 in [../../research/proposed-workflows.md](../../research/proposed-workflows.md) and the phase decisions in [decision-log.md](decision-log.md).
-**Not included:** authentication, roles/permissions, examination windows, audit revisions or a user interface.
+**Not included:** examination windows, audit revisions or a user interface. The original slice deferred permissions; B-04 now enforces `academic_calendar.manage` on calendar writes and the management screen.
 
 ## Domain overview
 
@@ -51,7 +51,7 @@ Records are school-owned and scoped by the server-side `SchoolContext` establish
 
 ## Interfaces
 
-All endpoints sit behind `auth` and `school.context`. They are isolated in `routes/academic-calendar.php`, loaded by `AcademicCalendarServiceProvider`, so shared routing files used by other slices remain untouched.
+All endpoints sit behind `auth` and `school.context`. Write endpoints also require `academic_calendar.manage` through `EnsurePermission`. The frontend management screen and its Livewire gateway writes use the same permission boundary. They are isolated in `routes/academic-calendar.php`, loaded by `AcademicCalendarServiceProvider`, so shared routing files used by other slices remain untouched.
 
 | Method | Path | Purpose |
 | --- | --- | --- |
@@ -66,7 +66,7 @@ All endpoints sit behind `auth` and `school.context`. They are isolated in `rout
 
 Domain actions live under `app/Domains/AcademicCalendar/Actions/`: `CreateAcademicYear`, `UpdateAcademicYear`, `CreateAcademicPeriod`, `UpdateAcademicPeriod` and `ValidateAcademicCalendar`. Controllers validate requests, resolve the school context and delegate to those actions.
 
-The route identifier is authoritative for period creation: a client-supplied `academic_year_id` in the body cannot redirect a period to another year. `school_id` is rejected as client input on every calendar endpoint. Year references on period writes must belong to the current school.
+The route identifier is authoritative for period creation: a client-supplied `academic_year_id` in the body cannot redirect a period to another year. A non-empty client-supplied `school_id` is rejected on every calendar endpoint; a null or empty value is ignored and cannot change server-side ownership. Year references on period writes must belong to the current school.
 
 Tenant-varying JSON responses send `Cache-Control: no-store` and `Vary: X-School-Id, school_id` because both the header and the request input can select a school.
 
@@ -78,7 +78,9 @@ Tenant-varying JSON responses send `Cache-Control: no-store` and `Vary: X-School
 - An unauthorised client-selected school ID is rejected with `403` by the existing context middleware; conflicting or malformed IDs are rejected with `400`.
 - A missing context never falls back to a client value or to another tenant's data.
 - `school_id` is not mass-assignable on either model; create actions set it from the resolved `School` after validation.
-- Permissions are not part of this slice. Any authenticated user with school membership can use the endpoints until the roles/permissions slices are implemented.
+- Reads remain membership-scoped and are not gated by `academic_calendar.view`; that permission is catalogued but not enforced, tracked as an unresolved B-04 finding.
+- Writes require `academic_calendar.manage`, held by `school_editor` and `school_admin`. A roleless member, `school_member` or `role_viewer` receives `403`; a role assigned in another school does not grant access.
+- The management screen and all frontend gateway writes apply the same write permission, so Livewire update requests cannot bypass the route gate.
 
 ## Implementation decisions
 

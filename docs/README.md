@@ -28,6 +28,7 @@ Sprint 0 established the engineering foundation. All seven Phase 1 foundation sl
 ## Quality and operations
 
 - [Testing strategy](testing/strategy.md)
+- [B-04 authorization / tenant-isolation audit](reports/b04-authorization-and-tenant-isolation-audit.md) — route matrix, findings, evidence and residual risk
 - [School Settings API](api/school-settings.md) — school-scoped settings, provenance and revisions
 - [Academic Structure API](api/academic-structure.md) — configurable school structure endpoints merged in #59
 - [Deployment strategy](operations/deployment.md)
