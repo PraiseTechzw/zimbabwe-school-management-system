@@ -23,6 +23,8 @@ function auditIsolationUser(School $school, ?string $role = 'school_editor'): Us
     $user = User::factory()->create();
     $user->schools()->attach($school);
 
+    // Calendar writes require academic_calendar.manage; tests that use that
+    // write path pass an explicit role to produce audit events.
     if ($role !== null) {
         RoleAssignment::query()->forceCreate([
             'school_id' => (int) $school->id,

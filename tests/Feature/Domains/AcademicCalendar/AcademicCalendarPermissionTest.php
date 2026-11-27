@@ -153,3 +153,23 @@ it('enforces the calendar view permission on read endpoints', function (): void 
     $this->actingAs($member)->getJson('/api/academic-years')->assertOk();
     $this->actingAs($member)->getJson('/app/academic-calendar')->assertOk();
 });
+
+it('does not grant calendar permissions from a role assigned in another school', function (): void {
+    $school = School::factory()->create();
+    $otherSchool = School::factory()->create();
+    $user = calendarPermissionUser($school, null);
+
+    RoleAssignment::query()->forceCreate([
+        'school_id' => (int) $otherSchool->id,
+        'user_id' => (int) $user->id,
+        'role' => 'school_admin',
+        'source' => 'domain',
+        'created_at' => Carbon::now(),
+    ]);
+
+    $this->actingAs($user)
+        ->postJson('/api/academic-years', calendarPermissionYearData(['name' => 'Cross-school denial']))
+        ->assertForbidden();
+
+    $this->assertDatabaseCount('academic_years', 0);
+});
