@@ -48,7 +48,7 @@ return [
             ],
         ],
         'school_editor' => [
-            'label' => 'School calendar editor',
+            'label' => 'School editor',
             'permissions' => [
                 'school.view',
                 'academic_calendar.view',
