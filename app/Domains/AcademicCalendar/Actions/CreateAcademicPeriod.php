@@ -41,6 +41,7 @@ final class CreateAcademicPeriod
         $sequence = (int) $validated['sequence'];
 
         return DB::transaction(function () use ($school, $validated, $yearId, $name, $startDate, $endDate, $sequence): AcademicPeriod {
+            $this->lockCalendarForSchool($school);
             $year = $this->resolveYearForSchool($school, $yearId);
 
             $this->assertPeriodNameAvailable($year, $name);
@@ -48,8 +49,8 @@ final class CreateAcademicPeriod
             $this->assertPeriodWithinYear($year, $startDate, $endDate);
             $this->assertPeriodRangeAvailable($year, $startDate, $endDate);
 
-            return AcademicPeriod::query()->create(array_merge([
-                'school_id' => $school->id,
+            $period = new AcademicPeriod;
+            $period->fill(array_merge([
                 'academic_year_id' => $year->id,
                 'name' => $name,
                 'type' => (string) $validated['type'],
@@ -59,6 +60,10 @@ final class CreateAcademicPeriod
                 'status' => isset($validated['status']) ? (string) $validated['status'] : 'draft',
                 'counting_basis' => isset($validated['counting_basis']) ? (string) $validated['counting_basis'] : null,
             ], $this->calendarMetadata($validated)));
+            $period->school_id = $school->id;
+            $period->save();
+
+            return $period;
         });
     }
 }

@@ -266,7 +266,10 @@ it('rejects overlapping periods but accepts adjacent boundaries', function (): v
 it('updates years and periods while applying the same integrity rules', function (): void {
     $school = School::factory()->create();
     $year = app(CreateAcademicYear::class)->execute($school, calendarYearData(['name' => 'Original year']));
-    $period = app(CreateAcademicPeriod::class)->execute($school, calendarPeriodData($year));
+    $period = app(CreateAcademicPeriod::class)->execute($school, calendarPeriodData($year, [
+        'start_date' => '2027-03-01',
+        'end_date' => '2027-04-10',
+    ]));
 
     $updatedYear = app(UpdateAcademicYear::class)->execute($school, $year, calendarYearData([
         'name' => 'Renamed year',
@@ -378,4 +381,36 @@ it('reports calendar validation problems from stored records', function (): void
         ->and(collect($issues)->some(fn (string $issue): bool => str_contains($issue, 'falls outside its academic year')))->toBeTrue()
         ->and(collect($issues)->some(fn (string $issue): bool => str_contains($issue, 'duplicated in this academic year')))->toBeTrue()
         ->and(collect($issues)->some(fn (string $issue): bool => str_contains($issue, 'overlap')))->toBeTrue();
+});
+
+it('rejects a year update that would leave existing periods outside the year', function (): void {
+    $school = School::factory()->create();
+    $year = app(CreateAcademicYear::class)->execute($school, calendarYearData());
+    app(CreateAcademicPeriod::class)->execute($school, calendarPeriodData($year));
+
+    expect(fn () => app(UpdateAcademicYear::class)->execute($school, $year, calendarYearData([
+        'name' => 'Shortened year',
+        'start_date' => '2027-06-01',
+        'end_date' => '2027-12-31',
+    ])))->toThrow(ValidationException::class);
+
+    $this->assertDatabaseHas('academic_years', [
+        'id' => $year->id,
+        'name' => 'Learning Year 2027',
+        'start_date' => '2027-01-01 00:00:00',
+    ]);
+
+    config()->set('academic-calendar.require_periods_within_year', false);
+
+    expect(fn () => app(UpdateAcademicYear::class)->execute($school, $year, calendarYearData([
+        'name' => 'Shortened year',
+        'start_date' => '2027-06-01',
+        'end_date' => '2027-12-31',
+    ])))->not->toThrow(ValidationException::class);
+
+    $this->assertDatabaseHas('academic_years', [
+        'id' => $year->id,
+        'name' => 'Shortened year',
+        'start_date' => '2027-06-01 00:00:00',
+    ]);
 });

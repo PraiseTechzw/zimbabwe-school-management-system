@@ -35,16 +35,21 @@ final class CreateAcademicYear
         $endDate = (string) $validated['end_date'];
 
         return DB::transaction(function () use ($school, $validated, $name, $startDate, $endDate): AcademicYear {
+            $this->lockCalendarForSchool($school);
             $this->assertYearNameAvailable($school, $name);
             $this->assertYearRangeAvailable($school, $startDate, $endDate);
 
-            return AcademicYear::query()->create(array_merge([
-                'school_id' => $school->id,
+            $year = new AcademicYear;
+            $year->fill(array_merge([
                 'name' => $name,
                 'start_date' => $startDate,
                 'end_date' => $endDate,
                 'status' => isset($validated['status']) ? (string) $validated['status'] : 'draft',
             ], $this->calendarMetadata($validated)));
+            $year->school_id = $school->id;
+            $year->save();
+
+            return $year;
         });
     }
 }

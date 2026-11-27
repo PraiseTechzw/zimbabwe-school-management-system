@@ -34,6 +34,16 @@ trait GuardsCalendarIntegrity
         return $year;
     }
 
+    /**
+     * Serialise calendar writes for one school on databases that support
+     * SELECT ... FOR UPDATE. SQLite already serialises writers at the engine
+     * level, so the row lock is a no-op there.
+     */
+    private function lockCalendarForSchool(School $school): void
+    {
+        School::query()->whereKey($school->id)->lockForUpdate()->firstOrFail();
+    }
+
     private function assertYearNameAvailable(School $school, string $name, ?int $ignoreId = null): void
     {
         $exists = AcademicYear::query()
@@ -123,6 +133,28 @@ trait GuardsCalendarIntegrity
         if ($startDate < $yearStart || $endDate > $yearEnd) {
             throw ValidationException::withMessages([
                 'start_date' => 'The period must fall within its academic year.',
+            ]);
+        }
+    }
+
+    private function assertPeriodsFitYear(AcademicYear $year, string $startDate, string $endDate): void
+    {
+        if (! (bool) config('academic-calendar.require_periods_within_year', true)) {
+            return;
+        }
+
+        $outside = AcademicPeriod::query()
+            ->where('academic_year_id', $year->id)
+            ->where(function (Builder $query) use ($startDate, $endDate): void {
+                $query->where('start_date', '<', $startDate)
+                    ->orWhere('end_date', '>', $endDate);
+            })
+            ->lockForUpdate()
+            ->exists();
+
+        if ($outside) {
+            throw ValidationException::withMessages([
+                'start_date' => 'The updated academic year must still contain all of its periods.',
             ]);
         }
     }

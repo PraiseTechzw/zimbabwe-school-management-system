@@ -29,8 +29,10 @@ Records are school-owned and scoped by the server-side `SchoolContext` establish
 - Academic year overlap is disabled by default (`academic-calendar.prevent_year_overlap`). It is an engineering safeguard, not an evidence-backed requirement, so it can be enabled by configuration.
 - Statuses, period types and counting bases are read from `config/academic-calendar.php`. Unknown values are rejected.
 - New records default to `draft`. The configured values do not prove that every school uses the same publication workflow.
+- Shrinking an academic year is rejected when existing periods would fall outside the new boundaries, unless `require_periods_within_year` is disabled.
+- Year references on period writes are validated against the current school, so a foreign or missing year produces the same generic validation error and cannot be used to enumerate identifiers.
 - `counting_basis` exists because source day counts conflict (C-07: school days versus calendar days).
-- Integrity checks and writes run in a transaction with row locks; database unique constraints remain the final guard.
+- Integrity checks and writes run in one transaction. The school row is locked for update first, serialising all calendar writes for that school on databases that support `SELECT ... FOR UPDATE`; SQLite serialises writers at the engine level. Database unique constraints remain the final guard for names and sequences.
 
 `ValidateAcademicCalendar` reports stored-data problems without mutating records. The validation endpoint returns `valid` plus a list of human-readable issues.
 
@@ -59,9 +61,9 @@ All endpoints sit behind `auth` and `school.context` in `routes/web.php`.
 
 Domain actions live under `app/Domains/AcademicCalendar/Actions/`: `CreateAcademicYear`, `UpdateAcademicYear`, `CreateAcademicPeriod`, `UpdateAcademicPeriod` and `ValidateAcademicCalendar`. Controllers validate requests, resolve the school context and delegate to those actions.
 
-The route identifier is authoritative for period creation: a client-supplied `academic_year_id` in the body cannot redirect a period to another year. `school_id` is rejected as client input on calendar writes and validation requests.
+The route identifier is authoritative for period creation: a client-supplied `academic_year_id` in the body cannot redirect a period to another year. `school_id` is rejected as client input on calendar writes and validation requests. Year references on period writes must belong to the current school.
 
-Tenant-varying JSON responses send `Cache-Control: no-store` and `Vary: X-School-Id`.
+Tenant-varying JSON responses send `Cache-Control: no-store` and `Vary: X-School-Id, school_id` because both the header and the request input can select a school.
 
 ## Isolation behaviour
 
@@ -70,6 +72,7 @@ Tenant-varying JSON responses send `Cache-Control: no-store` and `Vary: X-School
 - Cross-school year or period IDs resolve to `404` over HTTP. In domain actions they raise `ValidationException` for an invalid year reference or `AuthorizationException` for an update outside the school.
 - An unauthorised client-selected school ID is rejected with `403` by the existing context middleware; conflicting or malformed IDs are rejected with `400`.
 - A missing context never falls back to a client value or to another tenant's data.
+- `school_id` is not mass-assignable on either model; create actions set it from the resolved `School` after validation.
 - Permissions are not part of this slice. Any authenticated user with school membership can use the endpoints until the roles/permissions slices are implemented.
 
 ## Implementation decisions

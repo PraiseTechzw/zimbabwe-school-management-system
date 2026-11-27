@@ -177,6 +177,6 @@ final class AcademicCalendarController extends Controller
     {
         return response()->json($payload, $status)
             ->header('Cache-Control', 'no-store')
-            ->header('Vary', 'X-School-Id');
+            ->header('Vary', 'X-School-Id, school_id');
     }
 }

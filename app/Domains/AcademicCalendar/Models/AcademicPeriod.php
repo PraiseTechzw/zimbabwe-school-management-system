@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
-    'school_id', 'academic_year_id', 'name', 'type', 'sequence',
+    'academic_year_id', 'name', 'type', 'sequence',
     'start_date', 'end_date', 'status', 'counting_basis',
     'source', 'source_reference', 'source_published_at',
 ])]

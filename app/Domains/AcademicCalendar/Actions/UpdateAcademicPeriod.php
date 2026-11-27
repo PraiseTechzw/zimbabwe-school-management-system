@@ -41,6 +41,8 @@ final class UpdateAcademicPeriod
         $sequence = (int) $validated['sequence'];
 
         return DB::transaction(function () use ($school, $period, $validated, $name, $startDate, $endDate, $sequence): AcademicPeriod {
+            $this->lockCalendarForSchool($school);
+
             /** @var AcademicPeriod $current */
             $current = AcademicPeriod::query()->whereKey($period->id)->lockForUpdate()->firstOrFail();
 

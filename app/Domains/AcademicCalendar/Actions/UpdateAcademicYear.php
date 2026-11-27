@@ -36,6 +36,8 @@ final class UpdateAcademicYear
         $endDate = (string) $validated['end_date'];
 
         return DB::transaction(function () use ($school, $year, $validated, $name, $startDate, $endDate): AcademicYear {
+            $this->lockCalendarForSchool($school);
+
             /** @var AcademicYear $current */
             $current = AcademicYear::query()->whereKey($year->id)->lockForUpdate()->firstOrFail();
 
@@ -45,6 +47,7 @@ final class UpdateAcademicYear
 
             $this->assertYearNameAvailable($school, $name, (int) $current->id);
             $this->assertYearRangeAvailable($school, $startDate, $endDate, (int) $current->id);
+            $this->assertPeriodsFitYear($current, $startDate, $endDate);
 
             $current->update(array_merge([
                 'name' => $name,

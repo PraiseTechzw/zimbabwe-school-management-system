@@ -33,7 +33,7 @@ it('enforces unique year names and period names and sequences at the database la
         'end_date' => '2027-12-31',
     ]);
 
-    expect(fn () => AcademicYear::query()->create([
+    expect(fn () => AcademicYear::query()->forceCreate([
         'school_id' => $school->id,
         'name' => 'Schema year',
         'start_date' => '2028-01-01',
@@ -41,7 +41,7 @@ it('enforces unique year names and period names and sequences at the database la
         'status' => 'draft',
     ]))->toThrow(QueryException::class);
 
-    AcademicPeriod::query()->create([
+    AcademicPeriod::query()->forceCreate([
         'school_id' => $school->id,
         'academic_year_id' => $year->id,
         'name' => 'Schema block',
@@ -52,7 +52,7 @@ it('enforces unique year names and period names and sequences at the database la
         'status' => 'draft',
     ]);
 
-    expect(fn () => AcademicPeriod::query()->create([
+    expect(fn () => AcademicPeriod::query()->forceCreate([
         'school_id' => $school->id,
         'academic_year_id' => $year->id,
         'name' => 'Schema block',
@@ -63,7 +63,7 @@ it('enforces unique year names and period names and sequences at the database la
         'status' => 'draft',
     ]))->toThrow(QueryException::class);
 
-    expect(fn () => AcademicPeriod::query()->create([
+    expect(fn () => AcademicPeriod::query()->forceCreate([
         'school_id' => $school->id,
         'academic_year_id' => $year->id,
         'name' => 'Another block',

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\AcademicCalendar;
 
+use App\Domains\School\Context\SchoolContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -21,7 +22,12 @@ final class UpdateAcademicPeriodRequest extends FormRequest
     {
         return [
             'school_id' => ['prohibited'],
-            'academic_year_id' => ['sometimes', 'required', 'integer', 'exists:academic_years,id'],
+            'academic_year_id' => [
+                'sometimes',
+                'required',
+                'integer',
+                Rule::exists('academic_years', 'id')->where('school_id', (int) app(SchoolContext::class)->assertCurrent()->id),
+            ],
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', Rule::in(array_keys((array) config('academic-calendar.period_types', [])))],
             'sequence' => ['required', 'integer', 'min:1', 'max:10000'],

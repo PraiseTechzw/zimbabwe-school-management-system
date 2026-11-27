@@ -78,7 +78,7 @@ it('creates and lists tenant-scoped academic years through the API', function ()
         ->assertCreated()
         ->assertJsonPath('academic_year.name', 'Gateway year')
         ->assertJsonPath('academic_year.school_id', $school->id)
-        ->assertHeader('Vary', 'X-School-Id');
+        ->assertHeader('Vary', 'X-School-Id, school_id');
 
     expect($created->headers->get('Cache-Control'))->toContain('no-store');
 
@@ -114,7 +114,7 @@ it('creates and lists ordered periods for one academic year through the API', fu
         ]))
         ->assertCreated()
         ->assertJsonPath('period.academic_year_id', $year->id)
-        ->assertHeader('Vary', 'X-School-Id');
+        ->assertHeader('Vary', 'X-School-Id, school_id');
 
     $this->actingAs($user)
         ->getJson('/api/academic-years/'.$year->id.'/periods')
@@ -207,7 +207,7 @@ it('does not expose or allow updates to another school calendar records', functi
         ->assertNotFound();
 
     $this->actingAs($user)
-        ->putJson('/api/academic-periods/'.$otherPeriod->id, calendarHttpPeriodData($otherYear, ['name' => 'Tampered period']))
+        ->putJson('/api/academic-periods/'.$otherPeriod->id, calendarHttpPeriodData($ownedYear, ['name' => 'Tampered period']))
         ->assertNotFound();
 
     $this->actingAs($user)
@@ -285,4 +285,51 @@ it('validates one scoped academic year and rejects a client supplied school id',
         ->getJson('/api/academic-calendar/validation?academic_year_id='.$year->id.'&school_id='.$school->id)
         ->assertStatus(422)
         ->assertJsonValidationErrors('school_id');
+});
+
+it('does not reveal foreign year identifiers when creating a period', function (): void {
+    $school = School::factory()->create();
+    $otherSchool = School::factory()->create();
+    $user = calendarHttpUser($school);
+    $ownedYear = AcademicYear::factory()->for($school)->create(calendarHttpYearData(['name' => 'Own year']));
+    $foreignYear = AcademicYear::factory()->for($otherSchool)->create(calendarHttpYearData(['name' => 'Foreign year']));
+
+    $response = $this->actingAs($user)
+        ->postJson('/api/academic-years/'.$ownedYear->id.'/periods', calendarHttpPeriodData($ownedYear, [
+            'academic_year_id' => $foreignYear->id,
+        ]))
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('academic_year_id');
+
+    expect((string) json_encode($response->json()))->not->toContain('does not belong to this school');
+
+    $this->assertDatabaseCount('academic_periods', 0);
+});
+
+it('does not reveal foreign year identifiers when reassigning a period', function (): void {
+    $school = School::factory()->create();
+    $otherSchool = School::factory()->create();
+    $user = calendarHttpUser($school);
+    $ownedYear = AcademicYear::factory()->for($school)->create(calendarHttpYearData(['name' => 'Own year']));
+    $foreignYear = AcademicYear::factory()->for($otherSchool)->create(calendarHttpYearData(['name' => 'Foreign year']));
+    $period = AcademicPeriod::factory()->inYear($ownedYear)->create([
+        'name' => 'Own period',
+        'start_date' => '2031-01-10',
+        'end_date' => '2031-03-31',
+    ]);
+
+    $response = $this->actingAs($user)
+        ->putJson('/api/academic-periods/'.$period->id, calendarHttpPeriodData($ownedYear, [
+            'academic_year_id' => $foreignYear->id,
+        ]))
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('academic_year_id');
+
+    expect((string) json_encode($response->json()))->not->toContain('does not belong to this school');
+
+    $this->assertDatabaseHas('academic_periods', [
+        'id' => $period->id,
+        'academic_year_id' => $ownedYear->id,
+        'name' => 'Own period',
+    ]);
 });
