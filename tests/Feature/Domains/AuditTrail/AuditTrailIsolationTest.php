@@ -9,6 +9,7 @@ use App\Domains\AuditTrail\AuditEventData;
 use App\Domains\AuditTrail\AuditEventQuery;
 use App\Domains\AuditTrail\AuditScope;
 use App\Domains\AuditTrail\Models\AuditEvent;
+use App\Domains\Authorization\Models\RoleAssignment;
 use App\Domains\School\Models\School;
 use App\Models\User;
 use Carbon\Carbon;
@@ -21,6 +22,16 @@ function auditIsolationUser(School $school): User
 {
     $user = User::factory()->create();
     $user->schools()->attach($school);
+
+    // Calendar writes require academic_calendar.manage; these tests use that
+    // write path only to produce audit events.
+    RoleAssignment::query()->forceCreate([
+        'school_id' => (int) $school->id,
+        'user_id' => (int) $user->id,
+        'role' => 'school_editor',
+        'source' => 'domain',
+        'created_at' => Carbon::now(),
+    ]);
 
     return $user;
 }

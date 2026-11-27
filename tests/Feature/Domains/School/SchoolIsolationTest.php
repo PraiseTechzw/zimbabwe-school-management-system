@@ -121,6 +121,26 @@ it('rejects a malformed school identifier', function (): void {
         ->assertBadRequest();
 });
 
+it('treats empty school identifiers as absent without widening access', function (): void {
+    $first = School::factory()->create();
+    $second = School::factory()->create();
+
+    $user = User::factory()->create();
+    $user->schools()->attach($first);
+    $user->schools()->attach($second);
+
+    $this->actingAs($user)
+        ->withHeader('X-School-Id', '')
+        ->getJson('/api/school')
+        ->assertBadRequest();
+
+    $this->actingAs($user)
+        ->getJson('/api/school?school_id=')
+        ->assertBadRequest();
+
+    expect(app(SchoolContext::class)->current())->toBeNull();
+});
+
 it('clears the school context after the request completes', function (): void {
     $school = School::factory()->create();
     $user = User::factory()->create();

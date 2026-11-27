@@ -7,6 +7,7 @@ use App\Domains\AcademicCalendar\Actions\UpdateAcademicPeriod;
 use App\Domains\AcademicCalendar\Actions\UpdateAcademicYear;
 use App\Domains\AcademicCalendar\Models\AcademicPeriod;
 use App\Domains\AcademicCalendar\Models\AcademicYear;
+use App\Domains\Authorization\Models\RoleAssignment;
 use App\Domains\School\Models\School;
 use App\Models\User;
 use Carbon\Carbon;
@@ -16,10 +17,20 @@ use Illuminate\Validation\ValidationException;
 
 uses(RefreshDatabase::class);
 
-function calendarHttpUser(School $school): User
+function calendarHttpUser(School $school, ?string $role = 'school_editor'): User
 {
     $user = User::factory()->create();
     $user->schools()->attach($school);
+
+    if ($role !== null) {
+        RoleAssignment::query()->forceCreate([
+            'school_id' => (int) $school->id,
+            'user_id' => (int) $user->id,
+            'role' => $role,
+            'source' => 'domain',
+            'created_at' => Carbon::now(),
+        ]);
+    }
 
     return $user;
 }
@@ -413,4 +424,56 @@ it('returns an explicit null current year when no year qualifies', function (): 
     } finally {
         Carbon::setTestNow();
     }
+});
+
+it('rejects client supplied school identifiers on calendar updates', function (): void {
+    $school = School::factory()->create();
+    $user = calendarHttpUser($school);
+    $year = AcademicYear::factory()->for($school)->create(calendarHttpYearData(['name' => 'Owned year']));
+    $period = AcademicPeriod::factory()->inYear($year)->create([
+        'name' => 'Owned period',
+        'start_date' => '2031-01-10',
+        'end_date' => '2031-03-31',
+    ]);
+
+    $this->actingAs($user)
+        ->putJson('/api/academic-years/'.$year->id, calendarHttpYearData([
+            'name' => 'Tampered year',
+            'school_id' => $school->id,
+        ]))
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('school_id');
+
+    $this->actingAs($user)
+        ->putJson('/api/academic-periods/'.$period->id, calendarHttpPeriodData($year, [
+            'name' => 'Tampered period',
+            'school_id' => $school->id,
+        ]))
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('school_id');
+
+    $this->assertDatabaseHas('academic_years', [
+        'id' => $year->id,
+        'name' => 'Owned year',
+        'school_id' => $school->id,
+    ])->assertDatabaseHas('academic_periods', [
+        'id' => $period->id,
+        'name' => 'Owned period',
+        'school_id' => $school->id,
+    ]);
+});
+
+it('ignores a null client school id without widening calendar ownership', function (): void {
+    $school = School::factory()->create();
+    $user = calendarHttpUser($school);
+
+    $created = $this->actingAs($user)
+        ->postJson('/api/academic-years', calendarHttpYearData([
+            'name' => 'Null school id',
+            'school_id' => null,
+        ]))
+        ->assertCreated()
+        ->json('academic_year');
+
+    expect((int) $created['school_id'])->toBe((int) $school->id);
 });
