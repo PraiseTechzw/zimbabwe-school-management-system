@@ -204,13 +204,23 @@ it('ignores unsafe correlation header values', function (): void {
     expect($event->correlation_id)->toBeNull();
 });
 
-it('blocks updates and deletes through both model instances and the query builder', function (): void {
+it('blocks updates, upserts, truncates and deletes through model instances and the query builder', function (): void {
     $event = AuditEvent::factory()->create(['school_id' => null]);
 
     expect(fn () => $event->update(['action' => 'tampered.action']))->toThrow(MassAssignmentException::class)
         ->and(fn () => $event->forceFill(['action' => 'tampered.action'])->save())->toThrow(LogicException::class)
         ->and(fn () => $event->delete())->toThrow(LogicException::class)
         ->and(fn () => AuditEvent::query()->whereKey($event->id)->update(['action' => 'tampered.action']))->toThrow(LogicException::class)
+        ->and(fn () => AuditEvent::query()->whereKey($event->id)->updateOrInsert(
+            ['id' => $event->id],
+            ['action' => 'tampered.action'],
+        ))->toThrow(LogicException::class)
+        ->and(fn () => AuditEvent::query()->upsert(
+            [['id' => $event->id, 'action' => 'tampered.action']],
+            ['id'],
+            ['action'],
+        ))->toThrow(LogicException::class)
+        ->and(fn () => AuditEvent::query()->truncate())->toThrow(LogicException::class)
         ->and(fn () => AuditEvent::query()->whereKey($event->id)->delete())->toThrow(LogicException::class);
 
     expect(AuditEvent::query()->whereKey($event->id)->exists())->toBeTrue()
