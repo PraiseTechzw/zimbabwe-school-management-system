@@ -13,8 +13,8 @@ The proposed specification and research documents were merged into `main` as PR 
 | 1 — School identity | #34 | #41 | Merged |
 | 2 — School isolation | #35 | #43 | Merged |
 | 3 — Authentication/users | #36 | #44 | Merged |
-| 4 — Roles/permissions | #37 | Pending PR | Implemented, not merged |
-| 5 — School configuration | #38 | — | Not started |
+| 4 — Roles/permissions | #37 | #49 | Implemented |
+| 5 — School configuration | #38 | #51 | Merged |
 | 6 — Academic calendar | #39 | #45 | Merged |
 | 7 — Audit trail | #40 | — | Not started |
 
@@ -30,6 +30,7 @@ The proposed specification and research documents were merged into `main` as PR 
 | D-06 | **Deferred** | Do not claim stakeholder-interview validation. | No interviews were conducted; research evidence remains classified as documented/official/legal/proposed only. |
 | D-07 | **Unresolved** | No branch-protection governance change is relied upon by implementation. | `P1-G02` (#32) remains open. Required approvals stay as currently configured; CI remains mandatory. |
 | D-08 | **Recorded / superseded** | The no-implementation rule was respected through discovery. The Product Owner's later direct implementation instruction is treated as the gate release for this execution phase. | Future gates should be recorded on `P1-G01`; the GitHub issue comment was not used as the sole authority for this decision. |
+| D-09 | **Implemented / provisional catalogue** | Slice 5 implements a school-scoped settings mechanism with typed values, explicit allow-lists, provenance and prior-version snapshots. The catalogue is limited to framework-supported `locale` and `timezone` defaults. | Issue #38 confirms the mechanism but not a catalogue; U-13 remains unresolved. Currency, terminology, attendance, finance, calendar, structure and module settings are not inferred from PROPOSED candidates. Full audit events remain with #40 and permissions with #37. |
 
 ## Standing constraints
 
@@ -41,7 +42,7 @@ The proposed specification and research documents were merged into `main` as PR 
 
 ## Known limitations to resolve before exposing domain actions over HTTP
 
-- School relationship actions validate that the related school exists. Caller authorization and role/permission enforcement (Slice 4) are not yet in place, so these actions remain internal.
+- School relationship actions validate that the related school exists. They remain internal: the Slice 4 permission foundation exists, but these actions have not opted into it and no endpoint exposes them.
 - Identifier values are unique case-insensitively after trimming. The syntax itself remains unverified and configurable.
 - Status periods cannot overlap for a school. `currentStatus()` resolves ties deterministically by effective date, creation time and ID.
 
@@ -61,6 +62,14 @@ The proposed specification and research documents were merged into `main` as PR 
 - Role-management endpoints are permission-protected and tenant-scoped. `AssignSchoolRole` refuses to grant a role containing permissions the actor does not hold, preventing privilege escalation through role assignment.
 - A CLI bootstrap command creates the first assignment with an allow-listed `cli` source. HTTP inputs cannot set the source or school.
 - Existing school-context and calendar endpoints are intentionally unchanged until their owning slices opt into the middleware. MFA, separation of duties, time-bounded delegation, periodic review, permission-change audit and a role UI remain deferred. See [roles-and-permissions.md](roles-and-permissions.md).
+## Slice 5: implemented school settings mechanism
+
+- One structured `school_settings` row is stored per server-resolved school. There is no generic key/value API; only allow-listed locale and timezone fields are writable and unknown fields are not persisted.
+- Configured defaults are returned without writing on reads. They do not assert a universal calendar, school code/identifier format or academic structure.
+- The first save establishes version 1 and records its source and effective date. Each later save increments the version and writes an append-oriented `school_setting_revisions` snapshot of the previous values, source and effective date in the same transaction.
+- This provenance satisfies the narrowed #38 mechanism and PROPOSED NFR-013/WF-08 shape only. It is not the #40 audit event model: no actor, event taxonomy, retention policy or generic entity metadata is introduced.
+- Writes use `auth` + `school.context`, reject client `school_id`, set ownership from the resolved school, and lock the school and existing settings rows before incrementing the version. Database unique constraints are the final guard.
+- Role/permission enforcement, a wider catalogue and stakeholder validation remain deferred; see [school-settings.md](school-settings.md) and D-09 for assumptions and unresolved decisions.
 
 ## Slice 6: implemented academic calendar
 
