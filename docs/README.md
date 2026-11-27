@@ -1,6 +1,6 @@
 # Documentation index
 
-Sprint 0 establishes the engineering foundation. **No school functionality is implemented yet.**
+Sprint 0 established the engineering foundation. Phase 1 school-scoped backend foundation is in progress; discovery documents remain historical/proposed where labelled, and the [Phase 1 decision log](modules/platform-foundation/decision-log.md) records implementation status.
 
 ## Architecture and decisions
 
@@ -28,6 +28,7 @@ Sprint 0 establishes the engineering foundation. **No school functionality is im
 ## Quality and operations
 
 - [Testing strategy](testing/strategy.md)
+- [School Settings API](api/school-settings.md) — school-scoped settings, provenance and revisions
 - [Deployment strategy](operations/deployment.md)
 - [Backup and restore](operations/backup-and-restore.md)
 - [GitHub project board guidance](github/project-board.md)
@@ -42,7 +43,11 @@ Sprint 0 establishes the engineering foundation. **No school functionality is im
 - [Research index](research/README.md) — all discovery artefacts
 - [Product discovery](modules/platform-foundation/product-discovery.md) — PROPOSED product definition
 - [Phase 1 specification](modules/platform-foundation/phase-1-specification-proposed.md) — Product Owner approval gate `P1-G01`
-- [Traceability matrix](modules/platform-foundation/traceability-matrix.md) — planned links only; no implementation or tests
+- [Traceability matrix](modules/platform-foundation/traceability-matrix.md) — discovery-time links only; implementation status is recorded in the decision log
+- [Phase 1 decision log](modules/platform-foundation/decision-log.md) — authoritative implementation status and decisions
+- [Academic calendar](modules/platform-foundation/academic-calendar.md) — implemented backend slice
+- [Auth and users](modules/platform-foundation/auth-user-foundation.md) — implemented backend slice
+- [School settings](modules/platform-foundation/school-settings.md) — implemented backend settings mechanism for #38
 - [Research coverage matrix](research/research-coverage-matrix.md) — evidence classes and gaps
 
 ## Templates
