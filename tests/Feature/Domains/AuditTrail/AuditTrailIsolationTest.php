@@ -136,7 +136,7 @@ it('attributes a calendar write to the authenticated actor and the server resolv
             'status' => 'published',
             'source' => 'School calendar register',
             'source_reference' => 'calendar-register/2033',
-            $sensitiveKey => 'must-not-be-audited',
+            $sensitiveKey => 'redacted-fixture-value',
         ])
         ->assertCreated();
 
@@ -154,7 +154,7 @@ it('attributes a calendar write to the authenticated actor and the server resolv
 
     $stored = json_encode($event->toArray(), JSON_THROW_ON_ERROR);
 
-    expect($stored)->not->toContain('must-not-be-audited')
+    expect($stored)->not->toContain('redacted-fixture-value')
         ->and(AuditEvent::query()->forSchool($otherSchool)->count())->toBe(0);
 });
 
