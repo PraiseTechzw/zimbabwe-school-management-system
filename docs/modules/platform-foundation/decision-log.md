@@ -41,3 +41,11 @@ The proposed specification and research documents live on branch `docs/phase-1-d
 - This is the provisional shared-database design recorded in D-04. A final tenancy topology ADR is still required; no topology decision is treated as settled by this implementation.
 - Permissions are not part of this slice. The two JSON endpoints use the existing `auth` middleware plus school context; role and permission enforcement is deferred to Slice 4.
 
+## Slice 6: implemented academic calendar
+
+- `config/academic-calendar.php` holds statuses, period types, counting bases and provisional integrity switches. No dates, term count, term name or universal Zimbabwean calendar is encoded.
+- Years and periods are school-owned and use explicit `forCurrentSchool()` reads. Client-supplied `school_id` is never accepted as tenant context; cross-school records are not visible over HTTP and are rejected by domain actions.
+- A source is required on writes. Reference and publication date are optional because the evidence supports provenance but not a single reference format.
+- Period boundaries and overlap protection are enabled by default. Year overlap is configurable and off by default because it is an engineering safeguard, not an evidence-backed requirement.
+- Review before publication, auditable revisions, permissions and examination windows are deferred; see [academic-calendar.md](academic-calendar.md) for the full rules, interfaces and implementation decisions.
+

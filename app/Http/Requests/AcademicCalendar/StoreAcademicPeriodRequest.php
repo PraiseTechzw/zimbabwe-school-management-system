@@ -1,0 +1,37 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Requests\AcademicCalendar;
+
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
+final class StoreAcademicPeriodRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function rules(): array
+    {
+        return [
+            'school_id' => ['prohibited'],
+            'academic_year_id' => ['required', 'integer', 'exists:academic_years,id'],
+            'name' => ['required', 'string', 'max:255'],
+            'type' => ['required', Rule::in(array_keys((array) config('academic-calendar.period_types', [])))],
+            'sequence' => ['required', 'integer', 'min:1', 'max:10000'],
+            'start_date' => ['required', 'date_format:Y-m-d'],
+            'end_date' => ['required', 'date_format:Y-m-d', 'after:start_date'],
+            'status' => ['nullable', Rule::in(array_keys((array) config('academic-calendar.period_statuses', [])))],
+            'counting_basis' => ['nullable', Rule::in(array_keys((array) config('academic-calendar.counting_bases', [])))],
+            'source' => ['required', 'string', 'max:255', 'not_regex:/^\s*$/'],
+            'source_reference' => ['nullable', 'string', 'max:255'],
+            'source_published_at' => ['nullable', 'date_format:Y-m-d'],
+        ];
+    }
+}
