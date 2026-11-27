@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 use App\Domains\AcademicCalendar\Models\AcademicPeriod;
 use App\Domains\AcademicCalendar\Models\AcademicYear;
+use App\Domains\Authorization\Models\RoleAssignment;
 use App\Domains\School\Context\SchoolContext;
 use App\Domains\School\Models\School;
 use App\Frontend\Contracts\CalendarManagementGateway;
 use App\Http\Middleware\ResolveSchoolContext;
 use App\Livewire\CalendarAdministration;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Livewire\Livewire;
@@ -22,10 +25,21 @@ uses(RefreshDatabase::class);
 
 beforeEach(fn (): mixed => $this->withoutVite());
 
-function stageBUserWithSchool(School $school): User
+function stageBUserWithSchool(School $school, ?string $role = 'school_editor'): User
 {
     $user = User::factory()->create();
     $user->schools()->attach($school);
+
+    if ($role !== null) {
+        RoleAssignment::query()->forceCreate([
+            'school_id' => (int) $school->id,
+            'user_id' => (int) $user->id,
+            'role' => $role,
+            'source' => 'domain',
+            'created_at' => Carbon::now(),
+        ]);
+    }
+
     app(SchoolContext::class)->set($school);
     Auth::login($user);
 
@@ -263,4 +277,61 @@ it('cannot resolve a year from another school through the calendar adapter', fun
         'end_date' => '2027-12-31',
         'source' => 'Foreign record',
     ]))->toThrow(ModelNotFoundException::class);
+});
+
+it('requires the calendar manage permission for the management screen', function (): void {
+    $school = School::factory()->create(['name' => 'Permission School']);
+    $user = stageBUserWithSchool($school, 'school_member');
+
+    $this->actingAs($user)
+        ->get('/app/academic-calendar')
+        ->assertOk();
+
+    $this->actingAs($user)
+        ->get('/app/academic-calendar/manage')
+        ->assertForbidden();
+});
+
+it('denies Livewire calendar writes without the calendar manage permission', function (): void {
+    $school = School::factory()->create();
+    stageBUserWithSchool($school, 'school_member');
+
+    Livewire::test(CalendarAdministration::class)
+        ->set('yearName', 'Unauthorised year')
+        ->set('yearStartDate', '2029-01-01')
+        ->set('yearEndDate', '2029-12-31')
+        ->set('yearSource', 'School circular 2029')
+        ->call('saveYear')
+        ->assertSet('formError', 'This academic year cannot be changed in the current school context.');
+
+    $this->assertDatabaseMissing('academic_years', [
+        'school_id' => $school->id,
+        'name' => 'Unauthorised year',
+    ]);
+});
+
+it('enforces the calendar manage permission in the frontend gateway', function (): void {
+    $school = School::factory()->create();
+    stageBUserWithSchool($school, null);
+
+    expect(fn (): array => app(CalendarManagementGateway::class)->createYear([
+        'name' => 'Gateway denial',
+        'start_date' => '2030-01-01',
+        'end_date' => '2030-12-31',
+        'source' => 'School circular 2030',
+    ]))->toThrow(AuthorizationException::class);
+
+    $this->assertDatabaseMissing('academic_years', ['name' => 'Gateway denial']);
+});
+
+it('rejects an unowned school selection on the calendar management route', function (): void {
+    $owned = School::factory()->create(['name' => 'Owned School']);
+    $other = School::factory()->create(['name' => 'Other School']);
+    $user = stageBUserWithSchool($owned);
+
+    $this->actingAs($user)
+        ->withHeader('X-School-Id', (string) $other->id)
+        ->get('/app/academic-calendar/manage')
+        ->assertForbidden()
+        ->assertDontSee('Other School');
 });
