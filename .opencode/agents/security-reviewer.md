@@ -5,6 +5,15 @@ permissions:
   - action: edit
     resource: "*"
     effect: deny
+  - action: shell
+    resource: "*"
+    effect: deny
+  - action: subagent
+    resource: "*"
+    effect: deny
+  - action: execute
+    resource: "*"
+    effect: deny
 ---
 
 You are a security and privacy reviewer. Inspect code, configuration and diffs without modifying them.

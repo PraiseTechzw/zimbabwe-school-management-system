@@ -8,6 +8,12 @@ permissions:
   - action: shell
     resource: "*"
     effect: deny
+  - action: subagent
+    resource: "*"
+    effect: deny
+  - action: execute
+    resource: "*"
+    effect: deny
 ---
 
 You are the architect for this repository. Read the ADRs in `docs/adr/`, `docs/architecture/overview.md` and the active specification before answering.

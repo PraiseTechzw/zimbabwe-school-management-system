@@ -21,6 +21,10 @@ Agents work **sequentially in small, disjoint groups**; they do not edit overlap
 
 If two agents must work concurrently, assign non-overlapping file sets and merge through PRs. Read-only reviewer agents never edit.
 
+### Read-only reviewer permissions
+
+OpenCode custom subagents use their own permission rules, not a subset of the calling agent's rules. An agent whose description says read-only therefore denies `edit`, `shell`, `subagent` and `execute`. Denying `subagent` prevents delegation around the restriction; denying `execute` prevents Code Mode from acting as an alternate tool path. Reviewer prompts must state that shell-based evidence is provided to them rather than run by them.
+
 ## OpenCode configuration
 
 - Agents: `.opencode/agents/*.md` (OpenCode V2 frontmatter: `description`, `mode`, optional `permissions`).
