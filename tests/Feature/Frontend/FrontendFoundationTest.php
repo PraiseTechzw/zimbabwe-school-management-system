@@ -11,6 +11,10 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
+// CI's tests job does not build assets, so Blade's @vite directive must not
+// require a manifest for these view-rendering assertions.
+beforeEach(fn (): mixed => $this->withoutVite());
+
 function frontendUserWithSchool(School $school): User
 {
     $user = User::factory()->create();
