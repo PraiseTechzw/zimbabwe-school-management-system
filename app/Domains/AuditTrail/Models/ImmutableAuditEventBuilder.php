@@ -39,6 +39,21 @@ final class ImmutableAuditEventBuilder extends Builder
         throw new LogicException('Audit events are append-only and cannot be decremented.');
     }
 
+    public function updateOrInsert(array $attributes, array|callable $values = [])
+    {
+        throw new LogicException('Audit events are append-only and cannot be upserted.');
+    }
+
+    public function upsert(array $values, $uniqueBy, $update = null)
+    {
+        throw new LogicException('Audit events are append-only and cannot be upserted.');
+    }
+
+    public function truncate()
+    {
+        throw new LogicException('Audit events are append-only and cannot be truncated.');
+    }
+
     public function delete()
     {
         throw new LogicException('Audit events are append-only and cannot be deleted.');

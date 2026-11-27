@@ -13,8 +13,10 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
+#[Title('Academic calendar administration')]
 final class CalendarAdministration extends Component
 {
     public int $selectedYearId = 0;
@@ -77,6 +79,8 @@ final class CalendarAdministration extends Component
 
         return view('livewire.calendar-administration', [
             'user' => $data->user(),
+            'school' => $data->school(),
+            'academicYear' => $data->currentYear(),
             'years' => $years,
             'selectedYear' => $selectedYear,
             'periods' => $selectedYear === null ? [] : $gateway->periods((int) $selectedYear['id']),

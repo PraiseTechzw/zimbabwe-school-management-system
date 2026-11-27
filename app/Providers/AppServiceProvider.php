@@ -7,8 +7,12 @@ namespace App\Providers;
 use App\Domains\School\Context\SchoolContext;
 use App\Frontend\Contracts\CalendarManagementGateway;
 use App\Frontend\Contracts\FrontendDataProvider;
+use App\Frontend\Contracts\RoleAssignmentGateway;
+use App\Frontend\Contracts\SchoolSettingsGateway;
 use App\Frontend\DemoFrontendDataProvider;
 use App\Frontend\DomainCalendarManagementGateway;
+use App\Frontend\DomainRoleAssignmentGateway;
+use App\Frontend\DomainSchoolSettingsGateway;
 use App\Frontend\ServerFrontendDataProvider;
 use App\Http\Middleware\ResolveSchoolContext;
 use Illuminate\Contracts\Foundation\Application;
@@ -34,6 +38,8 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->app->bind(CalendarManagementGateway::class, DomainCalendarManagementGateway::class);
+        $this->app->bind(SchoolSettingsGateway::class, DomainSchoolSettingsGateway::class);
+        $this->app->bind(RoleAssignmentGateway::class, DomainRoleAssignmentGateway::class);
     }
 
     /**
