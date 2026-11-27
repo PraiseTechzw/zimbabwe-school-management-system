@@ -1,4 +1,244 @@
 @import 'tailwindcss';
 
+/* Scan source views only; compiled views in storage/ are generated and would make builds non-reproducible. */
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
+@source '../views/**/*.blade.php';
+@source '../../app/Livewire/**/*.php';
+
+/* Tokens are the single source of truth; see DESIGN.md. */
+@theme {
+    --color-ground: #f2f4f7;
+    --color-surface: #ffffff;
+    --color-raised: #fafafa;
+    --color-active: #e9eaec;
+    --color-border: #e6e6e6;
+    --color-rule: #f0f0f0;
+    --color-control: #d1d5db;
+    --color-ink: #141414;
+    --color-muted: #5f6368;
+    --color-primary: #141414;
+    --color-data: #1d5fbf;
+    --color-positive: #247b50;
+    --color-negative: #c4242a;
+    --color-warning: #92400e;
+
+    --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+@layer base {
+    html {
+        color-scheme: light;
+    }
+
+    body {
+        background: var(--color-ground);
+        color: var(--color-ink);
+        font-family: var(--font-sans);
+        font-size: 14px;
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--color-data);
+        outline-offset: 2px;
+    }
+
+    th,
+    td,
+    .fs-figure {
+        font-variant-numeric: tabular-nums;
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+}
+
+@layer components {
+    .fs-card {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+    }
+
+    .fs-panel {
+        background: var(--color-raised);
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+    }
+
+    .fs-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 36px;
+        padding: 0 16px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 120ms ease;
+    }
+
+    .fs-btn-compact {
+        min-height: 32px;
+        padding: 0 8px;
+    }
+
+    .fs-btn-primary {
+        background: var(--color-primary);
+        color: #ffffff;
+    }
+
+    .fs-btn-primary:hover:not(:disabled) {
+        background: #303030;
+    }
+
+    .fs-btn-secondary {
+        background: #e5e5e5;
+        color: var(--color-ink);
+    }
+
+    .fs-btn-secondary:hover:not(:disabled) {
+        background: #d9d9d9;
+    }
+
+    .fs-btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+    }
+
+    .fs-input {
+        width: 100%;
+        min-height: 36px;
+        padding: 7px 12px;
+        border: 1px solid var(--color-control);
+        border-radius: 6px;
+        background: var(--color-surface);
+        color: var(--color-ink);
+        font-size: 14px;
+    }
+
+    .fs-input::placeholder {
+        color: #8a8f98;
+    }
+
+    .fs-label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    .fs-help {
+        margin-top: 6px;
+        color: var(--color-muted);
+        font-size: 13px;
+    }
+
+    .fs-error {
+        margin-top: 6px;
+        color: var(--color-negative);
+        font-size: 13px;
+    }
+
+    .fs-pill {
+        display: inline-flex;
+        align-items: center;
+        min-height: 20px;
+        padding: 0 8px;
+        border-radius: 10px;
+        background: var(--color-active);
+        color: var(--color-muted);
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    .fs-pill-positive {
+        background: #e8f3ec;
+        color: var(--color-positive);
+    }
+
+    .fs-pill-negative {
+        background: #fbeaeb;
+        color: var(--color-negative);
+    }
+
+    .fs-pill-warning {
+        background: #fbf0e2;
+        color: var(--color-warning);
+    }
+
+    .fs-nav-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 36px;
+        padding: 6px 10px;
+        border-radius: 6px;
+        color: var(--color-muted);
+        font-size: 13px;
+        text-decoration: none;
+    }
+
+    .fs-nav-link:hover {
+        background: var(--color-active);
+        color: var(--color-ink);
+    }
+
+    .fs-nav-link[aria-current='page'] {
+        background: var(--color-active);
+        color: var(--color-ink);
+        font-weight: 600;
+    }
+
+    .fs-nav-group {
+        margin-top: 20px;
+        padding: 0 10px;
+        color: var(--color-muted);
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .fs-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+
+    .fs-table th {
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--color-border);
+        color: var(--color-muted);
+        font-weight: 500;
+        text-align: left;
+    }
+
+    .fs-table td {
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--color-rule);
+        vertical-align: top;
+    }
+
+    .fs-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .fs-skeleton-bar {
+        height: 12px;
+        border-radius: 4px;
+        background: var(--color-active);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+    }
+}

@@ -46,9 +46,9 @@ The Product Owner explicitly accepted this recommendation on 2026-11-27, releasi
 
 ## Evidence record
 
-1. **Prototype payload/latency evidence: outstanding, condition of acceptance.** The read-heavy screen (dashboard/school context) and form-heavy screen (sign-in) are the first Stage A deliverables. Their rendered payload sizes and interaction behaviour must be measured and recorded in `docs/frontend/progress.md` before Stage B begins. If the evidence contradicts this choice, reopen this ADR before adding Inertia.
+1. **Prototype payload/latency evidence: recorded 2026-11-27.** The read-heavy dashboard and form-heavy sign-in screens were measured against a local server with built assets. `npm run build` exited 0 (4 modules; CSS 46.78 kB / gzip 11.26 kB; application JS 1.56 kB / gzip 0.85 kB). Chromium observed 3 requests for sign-in (document, CSS at 47,081 B transfer, JS at 1,862 B) and 4 for the dashboard (the same three plus the cached Livewire runtime, 167,441 B transfer). Login, redirect to `/app` and logout worked with zero console errors; no initial XHR was observed. Full evidence is in `docs/frontend/progress.md`. The evidence supports the accepted stack; no Inertia switch is proposed.
 2. **Contributor familiarity: assumed, not interviewed.** The Laravel-first contributor base is stated in the discovery record; no contributor survey was run. Recorded as an assumption rather than a verified requirement.
-3. **Asset build: verified locally and wired in CI.** On 2026-11-27, `npm run build` exited 0 locally (three modules; CSS 55.21 kB / gzip 11.73 kB; JS 0.00 kB / gzip 0.02 kB) and `.github/workflows/ci.yml` runs `npm ci`, `npm run build` and `npm audit --audit-level=high`. Remote CI results are not claimed here.
+3. **Asset build: verified locally and wired in CI.** `npm ci`, `npm run build` and `npm audit --audit-level=high` all exited 0 locally on 2026-11-27, and `.github/workflows/ci.yml` runs those commands. Remote CI results are not claimed here.
 
 ## Consequences
 
@@ -56,4 +56,4 @@ Sprint 0 contained no application UI; this acceptance applies from Phase 1 onwar
 
 ## Review trigger
 
-Revisit when Stage A prototype measurements are recorded, when Livewire request chattiness becomes a measured bottleneck, or when a high-interaction area needs a different approach (new ADR required).
+Revisit when Livewire request chattiness becomes a measured bottleneck, when a high-interaction area needs a different approach (new ADR required), or when the recorded prototype evidence no longer reflects the shipped screens.
