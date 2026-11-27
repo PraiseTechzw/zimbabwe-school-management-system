@@ -94,9 +94,22 @@ it('lists calendar years and periods for the selected school only', function ():
     $other = School::factory()->create();
     $user = frontendUserWithSchool($school);
 
-    $year = AcademicYear::factory()->for($school)->create(['name' => '2027']);
-    $otherYear = AcademicYear::factory()->for($other)->create(['name' => '2031']);
-    AcademicPeriod::factory()->inYear($year)->create(['name' => 'Term 1']);
+    $year = AcademicYear::factory()->for($school)->create([
+        'name' => '2027',
+        'start_date' => '2027-01-01',
+        'end_date' => '2027-12-31',
+    ]);
+    $otherYear = AcademicYear::factory()->for($other)->create([
+        'name' => '2031',
+        'start_date' => '2031-01-01',
+        'end_date' => '2031-12-31',
+    ]);
+    AcademicPeriod::factory()->inYear($year)->create([
+        'name' => 'Term 1',
+        'sequence' => 1,
+        'start_date' => '2027-01-01',
+        'end_date' => '2027-03-31',
+    ]);
     AcademicPeriod::factory()->inYear($otherYear)->create(['name' => 'Foreign term']);
 
     $this->actingAs($user)
