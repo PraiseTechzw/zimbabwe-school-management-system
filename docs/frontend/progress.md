@@ -2,7 +2,7 @@
 
 Updated: 2026-11-27. Status vocabulary: `NOT STARTED`, `UI IN PROGRESS`, `UI COMPLETE`, `MOCK INTEGRATION`, `API INTEGRATION IN PROGRESS`, `API INTEGRATED`, `TESTED`, `BLOCKED`.
 
-Gate: ADR-0003 accepted 2026-11-27 (Blade + Livewire + Alpine + Tailwind). Stage A is merged into `main` as PR #48. Stage B calendar administration is implemented and tested on branch `feat/frontend-stage-b-calendar-admin`, based on that merged foundation. School modules still require their own approved specification; the navigation catalogue lists planned destinations but only sign-in, dashboard, school profile, calendar read view and calendar management have working implementations.
+Gate: ADR-0003 accepted 2026-11-27 (Blade + Livewire + Alpine + Tailwind). Stage A is merged into `main` as PR #48. Stage B calendar administration was implemented on `feat/frontend-stage-b-calendar-admin` and merged into `main` as PR #56 by the repository owner on 2026-11-27 after local verification and passing GitHub checks. School modules still require their own approved specification; the navigation catalogue lists planned destinations but only sign-in, dashboard, school profile, calendar read view and calendar management have working implementations.
 
 ## Stage A — foundation
 
@@ -104,8 +104,22 @@ All checks below were run locally on 2026-11-27. No remote GitHub Actions result
 | 2026-11-27 | `node .../lint.mjs resources/views resources/css resources/js --app` (final Stage B code) | 0 | 0 FAIL, 0 WARN |
 | 2026-11-27 | `node .../inspect.mjs <calendar management snapshot> --app --widths 1440,768,390 --allow font-not-dealt` | 0 | 0 findings; initial `panel-void` and `ragged-row` warnings resolved by stacking cards, result reconfirmed after rebasing onto merged `main` |
 
+## GitHub checks observed for PR #56
+
+Recorded from `gh pr checks 56` for head commit `cec1f03`. These are remote GitHub results, distinct from the local commands above.
+
+| Check | Observed result | Evidence |
+| --- | --- | --- |
+| `docker` | PASS | GitHub Actions run `46049550115`, job `140677167720` |
+| `quality` | PASS | GitHub Actions run `46049550115`, job `140677167871` |
+| `tests` | PASS | GitHub Actions run `46049550115`, job `140677167387` |
+| `GitGuardian Security Checks` | PASS | `https://dashboard.gitguardian.com` |
+| CodeRabbit | PENDING at observation | Review in progress |
+
+PR #56 was merged into `main` as commit `a466d17` by `PraiseTechzw` at `2026-11-27T18:28:54Z`. The agent did not merge it or push to `main`.
+
 ## Awaiting contracts
 
-- School Settings, Academic Structure, Roles/Permissions and Audit endpoints are not verified in this branch. Contracts seen in unmerged backend work are deliberately not imported or invented here.
-- No verified frontend permission map exists. UI visibility is never treated as authorisation; backend authorization remains authoritative.
+- School Settings and Role Assignment HTTP contracts are verified on this base but have no frontend UI in Stage B; Academic Structure and Audit endpoints remain unverified here. Contracts seen in unmerged backend work are deliberately not imported or invented here.
+- Role-assignment endpoints enforce `roles.view` and `roles.manage` in the backend, but no verified frontend permission map exists. UI visibility is never treated as authorisation; backend authorization remains authoritative.
 - No further school module can be started without an accepted specification and an endpoint contract present in this branch.

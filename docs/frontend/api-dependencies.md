@@ -21,6 +21,12 @@ Stage B uses server-side adapters that call the same domain actions as the JSON 
 | `/api/academic-years/{academicYear}` | PUT, PATCH | same; route ID must belong to the current school | `{academic_year: year payload}` | Edit academic year form | Available — integrated in-process via `UpdateAcademicYear` |
 | `/api/academic-years/{academicYear}/periods` | POST | same; route ID must belong to the current school | `{period: period payload}`, HTTP 201 | New period form | Available — integrated in-process via `CreateAcademicPeriod` |
 | `/api/academic-periods/{academicPeriod}` | PUT, PATCH | same; route ID must belong to the current school | `{period: period payload}` | Edit period form | Available — integrated in-process via `UpdateAcademicPeriod` |
+| `/api/school-settings` | GET | `web`, `auth`, `school.context`; `school_id` prohibited | `{school_id, settings, revision: {version, source, effective_from}}`; `Cache-Control: no-store`, `Vary: X-School-Id, school_id` | Planned School settings view | Available — contract verified; no UI built |
+| `/api/school-settings` | PUT, PATCH | same; validation from `ValidateSchoolSettings` rejects secret-like keys | `{school_id, settings, revision: {version, source, effective_from}}` | Planned School settings form | Available — contract verified; no UI built |
+| `/api/school-settings/revisions` | GET | `web`, `auth`, `school.context`; `school_id` prohibited | `{school_id, revisions: [revision payload]}`; `Cache-Control: no-store`, `Vary: X-School-Id, school_id` | Planned revision history | Available — contract verified; no UI built |
+| `/api/role-assignments` | GET | `web`, `auth`, `school.context`, `roles.view`; `school_id` prohibited | `{school_id, role_assignments: [assignment payload]}`; `Cache-Control: no-store`, `Vary: X-School-Id, school_id` | Planned roles view | Available — contract verified; no UI built |
+| `/api/role-assignments` | POST | `web`, `auth`, `school.context`, `roles.manage`; body `{user_id, role}`; `school_id` prohibited | `{role_assignment: assignment payload}`, HTTP 201 | Planned role assignment form | Available — contract verified; no UI built |
+| `/api/role-assignments/{roleAssignment}` | DELETE | `web`, `auth`, `school.context`, `roles.manage`; numeric route ID scoped to current school | HTTP 204, no body; `Cache-Control: no-store`, `Vary: X-School-Id, school_id` | Planned role assignment removal | Available — contract verified; no UI built |
 
 ## Stage B integration notes
 
@@ -38,11 +44,11 @@ Stage B uses server-side adapters that call the same domain actions as the JSON 
 - Treat every payload field as untrusted input: escape on output in Blade, never inject raw HTML.
 - A missing endpoint means a clearly labelled mock adapter, not an invented URL. Add provisional contracts here with `PROVISIONAL` in the status before writing UI against them.
 - Keep fetch/request counts low: one request per block, no polling on the dashboard unless a real need is documented.
-- UI visibility is not authorization. Until a verified permission map exists, never hide or show an action on the assumption that it mirrors backend permissions.
+- UI visibility is not authorization. Role-assignment endpoints carry backend `roles.view` and `roles.manage` requirements, but there is still no verified frontend permission map; never hide or show an action on the assumption that it mirrors backend permissions.
 
 ## Known gaps
 
 - No endpoint for school switching, notifications, dashboards aggregates, or a module availability catalogue. Navigation uses local configuration and honest "not available yet" states.
 - No delete/archive calendar endpoints were verified; the management screen does not offer those actions.
-- School Settings, Academic Structure, Roles/Permissions and Audit endpoints are not present in this branch. Contracts found in unmerged backend work are not treated as available here.
+- School Settings and Role Assignment HTTP contracts are verified on this base but have no frontend UI in Stage B; Academic Structure and Audit endpoints remain absent from this branch. Contracts found in unmerged backend work are not treated as available here.
 - No frontend permission map yet; backend authorization remains authoritative.
