@@ -177,6 +177,9 @@ Static review found no application-layer cross-school bypass in these flows. One
 | B04-O06 | CLI role bootstrap has no audit logging and does not enforce “first only” despite its docblock | Low / high | Open decision D-06 |
 | B04-O07 | No default provisioning role for new members | Low / high | Open decision D-07 |
 | B04-O08 | `academic_periods` lacks composite school/year FK | Low / high | Open decision D-08 |
+| B04-O09 | Stale Livewire snapshot can keep returning calendar data after permission revocation | Low / high; read-only, no write bypass | Open decision D-09 |
+| B04-O10 | Header-based school switching remains accepted per request | Low / high; cannot exceed memberships | Open decision D-10 |
+| B04-O11 | Structure/settings domain actions rely on route gates plus tenancy guards, not independent `SchoolPermissions` checks | Low / high | Open decision D-11 |
 
 ## 8. Unresolved decisions
 
@@ -190,6 +193,9 @@ These are deliberately **not** implemented. They need a product, security or gov
 - **D-06 CLI role bootstrap.** `roles:assign` is trusted CLI-only and writes `source = cli`, but it does not log to the audit trail and does not enforce the “first role assignment in a school” wording in its docblock. Decide whether to change the command, its documentation, or both.
 - **D-07 Default provisioning role.** No code automatically assigns `school_member` or any other role. Decide the provisioning contract before deployments assume new members can view calendar/structure data.
 - **D-08 Academic-period composite key.** Add a migration for a composite `(school_id, academic_year_id)` foreign key on `academic_periods`, with an explicit MySQL-safe rollback plan, if database-level tenancy is required in addition to application validation.
+- **D-09 Livewire permission replay.** Only `ResolveSchoolContext` is persistent middleware, so `EnsurePermission` is not replayed on `livewire/update`. Writes are now re-checked in the component, but `render()`, `editYear()`, `editPeriod()` and `validateSelectedYear()` are not. A stale signed snapshot from the management page could keep returning calendar data after read/manage permission is revoked. Decide whether to add `EnsurePermission` to persistent middleware or re-check permissions in those component methods.
+- **D-10 Header-based school selection.** `ResolveSchoolContext` accepts `X-School-Id` as well as a server-side context and revalidates membership on every request. This cannot widen access beyond the user's memberships, but request validation does not reject the header. Decide whether per-request school switching is acceptable or whether context should be bound only to a server-issued session value.
+- **D-11 Domain-level actor re-checks.** Academic structure and School Settings writes rely on route middleware (where a catalogue permission exists) plus tenancy/integrity guards in domain actions; they do not independently call `SchoolPermissions`. Decide whether defence-in-depth actor checks are required in those actions. This is distinct from D-01, where no settings permission exists at all.
 
 ## 9. Regression inventory
 
@@ -225,13 +231,19 @@ Database evidence label: the full Pest suite uses **in-memory SQLite** (`phpunit
 
 Remote GitHub reads confirmed PR #60 and PR #61 are MERGED. No remote CI result is claimed for this audit branch; the PR is left for human review.
 
-## 11. Required report fields
+## 11. Independent challenge
+
+A read-only security reviewer challenged the patch without editing files or running shell commands. Result: **no confirmed defects** — no ineffective or bypassable fix, no weakened test, no regression and no demonstrated high-risk authorization gap. The reviewer specifically verified middleware ordering, server-resolved school context in `EnsurePermission`, fail-closed lifecycle checks, nested calendar scoping, Livewire write re-checks and that `school_id => ['missing']` is stricter than `['prohibited']` for `null` input.
+
+The reviewer raised three policy questions, now recorded as D-09 (stale Livewire snapshot reads), D-10 (header-based school switching) and D-11 (domain-level actor re-checks). Wildcard role semantics were independently raised and are already covered by D-04.
+
+## 12. Required report fields
 
 ```text
 Task group: B-04 authorization, RBAC and tenant-isolation audit
 Files changed: 24 application/route files, 7 test files, this report, docs/github/integration-tracker.md and docs/README.md
 Commands run (with exit codes): see section 10
 Result / evidence: 29/50 routes permission-gated; 262 tests / 1134 assertions; MySQL 8.0.46 migrations clean
-Risks or limitations: decisions D-01 to D-08 remain open; SQLite is the test database; MySQL evidence is migration-only
+Risks or limitations: decisions D-01 to D-11 remain open; SQLite is the test database; MySQL evidence is migration-only
 Outstanding manual steps: human PR review and any product/governance decisions above
 ```
