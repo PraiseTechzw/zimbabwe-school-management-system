@@ -36,6 +36,7 @@ Sprint 0 establishes the engineering foundation. **No school functionality is im
 - [Product discovery](modules/platform-foundation/product-discovery.md) — PROPOSED product definition
 - [Phase 1 specification](modules/platform-foundation/phase-1-specification-proposed.md) — Product Owner approval gate `P1-G01`
 - [Traceability matrix](modules/platform-foundation/traceability-matrix.md) — planned links only; no implementation or tests
+- [Roles and permissions module](modules/platform-foundation/roles-and-permissions.md) — config-driven authorization foundation with school-scoped role assignments
 - [Research coverage matrix](research/research-coverage-matrix.md) — evidence classes and gaps
 
 ## Templates

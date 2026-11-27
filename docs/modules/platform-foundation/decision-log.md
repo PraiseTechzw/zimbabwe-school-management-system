@@ -13,7 +13,7 @@ The proposed specification and research documents were merged into `main` as PR 
 | 1 — School identity | #34 | #41 | Merged |
 | 2 — School isolation | #35 | #43 | Merged |
 | 3 — Authentication/users | #36 | #44 | Merged |
-| 4 — Roles/permissions | #37 | — | Not started |
+| 4 — Roles/permissions | #37 | Pending PR | Implemented, not merged |
 | 5 — School configuration | #38 | — | Not started |
 | 6 — Academic calendar | #39 | #45 | Merged |
 | 7 — Audit trail | #40 | — | Not started |
@@ -52,6 +52,15 @@ The proposed specification and research documents were merged into `main` as PR 
 - `forSchool()` is reserved for trusted server-side callers that have already resolved a school. School-owned models opt into the scope explicitly rather than through a global scope.
 - This is the provisional shared-database design recorded in D-04. A final tenancy topology ADR is still required; no topology decision is treated as settled by this implementation.
 - Permissions are not part of this slice. The two JSON endpoints use the existing `auth` middleware plus school context; role and permission enforcement is deferred to Slice 4.
+
+## Slice 4: implemented roles and permissions foundation
+
+- `config/authorization.php` owns the permission and role catalogues. The database stores only school-scoped role assignments; users never receive permissions directly and adding a future role requires no schema change.
+- `SchoolPermissions` resolves access only from an active role assignment in the server-resolved school and an existing school membership. Unknown permissions and roles fail closed.
+- `EnsurePermission` reads the actor from authentication and the school from `SchoolContext`, never from client input. Domain actions repeat the authorization check for trusted server-side callers.
+- Role-management endpoints are permission-protected and tenant-scoped. `AssignSchoolRole` refuses to grant a role containing permissions the actor does not hold, preventing privilege escalation through role assignment.
+- A CLI bootstrap command creates the first assignment with an allow-listed `cli` source. HTTP inputs cannot set the source or school.
+- Existing school-context and calendar endpoints are intentionally unchanged until their owning slices opt into the middleware. MFA, separation of duties, time-bounded delegation, periodic review, permission-change audit and a role UI remain deferred. See [roles-and-permissions.md](roles-and-permissions.md).
 
 ## Slice 6: implemented academic calendar
 

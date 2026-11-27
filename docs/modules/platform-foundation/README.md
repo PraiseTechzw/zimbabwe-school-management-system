@@ -12,6 +12,7 @@ This directory holds product discovery and traceability artefacts for Phase 1 â€
 | [discovery-report.md](discovery-report.md) | Comprehensive milestone report |
 | [decision-log.md](decision-log.md) | Authoritative record of the gate release and implemented slices |
 | [academic-calendar.md](academic-calendar.md) | Implemented backend foundation for school-scoped academic years and periods (issue #39) |
+| [roles-and-permissions.md](roles-and-permissions.md) | Implemented config-driven authorization foundation with school-scoped role assignments (issue #37) |
 
 Research evidence lives under [../../research/README.md](../../research/README.md).
 
