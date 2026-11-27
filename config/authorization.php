@@ -20,6 +20,8 @@ return [
         'school_identifiers.view' => ['label' => 'View school identifiers'],
         'academic_calendar.view' => ['label' => 'View academic calendars'],
         'academic_calendar.manage' => ['label' => 'Create and update academic calendars'],
+        'academic_structure.view' => ['label' => 'View school structure configuration'],
+        'academic_structure.manage' => ['label' => 'Create and update school structure configuration'],
         'roles.view' => ['label' => 'View role assignments'],
         'roles.manage' => ['label' => 'Assign and remove school roles'],
     ],
@@ -42,6 +44,7 @@ return [
             'permissions' => [
                 'school.view',
                 'academic_calendar.view',
+                'academic_structure.view',
             ],
         ],
         'school_editor' => [
@@ -50,6 +53,8 @@ return [
                 'school.view',
                 'academic_calendar.view',
                 'academic_calendar.manage',
+                'academic_structure.view',
+                'academic_structure.manage',
             ],
         ],
         'role_viewer' => [
