@@ -6,6 +6,7 @@ namespace App\Domains\SchoolSettings\Actions;
 
 use App\Domains\School\Models\School;
 use App\Domains\SchoolSettings\Concerns\GuardsSchoolSettingsIntegrity;
+use App\Domains\SchoolSettings\Concerns\RecordsSchoolSettingsAudit;
 use App\Domains\SchoolSettings\Models\SchoolSetting;
 use App\Domains\SchoolSettings\Models\SchoolSettingRevision;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 final class UpdateSchoolSettings
 {
     use GuardsSchoolSettingsIntegrity;
+    use RecordsSchoolSettingsAudit;
 
     /**
      * @param  array<string, mixed>  $data
@@ -50,6 +52,13 @@ final class UpdateSchoolSettings
 
             /** @var SchoolSetting $fresh */
             $fresh = $setting->fresh();
+
+            $this->recordSchoolSettingsAudit(
+                $lockedSchool,
+                $isFirstSave ? 'school_settings.created' : 'school_settings.updated',
+                $fresh,
+                $previous,
+            );
 
             return $fresh;
         });
