@@ -11,22 +11,28 @@ use App\Domains\AcademicCalendar\Actions\UpdateAcademicYear;
 use App\Domains\AcademicCalendar\Actions\ValidateAcademicCalendar;
 use App\Domains\AcademicCalendar\Models\AcademicPeriod;
 use App\Domains\AcademicCalendar\Models\AcademicYear;
+use App\Domains\Authorization\Services\SchoolPermissions;
 use App\Domains\School\Context\SchoolContext;
 use App\Domains\School\Models\School;
 use App\Frontend\Contracts\CalendarManagementGateway;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * Calendar adapter backed by the verified domain actions in this application.
  *
  * Reads use the same school scoping as the JSON API; writes go through the
- * actions that the API controllers use. This avoids a second HTTP round trip
- * and keeps authorisation and integrity checks in one place.
+ * actions that the API controllers use. Writes also apply the configured
+ * academic_calendar.manage boundary so Livewire updates cannot bypass the
+ * route-level permission gate.
  */
 final class DomainCalendarManagementGateway implements CalendarManagementGateway
 {
     public function __construct(
         private readonly SchoolContext $context,
+        private readonly SchoolPermissions $permissions,
         private readonly CreateAcademicYear $createYearAction,
         private readonly UpdateAcademicYear $updateYearAction,
         private readonly CreateAcademicPeriod $createPeriodAction,
@@ -64,11 +70,15 @@ final class DomainCalendarManagementGateway implements CalendarManagementGateway
 
     public function createYear(array $data): array
     {
+        $this->assertCanManage();
+
         return $this->yearPayload($this->createYearAction->execute($this->school(), $data));
     }
 
     public function updateYear(int $academicYearId, array $data): array
     {
+        $this->assertCanManage();
+
         return $this->yearPayload($this->updateYearAction->execute(
             $this->school(),
             $this->year($academicYearId),
@@ -78,6 +88,8 @@ final class DomainCalendarManagementGateway implements CalendarManagementGateway
 
     public function createPeriod(int $academicYearId, array $data): array
     {
+        $this->assertCanManage();
+
         // The selected year is authoritative, just as the route ID is on the API.
         $data['academic_year_id'] = $academicYearId;
 
@@ -86,6 +98,8 @@ final class DomainCalendarManagementGateway implements CalendarManagementGateway
 
     public function updatePeriod(int $academicPeriodId, array $data): array
     {
+        $this->assertCanManage();
+
         return $this->periodPayload($this->updatePeriodAction->execute(
             $this->school(),
             $this->period($academicPeriodId),
@@ -101,6 +115,15 @@ final class DomainCalendarManagementGateway implements CalendarManagementGateway
             'valid' => $issues === [],
             'issues' => $issues,
         ];
+    }
+
+    private function assertCanManage(): void
+    {
+        $user = Auth::user();
+
+        if (! $user instanceof User || ! $this->permissions->has($user, $this->school(), 'academic_calendar.manage')) {
+            throw new AuthorizationException('The user does not have permission to manage academic calendars.');
+        }
     }
 
     private function school(): School
