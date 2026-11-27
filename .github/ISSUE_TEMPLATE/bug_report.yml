@@ -1,0 +1,43 @@
+name: Bug report
+description: Report incorrect behaviour in the engineering foundation
+title: "[Bug]: "
+labels: [bug, needs-review]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Sprint 0 covers infrastructure only. Check that this is not a missing school feature.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the observed behaviour and the expected behaviour.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Include exact commands and environment (Docker or local host).
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Paste command output, logs or screenshots with secrets redacted.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Docker / Compose
+        - CI / workflows
+        - Tests / quality tools
+        - Documentation
+        - Laravel foundation
+        - Other
+    validations:
+      required: true

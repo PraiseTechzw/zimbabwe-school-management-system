@@ -1,0 +1,32 @@
+name: Feature request
+description: Propose new functionality (specification first, implementation later)
+title: "[Feature]: "
+labels: [enhancement, needs-evidence]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem and evidence
+      description: What Zimbabwe-first user problem does this solve? Link research or stakeholder input.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Proposed scope and non-goals
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Given / when / then statements and test expectations.
+    validations:
+      required: true
+  - type: checkboxes
+    id: sprint
+    attributes:
+      label: Scope check
+      options:
+        - label: This is not school functionality requested during Sprint 0
+          required: true

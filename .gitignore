@@ -1,0 +1,40 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+!.env.testing
+*.key
+
+# PHP / Composer
+/vendor/
+/build/
+/coverage/
+.phpunit.result.cache
+.phpunit.cache/
+/.php-cs-fixer.cache
+
+# Frontend
+/node_modules/
+/public/build/
+/public/hot
+npm-debug.log*
+yarn-error.log*
+
+# Laravel storage / local DB
+/public/storage/
+/storage/*.key
+/database/database.sqlite
+
+# Docker / local tooling
+/.docker/
+docker-compose.override.yml
+
+# IDE / OS
+/.fleet/
+/.idea/
+/.nova/
+/.vscode/
+/.zed/
+.DS_Store
+Thumbs.db
+*.log

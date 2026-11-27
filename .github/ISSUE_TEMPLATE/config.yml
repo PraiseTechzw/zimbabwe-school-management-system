@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/PraiseTechzw/zimbabwe-school-management-system/security/advisories/new
+    about: Report vulnerabilities privately, never in a public issue.
+  - name: Contributor guide
+    url: https://github.com/PraiseTechzw/zimbabwe-school-management-system/blob/main/CONTRIBUTING.md
+    about: Read the workflow and verification requirements before contributing.
