@@ -1,6 +1,6 @@
 # Zimbabwe School Management System
 
-An open-source, Zimbabwe-first school management platform. **Phase 1 — Platform Foundation is merged.** All seven foundation slices (school identity, server-side school isolation, authentication/users, roles/permissions, school configuration, academic calendar and audit trail) are in `main`, along with the Stage A frontend shell foundation. No end-user school features (admissions, attendance, fees, learner records, assessment, reporting, HR, boarding) are implemented yet.
+An open-source, Zimbabwe-first school management platform. **Phase 1 — Platform Foundation is merged.** All seven foundation slices (school identity, server-side school isolation, authentication/users, roles/permissions, school configuration, academic calendar and audit trail) are in `main`, along with the Stage A shell, Stage B calendar administration (#56), and the Academic Structure backend foundation (#59). No end-user school features (admissions, attendance, fees, learner records, assessment, reporting, HR, boarding) are implemented yet.
 
 ## Principles
 
@@ -17,11 +17,13 @@ An open-source, Zimbabwe-first school management platform. **Phase 1 — Platfor
 | --- | --- |
 | Application stack | Laravel 13 / PHP 8.3 (decided, ADR-0001) |
 | Database strategy | MySQL 8 for dev/self-hosting, SQLite for CI (decided, ADR-0002) |
-| Frontend approach | ADR-0003; minimal Vite/Tailwind server-rendered shell and login foundation merged in #48; no school workflow UI implemented |
+| Frontend approach | ADR-0003; minimal Vite/Tailwind server-rendered shell and login foundation merged in #48, calendar administration in #56; no admissions, learner, finance or other unapproved workflow UI |
 | Deployment/backups | Documented strategy (ADR-0004); no production deployment configured |
 | Docker development | Available via `docker compose`; **DEVELOPMENT ONLY**, never use as production |
 | CI | GitHub Actions: tests, formatting, static analysis, Composer audit, npm audit and asset build |
 | Phase 1 — Platform Foundation | All seven slices merged: identity (#34/#41), isolation (#35/#43), auth/users (#36/#44), roles/permissions (#37/#49), settings (#38/#51), calendar (#39/#45), audit trail (#40/#50) |
+| Frontend Stage B | Calendar administration merged in #56; deterministic fixture fix in #57; contracts recorded in #58 |
+| Academic structure | Configurable backend foundation merged in #59; no UI |
 
 ## Quick start (Docker — reproducible environment)
 

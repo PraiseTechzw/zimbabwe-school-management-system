@@ -1,6 +1,6 @@
 # Frontend API dependency tracker
 
-Updated: 2026-11-27. Only endpoints verified by reading this repository are listed. Provisional contracts are labelled and must not be treated as backend promises.
+Updated: 2026-11-27. This list covers Stage B frontend consumers. Only endpoints verified by reading this repository are listed. Provisional contracts are labelled and must not be treated as backend promises.
 
 Stage B uses server-side adapters that call the same domain actions as the JSON controllers. “Integrated in-process” below means the UI has a verified adapter in this branch; it does **not** claim an extra browser HTTP request.
 
@@ -27,6 +27,7 @@ Stage B uses server-side adapters that call the same domain actions as the JSON 
 | `/api/role-assignments` | GET | `web`, `auth`, `school.context`, `roles.view`; `school_id` prohibited | `{school_id, role_assignments: [assignment payload]}`; `Cache-Control: no-store`, `Vary: X-School-Id, school_id` | Planned roles view | Available — contract verified; no UI built |
 | `/api/role-assignments` | POST | `web`, `auth`, `school.context`, `roles.manage`; body `{user_id, role}`; `school_id` prohibited | `{role_assignment: assignment payload}`, HTTP 201 | Planned role assignment form | Available — contract verified; no UI built |
 | `/api/role-assignments/{roleAssignment}` | DELETE | `web`, `auth`, `school.context`, `roles.manage`; numeric route ID scoped to current school | HTTP 204, no body; `Cache-Control: no-store`, `Vary: X-School-Id, school_id` | Planned role assignment removal | Available — contract verified; no UI built |
+| `/api/academic-structure/*` (16 registrations) | GET, POST, PUT, PATCH | `web`, `auth`, `school.context`; `academic_structure.view` for reads and `academic_structure.manage` for writes; `school_id` prohibited | See [Academic Structure API](../api/academic-structure.md) | None | Available — contract verified in #59; no UI built |
 
 ## Stage B integration notes
 
@@ -50,5 +51,5 @@ Stage B uses server-side adapters that call the same domain actions as the JSON 
 
 - No endpoint for school switching, notifications, dashboards aggregates, or a module availability catalogue. Navigation uses local configuration and honest "not available yet" states.
 - No delete/archive calendar endpoints were verified; the management screen does not offer those actions.
-- School Settings and Role Assignment HTTP contracts are verified on this base but have no frontend UI in Stage B; Academic Structure and Audit endpoints remain absent from this branch. Contracts found in unmerged backend work are not treated as available here.
+- School Settings and Role Assignment HTTP contracts are verified on this base but have no frontend UI in Stage B. Academic Structure HTTP contracts are merged in #59 but have no frontend UI. Audit still has no HTTP read endpoint.
 - No frontend permission map yet; backend authorization remains authoritative.

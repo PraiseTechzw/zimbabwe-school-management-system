@@ -1,6 +1,6 @@
 # Phase 1 Discovery Report — Platform Foundation
 
-> **Post-discovery update (2026-11-27):** this report records the state at the end of the discovery milestone. The Product Owner subsequently released `P1-G01` for execution (D-08 in [decision-log.md](decision-log.md)) and four foundation slices merged into `main` via PRs #41, #43, #44 and #45. See the decision log for current implementation status.
+> **Post-discovery update (2026-11-27):** this report records the state at the end of the discovery milestone. The Product Owner subsequently released `P1-G01` for execution (D-08 in [decision-log.md](decision-log.md)) and all seven foundation slices merged into `main` via PRs #41, #43, #44, #45, #49, #50 and #51; the later Academic Structure backend foundation merged in #59. See the decision log for current implementation status.
 
 **Date:** 2026-11-27. **Status:** COMPLETE FOR PRODUCT OWNER REVIEW (discovery milestone). **Implementation:** NOT AUTHORISED *at the time of this report*.
 

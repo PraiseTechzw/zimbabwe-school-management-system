@@ -1,10 +1,10 @@
 # Requirements traceability matrix — Phase 1 (PLANNED LINKS ONLY)
 
-> **Post-discovery update (2026-11-27):** this matrix is retained as the discovery-time record. Implementation was subsequently released at `P1-G01` (D-08) and four slices merged via PRs #41, #43, #44 and #45. Implemented behaviour and decisions are recorded in [decision-log.md](decision-log.md), not here. The blank columns below are not a current status claim.
+> **Post-discovery update (2026-11-27):** this matrix is retained as the discovery-time record. Implementation was subsequently released at `P1-G01` (D-08) and all seven slices merged via PRs #41, #43, #44, #45, #49, #50 and #51; the later Academic Structure backend foundation merged in #59. Implemented behaviour and decisions are recorded in [decision-log.md](decision-log.md), not here. The blank columns below are not a current status claim.
 
 **Status:** Discovery traceability. At the time of discovery the last two columns were intentionally blank: no implementation or test existed in that milestone. Access date for sources: `2026-11-27`.
 
-All requirement IDs below are **PROPOSED** and await Product Owner approval (`P1-G01`). Evidence classes are defined in [../../research/evidence-classification.md](../../research/evidence-classification.md).
+All requirement IDs below are **PROPOSED** and awaited Product Owner approval (`P1-G01`) at discovery time; D-08 later released the execution gate, but these candidates remain PROPOSED as product requirements. Evidence classes are defined in [../../research/evidence-classification.md](../../research/evidence-classification.md).
 
 | Source ID(s) | Finding | Workflow | PROPOSED requirement | PROPOSED design concept | Future implementation | Future test |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -53,8 +53,8 @@ All requirement IDs below are **PROPOSED** and await Product Owner approval (`P1
 
 ## Traceability rules
 
-1. A row may be promoted from PROPOSED to approved only by Product Owner decision at `P1-G01`.
+1. A row may be promoted from PROPOSED to approved only by Product Owner decision. `P1-G01` was the original gate; D-08 released execution while leaving these requirement candidates PROPOSED as product requirements.
 2. Indexed-only sources (see [source register](../../research/source-register.md)) require original-document verification before approval.
 3. External standards (STD-01–STD-04) are benchmarks, **not** Zimbabwean law.
-4. The **Future implementation** and **Future test** columns remain blank until an approved requirement exists. This is a deliberate record of the approval gate, not an omission.
+4. The **Future implementation** and **Future test** columns remain blank in this historical matrix; implementation is recorded in [decision-log.md](decision-log.md), not back-filled here.
 5. No row claims a commit, PR, migration, test, deployment or feature.

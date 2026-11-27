@@ -12,6 +12,7 @@ School data is sensitive. Backups are part of the definition of done for any rea
 | `storage/app` | File sync/archive | Uploaded documents; preserve permissions metadata |
 | `.env` / secrets | Operator's secret store, not the backup archive | Never place secrets in an unencrypted dump |
 | Application code | Git tags/releases | Rebuild from source, not from a container snapshot |
+| Academic structure rows | Included in the MySQL logical dump | Educational levels, grades, classes, streams and offerings hard-cascade when a school or ancestor is deleted; audit events remain. Verify structure row counts during a restore drill before relying on historical references. |
 
 ## Proposed schedule (requires stakeholder confirmation)
 
