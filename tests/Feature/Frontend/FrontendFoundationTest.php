@@ -60,6 +60,17 @@ it('renders real school and calendar data on the dashboard', function (): void {
         ->assertDontSee('Demo data');
 });
 
+it('renders a parseable Alpine navigation expression in the app shell', function (): void {
+    $school = School::factory()->create();
+    $user = frontendUserWithSchool($school);
+
+    $this->actingAs($user)
+        ->get('/app')
+        ->assertOk()
+        ->assertSee("[tabindex]:not([tabindex='-1'])", false)
+        ->assertDontSee('[tabindex]:not([tabindex="-1"])', false);
+});
+
 it('labels demo figures so they cannot be mistaken for school records', function (): void {
     config()->set('frontend.demo.enabled', true);
 

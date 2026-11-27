@@ -38,7 +38,7 @@ final class ResolveSchoolContext
             abort(Response::HTTP_FORBIDDEN, 'The user has no school access.');
         }
 
-        $requested = $this->requestedSchoolId($request);
+        $requested = $this->requestedSchoolId($request, $schoolIds);
 
         if ($requested === null && count($schoolIds) > 1) {
             abort(Response::HTTP_BAD_REQUEST, 'A school must be selected when the user belongs to more than one school.');
@@ -53,7 +53,25 @@ final class ResolveSchoolContext
         /** @var School $school */
         $school = School::query()->findOrFail($schoolId);
 
+        // Remember the authorised selection for Livewire update requests. The
+        // stored value is rechecked against the user's memberships below, so a
+        // stale session can never widen access.
+        if ($request->hasSession()) {
+            $request->session()->put('school_context.id', $schoolId);
+        }
+
         $this->context->set($school);
+
+        // Livewire replays persistent middleware in an inner pipeline. Clearing
+        // here would remove the context before the component action runs, so
+        // defer cleanup until the real request terminates.
+        if ($request->hasHeader('X-Livewire')) {
+            app()->terminating(function (): void {
+                $this->context->clear();
+            });
+
+            return $next($request);
+        }
 
         try {
             return $next($request);
@@ -62,7 +80,10 @@ final class ResolveSchoolContext
         }
     }
 
-    private function requestedSchoolId(Request $request): ?int
+    /**
+     * @param  array<int, int>  $schoolIds
+     */
+    private function requestedSchoolId(Request $request, array $schoolIds): ?int
     {
         /** @var array<int, string> $supplied */
         $supplied = [];
@@ -82,7 +103,7 @@ final class ResolveSchoolContext
         $supplied = array_values(array_unique($supplied));
 
         if ($supplied === []) {
-            return null;
+            return $this->rememberedLivewireSchoolId($request, $schoolIds);
         }
 
         if (count($supplied) > 1) {
@@ -94,5 +115,27 @@ final class ResolveSchoolContext
         }
 
         return (int) $supplied[0];
+    }
+
+    /**
+     * @param  array<int, int>  $schoolIds
+     */
+    private function rememberedLivewireSchoolId(Request $request, array $schoolIds): ?int
+    {
+        if (! $request->hasHeader('X-Livewire') || ! $request->hasSession()) {
+            return null;
+        }
+
+        if (! $request->session()->has('school_context.id')) {
+            return null;
+        }
+
+        $remembered = $request->session()->get('school_context.id');
+
+        if (! is_int($remembered) || ! in_array($remembered, $schoolIds, true)) {
+            abort(Response::HTTP_FORBIDDEN, 'The remembered school context is no longer authorised.');
+        }
+
+        return $remembered;
     }
 }
