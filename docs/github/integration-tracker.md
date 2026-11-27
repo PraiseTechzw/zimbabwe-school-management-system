@@ -1,10 +1,10 @@
 # Phase 1 integration tracker
 
-**Verified:** 2026-11-27 (post academic-structure merge pass). **Scope:** current `origin/main` and all shipped platform-foundation/frontend PRs. This record distinguishes local evidence from GitHub-verified remote state; a local pass is never reported as remote CI success.
+**Verified:** 2026-11-27 (post academic-structure and frontend-contract merge pass). **Scope:** current `origin/main` and all shipped platform-foundation/frontend PRs. This record distinguishes local evidence from GitHub-verified remote state; a local pass is never reported as remote CI success.
 
 ## Current remote baseline
 
-- `origin/main`: `c21d0a90530cc2764853e6b3eabb277501da696b` — merge of PR #59 (academic structure integration); it contains PRs #56, #57 and #58.
+- `origin/main`: `fd3a6b875c1a5cfcf850f1f0229a64e8b540a0e0` — merge of PR #60 (frontend academic-structure contracts); it contains PRs #56, #57, #58 and #59. The prior baseline was `c21d0a90530cc2764853e6b3eabb277501da696b`.
 - Branch protection on `main`: required checks `quality`, `tests`, `docker`, strict; required conversation resolution enabled; required approving reviews `0`; `enforce_admins` enabled.
 - Remote reads used: `git ls-remote`, `git fetch --prune`, `gh pr view`, `gh pr checks`, `gh api .../check-runs`, GraphQL review-thread queries, `gh project item-list`.
 
@@ -26,6 +26,7 @@
 | Deterministic frontend test fix | — / [#57](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/57) | head `93c6610`; merge `cd87d8a` | Yes | Yes | Yes | Opened | `quality`, `tests`, `docker`, GitGuardian SUCCESS; CodeRabbit pending at final read | Not recorded here | Yes, `2026-11-27T18:32:35Z` | Not on board |
 | Documentation follow-up | — / [#58](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/58) | head `f301648`; merge `1c4d808` | Yes | Yes | Yes | Opened | `quality`, `tests`, `docker`, GitGuardian SUCCESS; CodeRabbit pending at final read | Not recorded here | Yes, `2026-11-27T18:56:07Z` | Not on board |
 | Academic structure integration | — / [#59](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/59) | head `9fc4804`; merge `c21d0a9` | Yes | Yes | Yes | Opened | `quality`, `tests`, `docker`, GitGuardian SUCCESS; CodeRabbit pending at final read | No review threads or approvals recorded | Yes, `2026-11-27T19:01:30Z` | Not on board |
+| Frontend academic-structure contracts | — / [#60](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/60) | head `17125df`; merge `fd3a6b8` | Yes | Yes | Yes | Opened | `quality`, `tests`, `docker`, GitGuardian SUCCESS; CodeRabbit pending at final read | Not recorded here | Yes, `2026-11-27T19:25:27Z` | Not on board |
 | Admissions application foundation (canonical) | — / none | local `8a7a21d404f627430dce0d9b7e8d852f2045ed02` | Yes | Yes | No | No | Not applicable | No | No | Not on board |
 
 ## Local verification evidence
@@ -41,13 +42,13 @@ All entries below are local runs, not GitHub Actions results.
 | `p1-admissions-canonical` at `8a7a21d` | Pint, PHPStan, Composer audit, `php artisan test`, `migrate:fresh`, route list, `docker compose config -q`, `git diff --check` | All exit 0; 212 tests / 790 assertions |
 | `p1-integration-tracker` after merged `main` | `make verify` via isolated Compose project and `docker compose config -q` | Exit 0; 180 tests / 675 assertions |
 | `p1-academic-structure-integration` at merged head `9fc4804` | `make verify` via isolated Compose project, focused suites, MySQL 8.0.46 `migrate:fresh` / `migrate:status` / `migrate:rollback`, `docker compose config -q`, `git diff --check` | All exit 0; Pint 207 files clean; PHPStan no errors; Composer audit clean; 243 tests / 990 assertions; focused API 24 / 110, isolation 11 / 110, permissions 6 / 15, audit 2 / 14, schema 7 / 33 |
-| `p1-academic-structure-tracker` docs branch | `make verify` via isolated Compose project, focused permission suite, `docker compose config -q`, `git diff --check` | All exit 0; Pint 207 files clean; PHPStan no errors; Composer audit clean; 244 tests / 1007 assertions; permission suite 7 / 32 after the all-route regression test |
+| `p1-academic-structure-tracker` docs branch, reconciled with `origin/main` `fd3a6b8` | `make verify` via isolated Compose project, focused permission suite, `docker compose config -q`, `git diff --check` | All exit 0; Pint 207 files clean; PHPStan no errors; Composer audit clean; 244 tests / 1007 assertions; permission suite 7 / 32 after the all-route regression test |
 
 Logs are retained under `/tmp/opencode/` with the prefixes `roles-integration-verify`, `audit-secret-fix-verify`, `frontend-pr48-review`, `structure-canonical-final`, `admissions-canonical`, `integration-docs-verify`, `integration-docs-postmerge-verify`, `academic-verify` and `academic-tracker-verify`.
 
 ## Dependency and duplication notes
 
-- PRs #51, #49, #50, #48, #52, #54, #56, #57, #58 and #59 merged in that order; no implementation PR remains open. Frontend head `588ddd1` was merged as `9f8f712`; the tracker corrections followed as `64cf7e8` and `28079f5`; academic structure was merged as `c21d0a9`.
+- PRs #51, #49, #50, #48, #52, #54, #56, #57, #58, #59 and #60 merged in that order; no implementation PR remains open. Frontend head `588ddd1` was merged as `9f8f712`; the tracker corrections followed as `64cf7e8` and `28079f5`; academic structure was merged as `c21d0a9`; frontend contract documentation was merged as `fd3a6b8`. PR #60 landed while the docs/test follow-up branch was in review; the branch was reconciled by merging `main` into it without rebase or force-push.
 - The audit trail was reconciled with merged roles work and its inert redaction fixtures were rewritten so GitGuardian scans only the clean single commit; the final check result is SUCCESS.
 - Academic structure had two competing local lines. Canonical lineage is `d602e88` replayed to `d137030`; the stale `77d2f9a` line duplicated merged school/calendar/auth work and was excluded. PR #59 replayed only the additive canonical implementation onto then-current `main`, then integrated the existing RBAC and audit foundations and short MySQL-safe index names. The held canonical branch is retained for lineage only; the merged `9fc4804` line is the single implementation.
 - Admissions has two local lines. Canonical is the clean `3ade1f3` commit replayed onto the then-current `main` as `8a7a21d`; the other worktree remains uncommitted and is not eligible for integration. The canonical replay removes the apparent school-settings duplication caused by the old `9e6db32` base. It is behind current `main` and must be replayed again if authorized.
@@ -62,7 +63,7 @@ Logs are retained under `/tmp/opencode/` with the prefixes `roles-integration-ve
 
 ## Remaining actions
 
-1. No implementation PRs remain open. `main` is green; required checks and branch protection were satisfied for every merge listed above.
+1. No implementation PRs remain open. One scoped docs/test follow-up PR (#61) is open for human review. `main` is green; required checks and branch protection were satisfied for every merge listed above.
 2. Board items #34–#40 are Done. Research items #6–#24 and #53 and governance items #31/#32 remain open and are not implementation deliverables.
 3. Academic structure is merged; do not replay or re-open the held canonical line. Admissions remains local-only pending an explicit scope decision.
 4. Do not push directly to `main`; do not merge unverified work.

@@ -22,7 +22,7 @@ An open-source, Zimbabwe-first school management platform. **Phase 1 — Platfor
 | Docker development | Available via `docker compose`; **DEVELOPMENT ONLY**, never use as production |
 | CI | GitHub Actions: tests, formatting, static analysis, Composer audit, npm audit and asset build |
 | Phase 1 — Platform Foundation | All seven slices merged: identity (#34/#41), isolation (#35/#43), auth/users (#36/#44), roles/permissions (#37/#49), settings (#38/#51), calendar (#39/#45), audit trail (#40/#50) |
-| Frontend Stage B | Calendar administration merged in #56; deterministic fixture fix in #57; contracts recorded in #58 |
+| Frontend Stage B | Calendar administration merged in #56; deterministic fixture fix in #57; contracts recorded in #58 and #60 |
 | Academic structure | Configurable backend foundation merged in #59; no UI |
 
 ## Quick start (Docker — reproducible environment)

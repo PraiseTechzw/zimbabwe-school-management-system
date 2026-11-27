@@ -1,6 +1,6 @@
 # Documentation index
 
-Sprint 0 established the engineering foundation. All seven Phase 1 foundation slices are merged; the Academic Structure backend foundation was subsequently merged in #59. Discovery documents remain historical/proposed where labelled, and the [Phase 1 decision log](modules/platform-foundation/decision-log.md) records implementation status.
+Sprint 0 established the engineering foundation. All seven Phase 1 foundation slices are merged; the Academic Structure backend foundation was subsequently merged in #59 and its frontend contract notes in #60. Discovery documents remain historical/proposed where labelled, and the [Phase 1 decision log](modules/platform-foundation/decision-log.md) records implementation status.
 
 ## Architecture and decisions
 
