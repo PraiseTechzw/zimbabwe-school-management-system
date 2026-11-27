@@ -20,8 +20,11 @@ return new class extends Migration
             $table->string('evidence_reference')->nullable();
             $table->timestamps();
 
-            $table->unique(['school_id', 'related_school_id', 'relationship_type', 'valid_from']);
-            $table->index(['related_school_id', 'relationship_type']);
+            $table->unique(
+                ['school_id', 'related_school_id', 'relationship_type', 'valid_from'],
+                'school_rel_school_related_type_valid_uq',
+            );
+            $table->index(['related_school_id', 'relationship_type'], 'school_rel_related_type_idx');
         });
     }
 

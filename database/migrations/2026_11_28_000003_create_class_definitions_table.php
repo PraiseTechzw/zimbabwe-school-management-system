@@ -31,7 +31,10 @@ return new class extends Migration
             $table->unique(['school_id', 'grade_level_id', 'code']);
             $table->unique(['school_id', 'grade_level_id', 'display_order']);
             $table->unique(['school_id', 'id']);
-            $table->index(['school_id', 'grade_level_id', 'is_active', 'display_order']);
+            $table->index(
+                ['school_id', 'grade_level_id', 'is_active', 'display_order'],
+                'class_defs_school_grade_active_order_idx',
+            );
         });
     }
 
