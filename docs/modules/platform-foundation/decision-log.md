@@ -88,6 +88,7 @@ The proposed specification and research documents were merged into `main` as PR 
 - `AuditScope::forSchool()` only accepts a server-resolved `School` model. `AuditScope::system()` is the only null-school path; client-supplied school identifiers are not accepted by the audit domain.
 - Actor identity is resolved through an extensible contract using the existing auth guard, with explicit `system` and `job` actors for non-request contexts. No names, email addresses or credentials are stored.
 - Metadata is allow-listed and recursively redacted using `config/audit.php`; unsupported objects and oversized structures are rejected before persistence.
-- Calendar year/period create and update actions now emit configuration audit events inside their existing transactions. This is the integration pattern for later modules, not an expansion of audit scope.
+- Calendar year/period, academic structure and school settings create/update actions emit configuration audit events inside their existing transactions. This is the integration pattern for later modules, not an expansion of audit scope.
+- B-05 closes the append-only builder bypass (`updateOrInsert`, `upsert`, `truncate`) and covers school settings writes. It does not alter D-01–D-11 from the B-04 review; authentication, role changes, CLI bootstrap, tenant switching and Livewire reads remain owner decisions.
 - Read access is exposed only as a server-side, school-scoped query action. HTTP retrieval is deferred until roles/permissions exist; retention, legal hold and raw-SQL tamper controls remain owner decisions. See [audit-trail.md](audit-trail.md).
 

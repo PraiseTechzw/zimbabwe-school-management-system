@@ -1,10 +1,10 @@
 # Phase 1 integration tracker
 
-**Verified:** 2026-11-27 (reconciled for B-04 against current `origin/main`). **Scope:** current `origin/main` and all shipped platform-foundation/frontend PRs. This record distinguishes local evidence from GitHub-verified remote state; a local pass is never reported as remote CI success.
+**Verified:** 2026-11-27 (reconciled after the B-04 merge and B-05 coverage pass). **Scope:** current `origin/main` and all shipped platform-foundation/frontend PRs. This record distinguishes local evidence from GitHub-verified remote state; a local pass is never reported as remote CI success.
 
 ## Current remote baseline
 
-- `origin/main`: `6844b4289af6c5446b80d897f73de39d4bb6aa7b` — merge of PR #61 (final Academic Structure integration evidence); it contains PRs #56–#60.
+- `origin/main`: `98e8226459541a56b02df25ed640b1996f76009d` — merge of PR #62 (calendar write permission enforcement); it contains PRs #56–#62. The prior baseline was `6844b4289af6c5446b80d897f73de39d4bb6aa7b` (PR #61, final Academic Structure integration evidence). B-04 follow-up PR #63 remains open at `7567ebc7bc09aaee3fb25de413566626b0fb9510` and is not part of this baseline.
 - B-04 audited baseline: `c21d0a90530cc2764853e6b3eabb277501da696b` — merge of PR #59 (`feat(academic-structure): integrate configurable structure foundation`). The audit was started while this was current `main`.
 - Earlier recorded baselines `28079f5b9f6dbb1173ffde1585eedfd84269fb3a` (PR #54), `fd3a6b875c1a5cfcf850f1f0229a64e8b540a0e0` (PR #60) are superseded and retained only for historical traceability.
 - Branch protection on `main`: required checks `quality`, `tests`, `docker`, strict; required conversation resolution enabled; required approving reviews `0`; `enforce_admins` enabled.
@@ -29,8 +29,10 @@
 | Documentation follow-up | — / [#58](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/58) | head `f301648`; merge `1c4d808` | Yes | Yes | Yes | Opened | `quality`, `tests`, `docker`, GitGuardian SUCCESS; CodeRabbit pending at final read | Not recorded here | Yes, `2026-11-27T18:56:07Z` | Not on board |
 | Academic structure integration | — / [#59](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/59) | head `9fc4804`; merge `c21d0a9` | Yes | Yes | Yes | Opened | `quality`, `tests`, `docker`, GitGuardian SUCCESS; CodeRabbit pending at final read | No review threads or approvals recorded | Yes, `2026-11-27T19:01:30Z` | Not on board |
 | Frontend academic-structure contracts | — / [#60](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/60) | head `17125df`; merge `fd3a6b8` | Yes | Yes | Yes | Opened | `quality`, `tests`, `docker`, GitGuardian SUCCESS; CodeRabbit pending at final read | Not recorded here | Yes, `2026-11-27T19:25:27Z` | Not on board |
-| Academic-structure evidence follow-up | — / [#61](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/61) | merge `6844b42` | Yes | Yes | Yes | Opened | Not re-read in B-04 | Not recorded here | Yes, `2026-11-27T21:33:01+02:00` | Not on board |
-| B-04 authorization / tenant-isolation audit | — / [#62](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/62) | `audit/b04-authorization-tenant-isolation` | Yes | Yes | Yes | Opened | Not claimed | Not recorded here | No | Not on board |
+| Academic-structure docs/test follow-up | — / [#61](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/61) | head `3fdc0ca`; merge `6844b42` | Yes | Yes | Yes | Opened | `quality`, `tests`, `docker`, GitGuardian SUCCESS; CodeRabbit pending at final read | No approval claimed | Yes, `2026-11-27T19:33:02Z` | Not on board |
+| B-04 calendar write permission fix | — / [#62](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/62) | head `c88be8d`; merge `98e8226` | Yes | Yes | Yes | Merged | `quality`, `tests`, `docker`, GitGuardian SUCCESS; CodeRabbit review completed | One minor thread resolved after review | Yes, `2026-11-27T21:01:25Z` | Not on board |
+| B-04 authorization/isolation follow-up | — / [#63](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/63) | head `7567ebc` | Yes | Yes | Yes | Open | `quality`, `tests`, `docker`, GitGuardian, CodeRabbit SUCCESS at final read | No approval claimed | No | Not on board |
+| B-05 audit trail coverage | — / [#65](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/65) | head `9b1c24e` | Yes | Yes | Yes | Open | Pending remote checks at creation | No approval claimed | No | Not on board |
 | Admissions application foundation (canonical) | — / none | local `8a7a21d404f627430dce0d9b7e8d852f2045ed02` | Yes | Yes | No | No | Not applicable | No | No | Not on board |
 
 ## Local verification evidence
@@ -47,6 +49,7 @@ All entries below are local runs, not GitHub Actions results.
 | `p1-integration-tracker` after merged `main` | `make verify` via isolated Compose project and `docker compose config -q` | Exit 0; 180 tests / 675 assertions |
 | `p1-academic-structure-integration` at merged head `9fc4804` | `make verify` via isolated Compose project, focused suites, MySQL 8.0.46 `migrate:fresh` / `migrate:status` / `migrate:rollback`, `docker compose config -q`, `git diff --check` | All exit 0; Pint 207 files clean; PHPStan no errors; Composer audit clean; 243 tests / 990 assertions; focused API 24 / 110, isolation 11 / 110, permissions 6 / 15, audit 2 / 14, schema 7 / 33 |
 | `p1-academic-structure-tracker` docs branch, reconciled with `origin/main` `fd3a6b8` | `make verify` via isolated Compose project, focused permission suite, `docker compose config -q`, `git diff --check` | All exit 0; Pint 207 files clean; PHPStan no errors; Composer audit clean; 244 tests / 1007 assertions; permission suite 7 / 32 after the all-route regression test |
+| `b05-audit-coverage` at `origin/main` `6844b42` plus B-05 fixes | `make verify` via isolated Compose project, focused audit/settings suites, MySQL 8.0.46 `migrate:fresh` / `migrate:status` and append-only/settings-audit runtime probes, `docker compose config -q`, `git diff --check` | All exit 0; Pint 209 files clean; PHPStan no errors; Composer audit clean; 248 tests / 1034 assertions; focused audit/settings 11 / 72; see `docs/reports/b05-audit-trail-coverage.md` |
 | `b04-audit` at audited baseline `c21d0a9` | `make COMPOSE="docker compose -p b04-audit" verify` | Exit 0; Pint, PHPStan, Composer audit; 243 tests / 990 assertions |
 | `b04-audit` after authorization fixes and rebase onto `6844b42` | Focused security suites, `make verify` via isolated Compose project `b04-audit-r`, route list, `docker compose config -q`, `git diff --check` | Exit 0; focused 164 tests / 671 assertions; full 264 tests / 1105 assertions; evidence under `/home/praisetechzw/b04-audit-evidence/` |
 
@@ -54,12 +57,12 @@ Logs are retained under `/tmp/opencode/` with the prefixes `roles-integration-ve
 
 ## Dependency and duplication notes
 
-- PRs #51, #49, #50, #48, #52, #54, #56, #57, #58, #59, #60 and #61 merged in that order; no implementation PR from that sequence remains open. Frontend head `588ddd1` was merged as `9f8f712`; academic structure was merged as `c21d0a9`; the frontend contract docs merged as `fd3a6b8`; the final evidence follow-up merged as `6844b42`. PR #60 landed while the docs/test follow-up branch was in review; that branch was reconciled by merging `main` into it without rebase or force-push. B-04 was rebased cleanly onto `6844b42` after manual conflict resolution; no history was force-pushed to a shared branch.
+- PRs #51, #49, #50, #48, #52, #54, #56, #57, #58, #59, #60, #61 and #62 merged in that order; no implementation PR from that sequence remains open. Frontend head `588ddd1` was merged as `9f8f712`; academic structure was merged as `c21d0a9`; the frontend contract docs merged as `fd3a6b8`; the final evidence follow-up merged as `6844b42`. PR #60 landed while the docs/test follow-up branch was in review; that branch was reconciled by merging `main` into it without rebase or force-push. B-04 was rebased cleanly onto `6844b42` and merged as `98e8226`; no history was force-pushed to a shared branch.
 - The audit trail was reconciled with merged roles work and its inert redaction fixtures were rewritten so GitGuardian scans only the clean single commit; the final check result recorded for that earlier PR was SUCCESS.
 - Academic structure had two competing local lines. Canonical lineage is `d602e88` replayed to `d137030`; the stale `77d2f9a` line duplicated merged school/calendar/auth work and was excluded. PR #59 replayed only the additive canonical implementation onto then-current `main`, then integrated the existing RBAC and audit foundations and short MySQL-safe index names. The held canonical branch is retained for lineage only; the merged `9fc4804` line is the single implementation.
 - Admissions has two local lines. Canonical is the clean `3ade1f3` commit replayed onto the then-current `main` as `8a7a21d`; the other worktree remains uncommitted and is not eligible for integration. The canonical replay removes the apparent school-settings duplication caused by the old `9e6db32` base. It is behind current `main` and must be replayed again if authorized.
 - Admissions tenant isolation is covered by `AdmissionsIsolationTest.php`: client `school_id` is prohibited, `X-School-Id` only selects authorised memberships, foreign applications return 404, cross-school academic-year references return a generic 422, and all writes resolve the school server-side.
-- No duplicate remote admissions PR exists. Admissions evidence is tracked as research issue #53 and remains local pending an explicit scope decision.
+- No duplicate remote branch or PR exists for academic structure or admissions. Admissions evidence is tracked as research issue #53; the admissions canonical branch remains local pending an explicit scope decision.
 
 ## Review findings and known limitations
 
@@ -70,7 +73,7 @@ Logs are retained under `/tmp/opencode/` with the prefixes `roles-integration-ve
 
 ## Remaining actions
 
-1. B-04 authorization remediation is proposed on `audit/b04-authorization-tenant-isolation`; do not merge before review and remote check evidence exist. Remote check status is not asserted here.
+1. B-04 calendar write enforcement (#62) is merged at `98e8226`; PR #63, #64, #65, #66, #67 and #68 remain in review at this reconciliation point. `main` is green at `98e8226`; required checks and branch protection were satisfied for every merge listed above.
 2. Board items #34–#40 are Done. Research items #6–#24 and #53 and governance items #31/#32 remain open and are not implementation deliverables.
 3. Academic structure is merged; do not replay or re-open the held canonical line. Admissions remains local-only pending an explicit scope decision.
 4. Do not push directly to `main`; do not merge unverified work.
