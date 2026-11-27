@@ -16,7 +16,7 @@ The proposed specification and research documents were merged into `main` as PR 
 | 4 — Roles/permissions | #37 | #49 | Merged |
 | 5 — School configuration | #38 | #51 | Merged |
 | 6 — Academic calendar | #39 | #45 | Merged |
-| 7 — Audit trail | #40 | #50 | Implemented, PR pending |
+| 7 — Audit trail | #40 | #50 | Merged |
 
 ## Decisions
 
