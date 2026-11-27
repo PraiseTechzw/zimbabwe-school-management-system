@@ -2,6 +2,8 @@
     'title' => '',
     'breadcrumbs' => [],
     'user' => null,
+    'school' => null,
+    'academicYear' => null,
 ])
 
 @php
@@ -27,7 +29,7 @@
     openMenu(event) {
         this.menuOpener = event.currentTarget;
         this.menu = true;
-        this.$nextTick(() => this.$refs.mobileNavigation?.querySelector('button')?.focus());
+        this.$nextTick(() => requestAnimationFrame(() => this.$refs.mobileNavigation?.querySelector('button')?.focus()));
     },
     closeMenu() {
         this.menu = false;
@@ -84,11 +86,16 @@
 
                 <div class="flex shrink-0 items-center gap-3">
                     @if($user !== null && $user !== [])
-                        <span class="hidden text-[13px] text-muted sm:inline">{{ $user['name'] }}</span>
-                        <span class="flex h-7 w-7 items-center justify-center rounded-full bg-active text-[13px] font-semibold"
-                              aria-hidden="true">{{ mb_substr((string) $user['name'], 0, 1) }}</span>
-                        <button type="button" class="text-[13px] text-muted underline-offset-2 hover:text-ink hover:underline"
-                                data-api-logout>Log out</button>
+                        <div class="hidden text-right sm:block">
+                            <span class="block text-[13px] font-medium">{{ $user['name'] }}</span>
+                            @if(($user['email'] ?? '') !== '')
+                                <span class="block text-[12px] text-muted">{{ $user['email'] }}</span>
+                            @endif
+                        </div>
+                        <span class="flex h-8 w-8 items-center justify-center rounded-full bg-active text-[13px] font-semibold"
+                              title="{{ $user['name'] }}" aria-hidden="true">{{ mb_substr((string) $user['name'], 0, 1) }}</span>
+                        <button type="button" class="fs-btn fs-btn-secondary fs-btn-compact" data-api-logout
+                                aria-label="Log out">Log out</button>
                     @endif
                 </div>
             </div>
@@ -97,6 +104,7 @@
         <div class="mx-auto w-full max-w-[1240px] px-4 pt-6 sm:px-6">
             <h1 class="text-2xl font-semibold tracking-tight">{{ $title }}</h1>
             {{ $header ?? '' }}
+            <x-context-strip :school="$school" :academic-year="$academicYear" class="mt-4" />
         </div>
 
         <main class="mx-auto w-full max-w-[1240px] px-4 py-6 sm:px-6">
@@ -116,7 +124,10 @@
                     <x-icon name="close" class="h-4 w-4" />
                 </button>
             </div>
-            <div class="pt-4">
+            <div class="px-3 pt-3">
+                <x-context-strip :school="$school" :academic-year="$academicYear" compact />
+            </div>
+            <div class="pt-1">
                 <x-nav-list :groups="$groups" :current="$currentRoute" />
             </div>
         </aside>

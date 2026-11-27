@@ -2,7 +2,7 @@
 
 Updated: 2026-11-27. Status vocabulary: `NOT STARTED`, `UI IN PROGRESS`, `UI COMPLETE`, `MOCK INTEGRATION`, `API INTEGRATION IN PROGRESS`, `API INTEGRATED`, `TESTED`, `BLOCKED`.
 
-Gate: ADR-0003 accepted 2026-11-27 (Blade + Livewire + Alpine + Tailwind). Stage A is merged into `main` as PR #48. Stage B calendar administration was implemented on `feat/frontend-stage-b-calendar-admin` and merged into `main` as PR #56 by the repository owner on 2026-11-27 after local verification and passing GitHub checks. The merged Academic Structure backend (PR #59) is now recorded in `api-dependencies.md` as a verified API-ready contract; no frontend UI has been built for it. School modules still require their own approved specification; the navigation catalogue lists planned destinations but only sign-in, dashboard, school profile, calendar read view and calendar management have working implementations.
+Gate: ADR-0003 accepted 2026-11-27 (Blade + Livewire + Alpine + Tailwind). Stage A is merged into `main` as PR #48. Stage B calendar administration was implemented on `feat/frontend-stage-b-calendar-admin` and merged into `main` as PR #56 by the repository owner on 2026-11-27 after local verification and passing GitHub checks. The merged Academic Structure backend (PR #59) is recorded in `api-dependencies.md` as a verified API-ready contract; no frontend UI has been built for it. This branch adds visible School Settings and Role Assignment screens against verified contracts, plus shell/dashboard/calendar polish (Stage C). School modules still require their own approved specification; planned navigation destinations remain explicitly labelled as unavailable rather than looking finished.
 
 ## Stage A — foundation
 
@@ -53,6 +53,34 @@ Recorded against a local `php artisan serve` instance on `127.0.0.1:8010`, backe
 - The rebased smoke exposed a second defect inherited from merged foundation code: an unescaped quote inside the app shell's Alpine `x-data` focus-trap selector stopped Livewire handlers from initialising. The selector now uses a template literal with no nested double quotes, and a frontend regression test asserts the parseable form.
 - The final browser pass showed `No issues found for 2027.`, `Period added.`, no console errors and no `403`; logout returned to `/login`.
 - The rendered management page was inspected at 1440, 768 and 390 px with `--app --allow font-not-dealt`: 0 findings after stacking the cards to remove an initial `panel-void` / `ragged-row` warning. Screenshots were reviewed at desktop and mobile widths during the original smoke; the rebased page returned the same 0-finding result.
+
+## Stage C — visible settings, roles and shell polish
+
+Implemented on `feature/frontend-visible-ui` against contracts already verified on this base. No school type is hard-coded: government, council, mission, private, day, boarding, ECD, primary, secondary and A-Level contexts all read from the authorised school record.
+
+| Deliverable | Status | Screens / components | API dependencies | Integration | Tests | Known issues / next task |
+| --- | --- | --- | --- | --- | --- | --- |
+| School settings form + revision trail | TESTED | `Livewire/SchoolSettings.php`, `livewire/school-settings.blade.php`, `DomainSchoolSettingsGateway` | School settings equivalent of `GET/PUT /api/school-settings` (locale, timezone, source, effective_from) | In-process adapter over the verified domain action; school comes only from `SchoolContext` | `SchoolSettingsScreenTest.php` covers defaults, save, validation and revision history | No invented fields or silent fake saves. |
+| Role assignment list + assign/remove | TESTED | `Livewire/RoleAssignments.php`, `livewire/role-assignments.blade.php`, `DomainRoleAssignmentGateway` | Role equivalent of `GET/POST/DELETE /api/roles` (`user_id`, `role`) | In-process adapter over the verified domain action; backend remains authoritative | `RoleAssignmentsScreenTest.php` covers rendering, manage, denied state and validation | Numeric `User ID` is used because no member-picker contract was approved; no client-side permission claim is made. |
+| Responsive shell and account controls | TESTED | `components/app-shell.blade.php`, `components/nav-list.blade.php`, `components/context-strip.blade.php` | `GET /api/auth/me`, `GET /api/school` | Existing session and logout contract | Frontend suite plus real-browser smoke at desktop and mobile widths | Mobile menu focus now passes an explicit event; Escape restores focus to the opener. |
+| Honest dashboard states | TESTED | `Livewire/Dashboard.php`, `livewire/dashboard.blade.php` | Verified school/year/identifier reads only | Server-side read adapter; no invented aggregates | Frontend suite asserts real values, gap dashes and opt-in demo labelling | Cross-module counts remain gaps until endpoints exist. |
+| Calendar overview, validation and periods | TESTED | `frontend/academic-calendar.blade.php`, `Livewire/CalendarAdministration.php` | Verified calendar reads, writes and validation endpoint | Stage B domain adapter | Stage B suite plus Stage C browser smoke | Integrity rules are engineering checks, not compliance claims. |
+| Application layout on controller-rendered screens | TESTED | `components/layouts/app.blade.php`, `frontend/school-profile.blade.php`, `frontend/academic-calendar.blade.php`, `frontend/module-notice.blade.php` | None | Explicit shared layout with title, CSS, Livewire runtime and CSRF token | Regression test asserts DOCTYPE, CSRF meta and title on all three routes | Before this fix those pages rendered with an empty `<head>` and no assets. |
+
+`tests/Feature/Frontend/SchoolSettingsScreenTest.php` and `RoleAssignmentsScreenTest.php` add focused coverage. The full frontend suite is 35 tests / 124 assertions; the full application suite is 256 tests / 1061 assertions.
+
+## Stage C browser evidence (2026-11-27)
+
+Recorded in the connected Chromium tab against `php artisan serve` on `127.0.0.1:8010`, SQLite, `FRONTEND_DEMO=false` and freshly built assets.
+
+- Signed in through the real `POST /api/auth/login` form as `frontend@example.test`, reached `/app` and saw `Chinhoyi High School`, `government`, `2026`, `1 verified`, `Screens ready 4`, `Calendar events 2`, gap dashes and `Available now`. No invented aggregate values appeared.
+- School settings: saved a source and confirmed `School settings saved.`; a second save added a revision. Submitting an empty source produced the required-field error. The form only exposes locale, timezone, source and effective-from.
+- Roles: assigned `role_viewer` to numeric user `2`, confirmed `Role assigned.` and the scoped row, accepted the removal confirmation dialog, and confirmed `Role assignment removed.` with the row gone. An invalid user ID produced the server validation message.
+- Academic calendar: the read page showed the selected year and periods. On `/app/academic-calendar/manage`, `Run check` returned `No issues found for 2026.` and creating `Term 3 smoke` (`2026-09-01` – `2026-11-30`) returned `Period added.` with the new draft row.
+- Planned module notice: `/app/modules/admissions` showed the explicit "not built yet" state with no data. The earlier smoke also found a 404 for a guessed `/app/admissions` URL; the configured route is `/app/modules/{module}`.
+- Mobile navigation: opening the sheet from `Open navigation` shows the 51-link navigation, focuses `Close navigation`, Tab moves into the sheet, Escape closes it and restores focus to the opener. The first smoke found `$event` was undefined inside an Alpine method and logged a console error; passing the event explicitly and deferring focus with `requestAnimationFrame` fixed it.
+- Final pass: no console errors and no failed or 4xx/5xx network responses on the smoke pages. The page titles now match the screens; controller-rendered pages include the shared CSS, JS and CSRF token.
+- Rendered-page inspector (`--app --widths 1440,768,390 --allow font-not-dealt`): dashboard, settings, roles, calendar and calendar management each returned 0 FAIL / 0 WARN after stacking the unequal dashboard cards. Screenshots are kept under `.taste-skill/inspect-*`; a real-browser dashboard capture is `.taste-skill/after/browser-dashboard.png`.
 
 ## Prototype evidence (ADR-0003 condition)
 
@@ -105,6 +133,19 @@ All checks below were run locally on 2026-11-27. No remote GitHub Actions result
 | 2026-11-27 | `node .../inspect.mjs <calendar management snapshot> --app --widths 1440,768,390 --allow font-not-dealt` | 0 | 0 findings; initial `panel-void` and `ragged-row` warnings resolved by stacking cards, result reconfirmed after rebasing onto merged `main` |
 | 2026-11-27 | `php artisan route:list --path=api/academic-structure --json` (after PR #59 merge) | 0 | 16 route objects; all under authenticated school context with `EnsurePermission` |
 | 2026-11-27 | `make COMPOSE="docker compose -p zimschool-fe-verify" verify` (after PR #59 merge) | 0 | Pint 207 files PASS; PHPStan no errors; Composer audit no advisories; 243 tests / 990 assertions passed |
+| 2026-11-27 | `git diff --check` (Stage C final) | 0 | No whitespace errors |
+| 2026-11-27 | `php artisan test tests/Feature/Frontend` (Stage C final) | 0 | 35 passed, 124 assertions |
+| 2026-11-27 | `php artisan test` (Stage C final) | 0 | 256 passed, 1061 assertions |
+| 2026-11-27 | `./vendor/bin/pint --test` (Stage C final) | 0 | `{"tool":"pint","result":"passed"}` |
+| 2026-11-27 | `./vendor/bin/phpstan analyse --no-progress --memory-limit=1G` (Stage C final) | 0 | `{"tool":"phpstan","result":"passed","errors":0}` |
+| 2026-11-27 | `composer audit --locked` (Stage C final) | 0 | No security vulnerability advisories found |
+| 2026-11-27 | `npm run build` (Stage C final) | 0 | 4 modules; CSS 48.15 kB / gzip 11.50 kB; JS 1.63 kB / gzip 0.87 kB |
+| 2026-11-27 | `npm audit --audit-level=high` (Stage C final) | 0 | found 0 vulnerabilities |
+| 2026-11-27 | `docker compose config -q` (Stage C final) | 0 | No output |
+| 2026-11-27 | `node .../lint.mjs resources/views resources/css resources/js --app` (Stage C final) | 0 | 0 FAIL, 0 WARN |
+| 2026-11-27 | `node .../inspect.mjs <snapshot> --app --widths 1440,768,390 --allow font-not-dealt` (Stage C) | 0 | 0 FAIL / 0 WARN on dashboard, settings, roles, calendar and calendar management |
+
+Note: `make verify` without an isolated Compose project exited 0 but ran against the colliding shared project bound to the original checkout (244 tests / 1007 assertions). It is not evidence for this branch. The Stage C Compose check here is `docker compose config -q`; the isolated Compose project could not start in this worktree because Docker reported `all predefined address pools have been fully subnetted`. Host PHP/Node commands above ran with the worktree's dependencies and SQLite database.
 
 ## GitHub checks observed for PR #56
 
@@ -122,6 +163,7 @@ PR #56 was merged into `main` as commit `a466d17` by `PraiseTechzw` at `2026-11-
 
 ## Awaiting contracts
 
-- School Settings, Role Assignment and Academic Structure HTTP contracts are verified on this base but have no frontend UI in Stage B. Audit has no HTTP read endpoint. Contracts from unmerged backend work remain unavailable until merged and verified here.
+- Academic Structure HTTP contracts are verified on this base but still have no frontend UI; a product specification must be approved before screens are built. Audit has no HTTP read endpoint. Contracts from unmerged backend work remain unavailable until merged and verified here.
 - Role-assignment and Academic Structure endpoints enforce backend permissions (`roles.view` / `roles.manage` and `academic_structure.view` / `academic_structure.manage`), but no verified frontend permission map exists. UI visibility is never treated as authorisation; backend authorization remains authoritative.
+- Dashboard aggregates for learners, teachers, classes, attendance, fees and balances remain unavailable because no verified read endpoints exist. Gap tiles show an em dash; opt-in demo figures are labelled `Demo data` and off by default.
 - No further school module can be started without an accepted specification and an endpoint contract present in this branch.

@@ -21,12 +21,12 @@ Stage B uses server-side adapters that call the same domain actions as the JSON 
 | `/api/academic-years/{academicYear}` | PUT, PATCH | same; route ID must belong to the current school | `{academic_year: year payload}` | Edit academic year form | Available — integrated in-process via `UpdateAcademicYear` |
 | `/api/academic-years/{academicYear}/periods` | POST | same; route ID must belong to the current school | `{period: period payload}`, HTTP 201 | New period form | Available — integrated in-process via `CreateAcademicPeriod` |
 | `/api/academic-periods/{academicPeriod}` | PUT, PATCH | same; route ID must belong to the current school | `{period: period payload}` | Edit period form | Available — integrated in-process via `UpdateAcademicPeriod` |
-| `/api/school-settings` | GET | `web`, `auth`, `school.context`; `school_id` prohibited | `{school_id, settings, revision: {version, source, effective_from}}`; `Cache-Control: no-store`, `Vary: X-School-Id, school_id` | Planned School settings view | Available — contract verified; no UI built |
-| `/api/school-settings` | PUT, PATCH | same; validation from `ValidateSchoolSettings` rejects secret-like keys | `{school_id, settings, revision: {version, source, effective_from}}` | Planned School settings form | Available — contract verified; no UI built |
-| `/api/school-settings/revisions` | GET | `web`, `auth`, `school.context`; `school_id` prohibited | `{school_id, revisions: [revision payload]}`; `Cache-Control: no-store`, `Vary: X-School-Id, school_id` | Planned revision history | Available — contract verified; no UI built |
-| `/api/role-assignments` | GET | `web`, `auth`, `school.context`, `roles.view`; `school_id` prohibited | `{school_id, role_assignments: [assignment payload]}`; `Cache-Control: no-store`, `Vary: X-School-Id, school_id` | Planned roles view | Available — contract verified; no UI built |
-| `/api/role-assignments` | POST | `web`, `auth`, `school.context`, `roles.manage`; body `{user_id, role}`; `school_id` prohibited | `{role_assignment: assignment payload}`, HTTP 201 | Planned role assignment form | Available — contract verified; no UI built |
-| `/api/role-assignments/{roleAssignment}` | DELETE | `web`, `auth`, `school.context`, `roles.manage`; numeric route ID scoped to current school | HTTP 204, no body; `Cache-Control: no-store`, `Vary: X-School-Id, school_id` | Planned role assignment removal | Available — contract verified; no UI built |
+| `/api/school-settings` | GET | `web`, `auth`, `school.context`; `school_id` prohibited | `{school_id, settings, revision: {version, source, effective_from}}`; `Cache-Control: no-store`, `Vary: X-School-Id, school_id` | School settings screen (`/app/school-settings`) | Available — integrated in-process by `DomainSchoolSettingsGateway` |
+| `/api/school-settings` | PUT, PATCH | same; validation from `ValidateSchoolSettings` rejects secret-like keys | `{school_id, settings, revision: {version, source, effective_from}}` | School settings form | Available — integrated in-process via `UpdateSchoolSettings` |
+| `/api/school-settings/revisions` | GET | `web`, `auth`, `school.context`; `school_id` prohibited | `{school_id, revisions: [revision payload]}`; `Cache-Control: no-store`, `Vary: X-School-Id, school_id` | School settings revision history | Available — integrated in-process by the same gateway |
+| `/api/role-assignments` | GET | `web`, `auth`, `school.context`, `roles.view`; `school_id` prohibited | `{school_id, role_assignments: [assignment payload]}`; `Cache-Control: no-store`, `Vary: X-School-Id, school_id` | Role assignments screen (`/app/roles`) | Available — integrated in-process; hidden from accounts without `roles.view` |
+| `/api/role-assignments` | POST | `web`, `auth`, `school.context`, `roles.manage`; body `{user_id, role}`; `school_id` prohibited | `{role_assignment: assignment payload}`, HTTP 201 | Role assignment form (numeric user ID) | Available — integrated in-process via `AssignSchoolRole` |
+| `/api/role-assignments/{roleAssignment}` | DELETE | `web`, `auth`, `school.context`, `roles.manage`; numeric route ID scoped to current school | HTTP 204, no body; `Cache-Control: no-store`, `Vary: X-School-Id, school_id` | Role assignment removal | Available — integrated in-process via `RemoveSchoolRole` |
 
 ### Academic Structure contracts (verified, no frontend UI)
 
@@ -57,6 +57,8 @@ Integration constraints verified from the controller, FormRequests, domain actio
 - Write FormRequests require `source` and `Y-m-d` dates. Status, period type and counting-basis values come from `config/academic-calendar.php`, not from hard-coded school-structure assumptions.
 - Domain actions enforce school scoping, name/sequence uniqueness, period-within-year containment, overlap rules and year-shrink containment under transaction and school-row locking. The UI displays returned errors but does not duplicate or replace that authorization.
 - Field errors are surfaced inline; general failures and success states use the shared status primitives. Stage B introduces no demo or mock records.
+- `DomainSchoolSettingsGateway` and `DomainRoleAssignmentGateway` follow the same in-process rule: the school comes only from `SchoolContext`, and only verified fields (`locale`, `timezone`, `source`, `effective_from`; `user_id`, `role`) are accepted. Client `school_id` and secret-like keys are never sent.
+- Role controls are advisory: `roles.view` hides the assignment list and `roles.manage` hides the assign/remove controls, but every write is still authorised by the backend. With no verified frontend permission map, visibility alone is never treated as proof of access.
 
 ## Rules for integration
 
@@ -71,5 +73,5 @@ Integration constraints verified from the controller, FormRequests, domain actio
 
 - No endpoint for school switching, notifications, dashboards aggregates, or a module availability catalogue. Navigation uses local configuration and honest "not available yet" states.
 - No delete/archive calendar endpoints were verified; the management screen does not offer those actions.
-- School Settings, Role Assignment and Academic Structure HTTP contracts are verified on this base but have no frontend UI in Stage B. Audit has no HTTP read endpoint. Contracts from unmerged backend work remain unavailable until merged and verified here.
+- School Settings and Role Assignment now have Stage C screens backed by verified in-process adapters over their HTTP-equivalent domain actions. Academic Structure is verified on this base but still has no frontend UI; Audit has no HTTP read endpoint. Contracts from unmerged backend work remain unavailable until merged and verified here.
 - No frontend permission map yet; backend authorization remains authoritative.
