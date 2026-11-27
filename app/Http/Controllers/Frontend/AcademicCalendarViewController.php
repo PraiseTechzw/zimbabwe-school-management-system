@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Frontend;
 
+use App\Frontend\Contracts\CalendarManagementGateway;
 use App\Frontend\Contracts\FrontendDataProvider;
 use App\Http\Controllers\Controller;
 use Illuminate\Contracts\View\View;
 
 final class AcademicCalendarViewController extends Controller
 {
-    public function __construct(private readonly FrontendDataProvider $data) {}
+    public function __construct(
+        private readonly FrontendDataProvider $data,
+        private readonly CalendarManagementGateway $calendar,
+    ) {}
 
     public function index(): View
     {
@@ -26,10 +30,14 @@ final class AcademicCalendarViewController extends Controller
         }
 
         return view('frontend.academic-calendar', [
+            'title' => 'Academic calendar',
             'user' => $this->data->user(),
+            'school' => $this->data->school(),
+            'academicYear' => $this->data->currentYear(),
             'years' => $years,
             'selectedYear' => $selected,
             'periods' => $selected === null ? [] : $this->data->periods($selected['id']),
+            'validation' => $selected === null ? null : $this->calendar->validateYear((int) $selected['id']),
         ]);
     }
 }
