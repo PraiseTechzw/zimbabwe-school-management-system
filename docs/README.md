@@ -38,6 +38,7 @@ Sprint 0 established the engineering foundation. All seven Phase 1 foundation sl
 ## Sprint 0 report
 
 - [Verification evidence](reports/sprint-0-verification.md) — actual command output and GitHub checks
+- [B-06 audit policy decision brief](reports/b06-audit-policy-decision-brief.md) — PROPOSED role-change and CLI/bootstrap audit decisions awaiting owner approval
 
 ## Phase 1 — Platform Foundation discovery (historical; D-08 released the execution gate)
 
