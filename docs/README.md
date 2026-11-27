@@ -29,6 +29,15 @@ Sprint 0 establishes the engineering foundation. **No school functionality is im
 
 - [Verification evidence](reports/sprint-0-verification.md) — actual command output and GitHub checks
 
+## Phase 1 — Platform Foundation discovery (PROPOSED, not approved)
+
+- [Phase 1 Discovery Report](modules/platform-foundation/discovery-report.md) — board, research and next task
+- [Research index](research/README.md) — all discovery artefacts
+- [Product discovery](modules/platform-foundation/product-discovery.md) — PROPOSED product definition
+- [Phase 1 specification](modules/platform-foundation/phase-1-specification-proposed.md) — Product Owner approval gate `P1-G01`
+- [Traceability matrix](modules/platform-foundation/traceability-matrix.md) — planned links only; no implementation or tests
+- [Research coverage matrix](research/research-coverage-matrix.md) — evidence classes and gaps
+
 ## Templates
 
 - [Feature specification](templates/feature-specification.md)
