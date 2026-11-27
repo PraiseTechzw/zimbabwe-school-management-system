@@ -288,6 +288,26 @@ it('validates one scoped academic year and rejects a client supplied school id',
         ->assertJsonValidationErrors('school_id');
 });
 
+it('rejects a client supplied school id on calendar listing endpoints', function (string $path): void {
+    $school = School::factory()->create();
+    $user = calendarHttpUser($school);
+    $year = AcademicYear::factory()->for($school)->create(calendarHttpYearData(['name' => 'Listed year']));
+
+    $path = str_replace('{year}', (string) $year->id, $path);
+
+    $this->actingAs($user)
+        ->getJson($path)
+        ->assertOk();
+
+    $this->actingAs($user)
+        ->getJson($path.'?school_id='.$school->id)
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('school_id');
+})->with([
+    'years' => ['/api/academic-years'],
+    'periods' => ['/api/academic-years/{year}/periods'],
+]);
+
 it('does not reveal foreign year identifiers when creating a period', function (): void {
     $school = School::factory()->create();
     $otherSchool = School::factory()->create();
@@ -368,6 +388,28 @@ it('resolves the current year only for the authorised school and rejects client 
             ->getJson('/api/academic-years/current?school_id='.$school->id)
             ->assertStatus(422)
             ->assertJsonValidationErrors('school_id');
+    } finally {
+        Carbon::setTestNow();
+    }
+});
+
+it('returns an explicit null current year when no year qualifies', function (): void {
+    Carbon::setTestNow(Carbon::parse('2031-06-15'));
+
+    try {
+        $school = School::factory()->create();
+        $user = calendarHttpUser($school);
+        AcademicYear::factory()->for($school)->create(calendarHttpYearData([
+            'name' => 'Future year',
+            'start_date' => '2032-01-01',
+            'end_date' => '2032-12-31',
+        ]));
+
+        $this->actingAs($user)
+            ->getJson('/api/academic-years/current')
+            ->assertOk()
+            ->assertJsonPath('school_id', $school->id)
+            ->assertJsonPath('academic_year', null);
     } finally {
         Carbon::setTestNow();
     }

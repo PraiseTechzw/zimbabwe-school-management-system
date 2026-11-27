@@ -93,6 +93,11 @@ it('rejects invalid academic year input', function (array $overrides): void {
     'equal dates' => [['start_date' => '2027-06-01', 'end_date' => '2027-06-01']],
     'missing source' => [['source' => '']],
     'blank source' => [['source' => '   ']],
+    'missing name' => [['name' => null]],
+    'missing start date' => [['start_date' => null]],
+    'missing end date' => [['end_date' => null]],
+    'invalid date format' => [['start_date' => '01/01/2027']],
+    'overlong name' => [['name' => str_repeat('a', 256)]],
     'unconfigured status' => [['status' => 'unverified-status']],
 ]);
 
@@ -110,6 +115,32 @@ it('keeps academic year names unique per school but not across schools', functio
         ->toThrow(ValidationException::class);
 
     $this->assertDatabaseCount('academic_years', 2);
+});
+
+it('rejects case-insensitive duplicate names within their scope', function (): void {
+    $school = School::factory()->create();
+    $year = app(CreateAcademicYear::class)->execute($school, calendarYearData(['name' => 'Learning Year']));
+
+    expect(fn () => app(CreateAcademicYear::class)->execute($school, calendarYearData(['name' => 'learning year'])))
+        ->toThrow(ValidationException::class);
+
+    $action = app(CreateAcademicPeriod::class);
+    $action->execute($school, calendarPeriodData($year, [
+        'name' => 'Learning Block',
+        'sequence' => 1,
+        'start_date' => '2027-01-10',
+        'end_date' => '2027-02-10',
+    ]));
+
+    expect(fn () => $action->execute($school, calendarPeriodData($year, [
+        'name' => 'learning block',
+        'sequence' => 2,
+        'start_date' => '2027-02-11',
+        'end_date' => '2027-03-10',
+    ])))->toThrow(ValidationException::class);
+
+    $this->assertDatabaseCount('academic_years', 1)
+        ->assertDatabaseCount('academic_periods', 1);
 });
 
 it('makes academic year overlap configurable rather than assumed', function (): void {
@@ -181,6 +212,13 @@ it('rejects periods outside their year and invalid period dates', function (arra
     'starts before year' => [['start_date' => '2026-12-31', 'end_date' => '2027-02-01']],
     'ends after year' => [['start_date' => '2027-11-01', 'end_date' => '2028-01-01']],
     'end before start' => [['start_date' => '2027-05-01', 'end_date' => '2027-04-01']],
+    'missing academic year' => [['academic_year_id' => null]],
+    'nonexistent academic year' => [['academic_year_id' => 999999]],
+    'missing name' => [['name' => null]],
+    'missing start date' => [['start_date' => null]],
+    'invalid date format' => [['start_date' => '10/01/2027']],
+    'sequence below minimum' => [['sequence' => 0]],
+    'sequence above maximum' => [['sequence' => 10001]],
     'missing source' => [['source' => '']],
     'unconfigured type' => [['type' => 'unverified-type']],
     'unconfigured counting basis' => [['counting_basis' => 'unverified-basis']],
@@ -485,4 +523,95 @@ it('returns no current year when no published year covers today', function (): v
     } finally {
         Carbon::setTestNow();
     }
+});
+
+it('defaults new years and periods to draft when no status is supplied', function (): void {
+    $school = School::factory()->create();
+    $year = app(CreateAcademicYear::class)->execute($school, calendarYearData(['status' => null]));
+    $period = app(CreateAcademicPeriod::class)->execute($school, calendarPeriodData($year, ['status' => null]));
+
+    expect($year->status)->toBe('draft')
+        ->and($period->status)->toBe('draft');
+});
+
+it('accepts archived status on writes but excludes it from current resolution unless configured', function (): void {
+    Carbon::setTestNow(Carbon::parse('2031-06-15'));
+
+    try {
+        $school = School::factory()->create();
+        $year = app(CreateAcademicYear::class)->execute($school, calendarYearData([
+            'name' => 'Archived year',
+            'start_date' => '2031-01-01',
+            'end_date' => '2031-12-31',
+            'status' => 'archived',
+        ]));
+        $resolver = app(ResolveCurrentAcademicYear::class);
+
+        expect($year->status)->toBe('archived')
+            ->and($resolver->execute($school))->toBeNull();
+
+        config()->set('academic-calendar.current_year_statuses', ['archived' => ['label' => 'Archived']]);
+
+        expect($resolver->execute($school)?->id)->toBe($year->id);
+
+        config()->set('academic-calendar.current_year_statuses', []);
+
+        expect($resolver->execute($school))->toBeNull();
+    } finally {
+        Carbon::setTestNow();
+    }
+});
+
+it('treats academic year start and end dates as inclusive when resolving the current year', function (string $today): void {
+    Carbon::setTestNow(Carbon::parse($today));
+
+    try {
+        $school = School::factory()->create();
+        $year = AcademicYear::factory()->for($school)->create([
+            'name' => 'Boundary year',
+            'start_date' => '2031-01-01',
+            'end_date' => '2031-12-31',
+        ]);
+
+        expect(app(ResolveCurrentAcademicYear::class)->execute($school)?->id)->toBe($year->id);
+    } finally {
+        Carbon::setTestNow();
+    }
+})->with([
+    'start date' => ['2031-01-01'],
+    'end date' => ['2031-12-31'],
+]);
+
+it('allows a period that exactly matches its academic year boundaries', function (): void {
+    $school = School::factory()->create();
+    $year = app(CreateAcademicYear::class)->execute($school, calendarYearData());
+
+    $period = app(CreateAcademicPeriod::class)->execute($school, calendarPeriodData($year, [
+        'name' => 'Whole year',
+        'start_date' => '2027-01-01',
+        'end_date' => '2027-12-31',
+    ]));
+
+    expect($period->start_date->toDateString())->toBe('2027-01-01')
+        ->and($period->end_date->toDateString())->toBe('2027-12-31');
+});
+
+it('rejects periods that share an inclusive boundary date', function (): void {
+    $school = School::factory()->create();
+    $year = app(CreateAcademicYear::class)->execute($school, calendarYearData());
+    $action = app(CreateAcademicPeriod::class);
+
+    $action->execute($school, calendarPeriodData($year, [
+        'name' => 'First block',
+        'sequence' => 1,
+        'start_date' => '2027-01-05',
+        'end_date' => '2027-03-20',
+    ]));
+
+    expect(fn () => $action->execute($school, calendarPeriodData($year, [
+        'name' => 'Second block',
+        'sequence' => 2,
+        'start_date' => '2027-03-20',
+        'end_date' => '2027-06-20',
+    ])))->toThrow(ValidationException::class);
 });

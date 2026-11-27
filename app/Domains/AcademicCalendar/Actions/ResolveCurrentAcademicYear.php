@@ -26,7 +26,9 @@ final class ResolveCurrentAcademicYear
             return null;
         }
 
-        $today = Carbon::today()->toDateString();
+        // Dates are stored as datetime strings; compare like with like so the
+        // inclusive start boundary is not lost to string-length ordering.
+        $today = Carbon::today()->toDateTimeString();
 
         /** @var AcademicYear|null $year */
         $year = AcademicYear::query()

@@ -27,9 +27,7 @@ final class AcademicCalendarController extends Controller
 {
     public function current(Request $request, SchoolContext $context): JsonResponse
     {
-        Validator::make($request->all(), [
-            'school_id' => ['prohibited'],
-        ])->validate();
+        $this->rejectClientSchoolId($request);
 
         $school = $context->assertCurrent();
         $year = app(ResolveCurrentAcademicYear::class)->execute($school);
@@ -40,8 +38,10 @@ final class AcademicCalendarController extends Controller
         ]);
     }
 
-    public function years(SchoolContext $context): JsonResponse
+    public function years(Request $request, SchoolContext $context): JsonResponse
     {
+        $this->rejectClientSchoolId($request);
+
         $school = $context->assertCurrent();
 
         /** @var array<int, array<string, mixed>> $years */
@@ -74,8 +74,10 @@ final class AcademicCalendarController extends Controller
         return $this->tenantJson(['academic_year' => $this->yearPayload($updated)]);
     }
 
-    public function periods(SchoolContext $context, int $academicYear): JsonResponse
+    public function periods(Request $request, SchoolContext $context, int $academicYear): JsonResponse
     {
+        $this->rejectClientSchoolId($request);
+
         $year = $this->scopedYear($academicYear);
 
         /** @var array<int, array<string, mixed>> $periods */
@@ -114,8 +116,9 @@ final class AcademicCalendarController extends Controller
 
     public function validateCalendar(Request $request, SchoolContext $context): JsonResponse
     {
+        $this->rejectClientSchoolId($request);
+
         $validated = Validator::make($request->all(), [
-            'school_id' => ['prohibited'],
             'academic_year_id' => ['required', 'integer'],
         ])->validate();
 
@@ -128,6 +131,13 @@ final class AcademicCalendarController extends Controller
             'valid' => $issues === [],
             'issues' => $issues,
         ]);
+    }
+
+    private function rejectClientSchoolId(Request $request): void
+    {
+        Validator::make($request->all(), [
+            'school_id' => ['prohibited'],
+        ])->validate();
     }
 
     private function scopedYear(int $id): AcademicYear
