@@ -28,6 +28,25 @@ Stage B uses server-side adapters that call the same domain actions as the JSON 
 | `/api/role-assignments` | POST | `web`, `auth`, `school.context`, `roles.manage`; body `{user_id, role}`; `school_id` prohibited | `{role_assignment: assignment payload}`, HTTP 201 | Planned role assignment form | Available — contract verified; no UI built |
 | `/api/role-assignments/{roleAssignment}` | DELETE | `web`, `auth`, `school.context`, `roles.manage`; numeric route ID scoped to current school | HTTP 204, no body; `Cache-Control: no-store`, `Vary: X-School-Id, school_id` | Planned role assignment removal | Available — contract verified; no UI built |
 
+### Academic Structure contracts (verified, no frontend UI)
+
+`app/Providers/AcademicStructureServiceProvider.php` registers `routes/academic-structure.php` under `web`, `auth` and `school.context` with the `/api` prefix. Reads require `academic_structure.view`; writes require `academic_structure.manage`. Tenant-varying responses send `Cache-Control: no-store` and `Vary: X-School-Id, school_id`. `php artisan route:list --path=api/academic-structure --json` returned 16 route objects on this base.
+
+| Resource | Verified routes | Verified envelope | Status |
+| --- | --- | --- | --- |
+| Educational levels | `GET`, `POST /api/academic-structure/levels`; `PUT\|PATCH /api/academic-structure/levels/{educationalLevel}` | Lists: `{school_id, educational_levels: [...]}`; singular: `{educational_level}` | Available — contract verified; no UI built |
+| Grade levels | `GET /api/academic-structure/grade-levels`; `GET`, `POST /api/academic-structure/levels/{educationalLevel}/grade-levels`; `PUT\|PATCH /api/academic-structure/grade-levels/{gradeLevel}` | Lists: `{school_id, grade_levels: [...]}`; nested list adds the parent ID; singular: `{grade_level}` | Available — contract verified; no UI built |
+| Class definitions | `GET`, `POST /api/academic-structure/grade-levels/{gradeLevel}/classes`; `PUT\|PATCH /api/academic-structure/classes/{classDefinition}` | Lists: `{school_id, classes: [...]}`; nested list adds the parent ID; singular key is `{class}` (not `class_definition`) | Available — contract verified; no UI built |
+| Streams | `GET`, `POST /api/academic-structure/classes/{classDefinition}/streams`; `PUT\|PATCH /api/academic-structure/streams/{stream}` | Lists: `{school_id, streams: [...]}`; nested list adds the parent ID; singular: `{stream}` | Available — contract verified; no UI built |
+| Class offerings | `GET`, `POST /api/academic-structure/class-offerings` (list accepts an owned `academic_year_id` query filter); `PUT\|PATCH /api/academic-structure/class-offerings/{classOffering}` | Lists: `{school_id, class_offerings: [...]}`; singular: `{class_offering}` | Available — contract verified; no UI built |
+
+Integration constraints verified from the controller, FormRequests, domain actions and `docs/modules/academic-structure.md`:
+
+- Creates take parent IDs from the route; updates accept owned parent IDs and resolve them through the current school. Client `school_id` is prohibited on writes and on the offerings list query.
+- There is no seeded stage, grade, class or stream model, no pagination, no `is_active` filter and no delete/archive endpoint. Do not infer a national structure or stream semantic in the UI.
+- Writes permit the documented fields only: `name`, optional `code`, `display_order`, optional `is_active`, optional `configuration`, optional offering `name`, and owned parent IDs. Bounds and active-parent rules come from `config/academic-structure.php`.
+- Backend permissions remain authoritative. There is still no verified frontend permission map, so UI visibility must not be inferred from membership or these route rules.
+
 ## Stage B integration notes
 
 - `app/Frontend/Contracts/CalendarManagementGateway.php` is the frontend write boundary. `DomainCalendarManagementGateway` derives the school exclusively from `SchoolContext` and calls the same create, update and validation actions used by `AcademicCalendarController`.
@@ -44,11 +63,11 @@ Stage B uses server-side adapters that call the same domain actions as the JSON 
 - Treat every payload field as untrusted input: escape on output in Blade, never inject raw HTML.
 - A missing endpoint means a clearly labelled mock adapter, not an invented URL. Add provisional contracts here with `PROVISIONAL` in the status before writing UI against them.
 - Keep fetch/request counts low: one request per block, no polling on the dashboard unless a real need is documented.
-- UI visibility is not authorization. Role-assignment endpoints carry backend `roles.view` and `roles.manage` requirements, but there is still no verified frontend permission map; never hide or show an action on the assumption that it mirrors backend permissions.
+- UI visibility is not authorization. Role-assignment and Academic Structure endpoints carry backend `roles.view` / `roles.manage` and `academic_structure.view` / `academic_structure.manage` requirements, but there is still no verified frontend permission map; never hide or show an action on the assumption that it mirrors backend permissions.
 
 ## Known gaps
 
 - No endpoint for school switching, notifications, dashboards aggregates, or a module availability catalogue. Navigation uses local configuration and honest "not available yet" states.
 - No delete/archive calendar endpoints were verified; the management screen does not offer those actions.
-- School Settings and Role Assignment HTTP contracts are verified on this base but have no frontend UI in Stage B; Academic Structure and Audit endpoints remain absent from this branch. Contracts found in unmerged backend work are not treated as available here.
+- School Settings, Role Assignment and Academic Structure HTTP contracts are verified on this base but have no frontend UI in Stage B; Audit endpoints remain absent from this branch. Contracts found in unmerged backend work are not treated as available here.
 - No frontend permission map yet; backend authorization remains authoritative.
