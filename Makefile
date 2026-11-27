@@ -1,6 +1,6 @@
 COMPOSE := docker compose
 
-.PHONY: help up down build logs shell test lint analyse security-audit audit migrate fresh verify
+.PHONY: help up down build logs shell test lint analyse security-audit audit assets npm-audit migrate fresh verify
 
 help:
 	@grep -E '^[a-zA-Z_-]+:' Makefile | cut -d: -f1
@@ -40,4 +40,11 @@ security-audit: ## Audit installed Composer dependencies
 
 audit: security-audit ## Alias for security-audit
 
-verify: lint analyse security-audit test ## Run all local quality gates
+assets: ## Install npm dependencies and build assets (host Node 24)
+	npm ci
+	npm run build
+
+npm-audit: ## Audit npm dependencies (host Node 24)
+	npm audit --audit-level=high
+
+verify: lint analyse security-audit test ## Run all Docker quality gates
