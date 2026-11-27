@@ -12,7 +12,7 @@ Included:
 - Minimal actor identity, server-resolved school context, action/category classification, resource identity, event and persistence timestamps, correlation identifiers, allow-listed sources, structured metadata and safe before/after summaries.
 - Explicit write action and read-only query action.
 - Redaction of sensitive metadata keys and rejection of unsupported object values.
-- Deliberate integration with academic calendar configuration writes as the pattern for later modules.
+- Deliberate integration with academic calendar, academic structure and school settings configuration writes as the pattern for later modules.
 
 Not included:
 
@@ -67,7 +67,7 @@ Changing the redaction patterns changes the safety floor; operators must review 
 
 - `AuditEvent` has no `updated_at` column.
 - Model `updating` and `deleting` events throw `LogicException`.
-- The model's Eloquent builder overrides `update`, `increment`, `decrement`, `incrementEach`, `decrementEach` and `delete` to throw.
+- The model's Eloquent builder overrides `update`, `updateOrInsert`, `upsert`, `increment`, `decrement`, `incrementEach`, `decrementEach`, `truncate` and `delete` to throw.
 - The school foreign key uses `RESTRICT`, so a school with audit history cannot be deleted accidentally.
 - No HTTP write or delete route exists.
 
@@ -81,7 +81,7 @@ No HTTP endpoint is exposed in this slice because roles and permissions are not 
 
 ## Domain integration example
 
-The academic calendar actions now emit deliberate events for year and period creation/update. This demonstrates the intended pattern without changing calendar business rules:
+The academic calendar, academic structure and school settings actions emit deliberate events for configuration creation/update. This demonstrates the intended pattern without changing business rules:
 
 ```php
 app(RecordAuditEvent::class)->execute(
@@ -101,13 +101,13 @@ app(RecordAuditEvent::class)->execute(
 );
 ```
 
-Later modules should copy this shape: select named fields deliberately, use explicit before/after summaries and pass the server-resolved school. They must not pass whole requests, model attribute arrays or client identifiers.
+Later modules should copy this shape: select named fields deliberately, use explicit before/after summaries and pass the server-resolved school. They must not pass whole requests, model attribute arrays or client identifiers. School settings reuses the domain's `snapshot()` helper for both sides of the change so the audit payload matches its provenance revision without copying a tenant identifier. The B-05 coverage review at [../../reports/b05-audit-trail-coverage.md](../../reports/b05-audit-trail-coverage.md) records which other operations remain policy-gated.
 
 ## Tenant isolation and privacy
 
 - School context is never taken from request input by the audit domain.
 - Query results are always constrained to the supplied authorised school.
-- Cross-school calendar writes remain rejected before an audit record is created.
+- Cross-school configuration writes remain rejected before an audit record is created.
 - Actor records contain identifiers only.
 - Sensitive metadata keys are redacted before persistence.
 - Audit responses are not exposed over HTTP in this slice.
@@ -119,4 +119,5 @@ Later modules should copy this shape: select named fields deliberately, use expl
 - Raw SQL and privileged database roles can still bypass Eloquent immutability; this needs deployment-level control.
 - A future import or job path must pass an explicit system/job actor and its own server-resolved scope.
 - Roles/permissions are still required before any audit UI or API surface is opened.
+- The B-05 review does not decide authentication, role-change, CLI bootstrap, tenant-switching or Livewire-read audit requirements; those remain owner decisions recorded in the coverage report.
 - The school foreign key `RESTRICT` may require an owner decision if a formal school-deletion workflow is introduced later.
