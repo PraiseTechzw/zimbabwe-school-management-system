@@ -25,6 +25,7 @@ Sprint 0 established the engineering foundation. Phase 1 school-scoped backend f
 - [Deployment strategy](operations/deployment.md)
 - [Backup and restore](operations/backup-and-restore.md)
 - [GitHub project board guidance](github/project-board.md)
+- [Phase 1 integration tracker](github/integration-tracker.md) — verified PR, CI, board and merge states
 
 ## Sprint 0 report
 
