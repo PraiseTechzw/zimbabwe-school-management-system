@@ -1,0 +1,13 @@
+# Default owner for all files
+* @PraiseTechzw
+
+# Infrastructure and CI
+/docker/ @PraiseTechzw
+/docker-compose.yml @PraiseTechzw
+/Makefile @PraiseTechzw
+/.github/workflows/ @PraiseTechzw
+
+# Architecture and agent configuration
+/docs/adr/ @PraiseTechzw
+/.opencode/ @PraiseTechzw
+/AGENTS.md @PraiseTechzw

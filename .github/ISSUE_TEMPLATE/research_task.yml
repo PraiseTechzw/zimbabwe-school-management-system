@@ -1,0 +1,30 @@
+name: Research task
+description: Record a question that needs evidence before a decision
+title: "[Research]: "
+labels: [research, needs-evidence]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question to answer
+    validations:
+      required: true
+  - type: textarea
+    id: decision
+    attributes:
+      label: Decision this informs
+      description: Which ADR, feature or operational choice depends on the answer?
+    validations:
+      required: true
+  - type: textarea
+    id: method
+    attributes:
+      label: Evidence plan
+      description: Sources, prototype or measurements to be used.
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Result and links
+      description: Fill in when complete; link the accepted ADR if one results.
