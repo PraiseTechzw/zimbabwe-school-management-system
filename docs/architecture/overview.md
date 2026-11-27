@@ -31,6 +31,10 @@ A domain owns its tables and public actions. Other domains call those actions or
 3. Action performs domain work inside a transaction where needed.
 4. Response is rendered as JSON or a Blade view.
 
+## Authentication (Phase 1, provisional)
+
+The `Auth` domain owns local account lifecycle (status, lockout, failed attempts and last login) and exposes `/api/auth/login`, `/api/auth/logout` and `/api/auth/me`. Its routes live in `routes/auth.php` and are loaded into the `web` middleware group by `AuthServiceProvider`; this keeps shared routing files untouched and is asserted by tests. Login does not accept a school identifier. School access is established separately by `ResolveSchoolContext` from the authenticated user's `school_user` memberships, so authentication alone never grants cross-school access.
+
 ## School context (Phase 1, provisional)
 
 HTTP reads of school-owned data are scoped by an authenticated, server-side school context. `ResolveSchoolContext` derives the current school from the user's `school_user` memberships; a client-supplied school ID can only select among those memberships and can never grant access to another school. School-owned models expose **opt-in** `forSchool()` and `forCurrentSchool()` scopes; the latter fails closed when no context was authorised. There is no global scope: unscoped Eloquent queries are not automatically tenant-filtered, so every new school-owned read must explicitly use the appropriate scope. Domain actions are internal and must be given an explicit, authorised school before being exposed over HTTP.
