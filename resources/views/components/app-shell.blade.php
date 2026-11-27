@@ -21,7 +21,32 @@
     }
 @endphp
 
-<div class="min-h-screen lg:flex" x-data="{ menu: false }">
+<div class="min-h-screen lg:flex" x-data="{
+    menu: false,
+    menuOpener: null,
+    openMenu() {
+        this.menuOpener = $event.currentTarget;
+        this.menu = true;
+        this.$nextTick(() => this.$refs.mobileNavigation?.querySelector('button')?.focus());
+    },
+    closeMenu() {
+        this.menu = false;
+        this.$nextTick(() => this.menuOpener?.focus());
+    },
+    trapMenuFocus(event) {
+        const focusable = this.$refs.mobileNavigation?.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+        if (!focusable || focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+        }
+    }
+}">
     <aside class="hidden w-64 shrink-0 flex-col border-r border-border bg-surface lg:flex">
         <a href="{{ route('frontend.dashboard') }}" class="flex h-14 items-center gap-2 border-b border-border px-5 text-[15px] font-semibold">
             <x-icon name="school" class="h-5 w-5" />
@@ -37,7 +62,7 @@
             <div class="flex h-14 items-center justify-between gap-4 px-4 sm:px-6">
                 <div class="flex min-w-0 items-center gap-3">
                     <button type="button" class="fs-btn fs-btn-secondary fs-btn-compact lg:hidden"
-                            aria-label="Open navigation" aria-controls="mobile-navigation" @click="menu = true">
+                            aria-label="Open navigation" aria-controls="mobile-navigation" @click="openMenu()">
                         <x-icon name="menu" class="h-4 w-4" />
                     </button>
                     <nav aria-label="Breadcrumb" class="min-w-0">
@@ -79,14 +104,15 @@
         </main>
     </div>
 
-    <div x-cloak x-show="menu" class="fixed inset-0 z-50 lg:hidden" @keydown.escape.window="menu = false">
-        <div class="absolute inset-0 bg-black/30" @click="menu = false" aria-hidden="true"></div>
-        <aside id="mobile-navigation" class="absolute inset-y-0 left-0 w-[280px] max-w-[85vw] overflow-y-auto bg-surface shadow-lg"
-               role="dialog" aria-modal="true" aria-label="Navigation">
+    <div x-cloak x-show="menu" class="fixed inset-0 z-50 lg:hidden" @keydown.escape.window="closeMenu()">
+        <div class="absolute inset-0 bg-black/30" @click="closeMenu()" aria-hidden="true"></div>
+        <aside id="mobile-navigation" x-ref="mobileNavigation"
+               class="absolute inset-y-0 left-0 w-[280px] max-w-[85vw] overflow-y-auto bg-surface shadow-lg"
+               role="dialog" aria-modal="true" aria-label="Navigation" @keydown.tab="trapMenuFocus($event)">
             <div class="flex h-14 items-center justify-between border-b border-border px-5">
                 <span class="text-[15px] font-semibold">School Manager</span>
                 <button type="button" class="fs-btn fs-btn-secondary fs-btn-compact" aria-label="Close navigation"
-                        @click="menu = false">
+                        @click="closeMenu()">
                     <x-icon name="close" class="h-4 w-4" />
                 </button>
             </div>

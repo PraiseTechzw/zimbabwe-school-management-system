@@ -66,7 +66,7 @@ function mountLoginForm(root, client) {
 
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
-        const errorBox = form.querySelector('[data-api-error]');
+        const errorBox = root.querySelector('[data-api-error]');
         const submit = form.querySelector('button[type="submit"]');
         if (errorBox) errorBox.hidden = true;
         if (submit) submit.disabled = true;
@@ -93,8 +93,10 @@ function mountLogoutButtons(root, client) {
             button.disabled = true;
             try {
                 await client.post('/api/auth/logout');
-            } catch {
-                // Even if logout fails, leave the application surface.
+            } catch (error) {
+                showError(root.querySelector('[data-api-error]'), error.message);
+                button.disabled = false;
+                return;
             }
             globalThis.location.assign('/login');
         });

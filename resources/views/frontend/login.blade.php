@@ -18,7 +18,7 @@
             <div data-api-error role="alert" hidden
                  class="mt-4 rounded-md border border-negative/30 bg-negative/5 px-3 py-2 text-[13px] text-negative"></div>
 
-            <form data-api-login class="mt-5 space-y-4" novalidate>
+            <form data-api-login action="/login" method="post" class="mt-5 space-y-4" novalidate>
                 <x-input name="email" label="Email address" type="email" autocomplete="username" required />
                 <x-input name="password" label="Password" type="password" autocomplete="current-password" required />
                 <x-button type="submit" class="w-full">Sign in</x-button>

@@ -33,7 +33,7 @@ it('renders the sign-in form without exposing credential values', function (): v
         ->assertOk()
         ->assertSee('data-api-login', false)
         ->assertSee('name="password"', false)
-        ->assertDontSee('type="password" value=');
+        ->assertSee('type="password" value=""', false);
 });
 
 it('requires an authorised school context for application screens', function (): void {
@@ -128,7 +128,7 @@ it('lets deployments hide navigation items from the shell', function (): void {
     $this->actingAs($user)
         ->get('/app')
         ->assertOk()
-        ->assertDontSee('>Fees<')
+        ->assertDontSee('>Fees<', false)
         ->assertSee('Academic calendar');
 });
 
