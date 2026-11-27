@@ -5,9 +5,11 @@ declare(strict_types=1);
 use App\Domains\AcademicStructure\Models\EducationalLevel;
 use App\Domains\Authorization\Models\RoleAssignment;
 use App\Domains\School\Models\School;
+use App\Http\Middleware\EnsurePermission;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Route;
 
 uses(RefreshDatabase::class);
 
@@ -131,4 +133,60 @@ it('does not grant structure permissions from a role assigned in another school'
         ->assertForbidden();
 
     expect(EducationalLevel::query()->forSchool($school)->count())->toBe(0);
+});
+
+it('applies the expected permission to every registered academic structure route', function (): void {
+    $expected = [
+        'GET api/academic-structure/levels' => 'academic_structure.view',
+        'POST api/academic-structure/levels' => 'academic_structure.manage',
+        'PUT api/academic-structure/levels/{educationalLevel}' => 'academic_structure.manage',
+        'PATCH api/academic-structure/levels/{educationalLevel}' => 'academic_structure.manage',
+        'GET api/academic-structure/grade-levels' => 'academic_structure.view',
+        'GET api/academic-structure/levels/{educationalLevel}/grade-levels' => 'academic_structure.view',
+        'POST api/academic-structure/levels/{educationalLevel}/grade-levels' => 'academic_structure.manage',
+        'PUT api/academic-structure/grade-levels/{gradeLevel}' => 'academic_structure.manage',
+        'PATCH api/academic-structure/grade-levels/{gradeLevel}' => 'academic_structure.manage',
+        'GET api/academic-structure/grade-levels/{gradeLevel}/classes' => 'academic_structure.view',
+        'POST api/academic-structure/grade-levels/{gradeLevel}/classes' => 'academic_structure.manage',
+        'PUT api/academic-structure/classes/{classDefinition}' => 'academic_structure.manage',
+        'PATCH api/academic-structure/classes/{classDefinition}' => 'academic_structure.manage',
+        'GET api/academic-structure/classes/{classDefinition}/streams' => 'academic_structure.view',
+        'POST api/academic-structure/classes/{classDefinition}/streams' => 'academic_structure.manage',
+        'PUT api/academic-structure/streams/{stream}' => 'academic_structure.manage',
+        'PATCH api/academic-structure/streams/{stream}' => 'academic_structure.manage',
+        'GET api/academic-structure/class-offerings' => 'academic_structure.view',
+        'POST api/academic-structure/class-offerings' => 'academic_structure.manage',
+        'PUT api/academic-structure/class-offerings/{classOffering}' => 'academic_structure.manage',
+        'PATCH api/academic-structure/class-offerings/{classOffering}' => 'academic_structure.manage',
+    ];
+
+    $actual = [];
+
+    foreach (Route::getRoutes() as $route) {
+        $uri = $route->uri();
+
+        if (! str_starts_with($uri, 'api/academic-structure')) {
+            continue;
+        }
+
+        $middleware = collect($route->gatherMiddleware())->first(
+            fn (mixed $value): bool => is_string($value)
+                && str_starts_with($value, EnsurePermission::class.':'),
+        );
+
+        expect($middleware)->not->toBeNull();
+
+        foreach ($route->methods() as $method) {
+            if ($method === 'HEAD' || $method === 'OPTIONS') {
+                continue;
+            }
+
+            $actual[$method.' '.$uri] = explode(':', (string) $middleware, 2)[1];
+        }
+    }
+
+    ksort($expected);
+    ksort($actual);
+
+    expect($actual)->toBe($expected);
 });
