@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\AcademicStructure\Actions;
 
 use App\Domains\AcademicStructure\Concerns\GuardsAcademicStructure;
+use App\Domains\AcademicStructure\Concerns\RecordsAcademicStructureAudit;
 use App\Domains\AcademicStructure\Models\Stream;
 use App\Domains\AcademicStructure\Support\AcademicStructureRules;
 use App\Domains\School\Models\School;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Validator;
 final class CreateStream
 {
     use GuardsAcademicStructure;
+    use RecordsAcademicStructureAudit;
 
     /**
      * @param  array<string, mixed>  $data
@@ -79,6 +81,15 @@ final class CreateStream
             $stream->school_id = $school->id;
             $stream->class_definition_id = $class->id;
             $stream->save();
+
+            $this->recordStructureAudit(
+                $school,
+                'stream.created',
+                'stream',
+                (string) $stream->id,
+                null,
+                $this->streamAuditSnapshot($stream),
+            );
 
             return $stream;
         });

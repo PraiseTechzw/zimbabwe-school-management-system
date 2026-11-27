@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\AcademicStructure\Actions;
 
 use App\Domains\AcademicStructure\Concerns\GuardsAcademicStructure;
+use App\Domains\AcademicStructure\Concerns\RecordsAcademicStructureAudit;
 use App\Domains\AcademicStructure\Models\ClassOffering;
 use App\Domains\AcademicStructure\Support\AcademicStructureRules;
 use App\Domains\School\Models\School;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Validator;
 final class CreateClassOffering
 {
     use GuardsAcademicStructure;
+    use RecordsAcademicStructureAudit;
 
     /**
      * @param  array<string, mixed>  $data
@@ -75,6 +77,15 @@ final class CreateClassOffering
             $offering->class_definition_id = $class->id;
             $offering->academic_year_id = $year->id;
             $offering->save();
+
+            $this->recordStructureAudit(
+                $school,
+                'class_offering.created',
+                'class_offering',
+                (string) $offering->id,
+                null,
+                $this->classOfferingAuditSnapshot($offering),
+            );
 
             return $offering;
         });

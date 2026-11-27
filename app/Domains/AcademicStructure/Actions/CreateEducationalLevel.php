@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\AcademicStructure\Actions;
 
 use App\Domains\AcademicStructure\Concerns\GuardsAcademicStructure;
+use App\Domains\AcademicStructure\Concerns\RecordsAcademicStructureAudit;
 use App\Domains\AcademicStructure\Models\EducationalLevel;
 use App\Domains\AcademicStructure\Support\AcademicStructureRules;
 use App\Domains\School\Models\School;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Validator;
 final class CreateEducationalLevel
 {
     use GuardsAcademicStructure;
+    use RecordsAcademicStructureAudit;
 
     /**
      * @param  array<string, mixed>  $data
@@ -75,6 +77,15 @@ final class CreateEducationalLevel
             ]);
             $level->school_id = $school->id;
             $level->save();
+
+            $this->recordStructureAudit(
+                $school,
+                'educational_level.created',
+                'educational_level',
+                (string) $level->id,
+                null,
+                $this->educationalLevelAuditSnapshot($level),
+            );
 
             return $level;
         });

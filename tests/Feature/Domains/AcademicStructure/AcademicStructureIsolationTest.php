@@ -10,18 +10,28 @@ use App\Domains\AcademicStructure\Models\ClassOffering;
 use App\Domains\AcademicStructure\Models\EducationalLevel;
 use App\Domains\AcademicStructure\Models\GradeLevel;
 use App\Domains\AcademicStructure\Models\Stream;
+use App\Domains\Authorization\Models\RoleAssignment;
 use App\Domains\School\Models\School;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 
 uses(RefreshDatabase::class);
 
-function structureHttpUser(School $school): User
+function structureHttpUser(School $school, string $role = 'school_admin'): User
 {
     $user = User::factory()->create();
     $user->schools()->attach($school);
+
+    RoleAssignment::query()->forceCreate([
+        'school_id' => (int) $school->id,
+        'user_id' => (int) $user->id,
+        'role' => $role,
+        'source' => 'domain',
+        'created_at' => Carbon::now(),
+    ]);
 
     return $user;
 }
@@ -196,6 +206,53 @@ it('creates and filters academic year class offerings through the API', function
         ->assertOk()
         ->assertJsonPath('class_offering.name', 'Renamed offering')
         ->assertJsonPath('class_offering.is_active', false);
+});
+
+it('rejects invalid update payloads on every structure update endpoint', function (): void {
+    $school = School::factory()->create();
+    $other = School::factory()->create();
+    $user = structureHttpUser($school);
+
+    $level = EducationalLevel::factory()->for($school)->create(['name' => 'Original level']);
+    $grade = GradeLevel::factory()->inLevel($level)->create();
+    $class = ClassDefinition::factory()->inGrade($grade)->create();
+    $stream = Stream::factory()->inClass($class)->create(['name' => 'Original stream']);
+
+    $year = app(CreateAcademicYear::class)->execute($school, [
+        'name' => 'Structure update year',
+        'start_date' => '2031-01-01',
+        'end_date' => '2031-12-31',
+        'status' => 'published',
+        'source' => 'School calendar register',
+    ]);
+    $foreignYear = app(CreateAcademicYear::class)->execute($other, [
+        'name' => 'Foreign update year',
+        'start_date' => '2032-01-01',
+        'end_date' => '2032-12-31',
+        'status' => 'published',
+        'source' => 'School calendar register',
+    ]);
+    $offering = ClassOffering::factory()->forClassAndYear($class, $year)->create(['name' => 'Original offering']);
+
+    $cases = [
+        ['/api/academic-structure/levels/'.$level->id, ['name' => '   ']],
+        ['/api/academic-structure/grade-levels/'.$grade->id, ['display_order' => 0]],
+        ['/api/academic-structure/classes/'.$class->id, ['configuration' => 'not-an-array']],
+        ['/api/academic-structure/streams/'.$stream->id, ['is_active' => 'yes']],
+        ['/api/academic-structure/class-offerings/'.$offering->id, ['academic_year_id' => $foreignYear->id]],
+    ];
+
+    foreach ($cases as [$endpoint, $payload]) {
+        $this->actingAs($user)
+            ->putJson($endpoint, $payload)
+            ->assertUnprocessable();
+    }
+
+    expect($level->fresh()->name)->toBe('Original level')
+        ->and($grade->fresh()->display_order)->toBe($grade->display_order)
+        ->and($class->fresh()->configuration)->toBeNull()
+        ->and($stream->fresh()->name)->toBe('Original stream')
+        ->and($offering->fresh()->name)->toBe('Original offering');
 });
 
 it('rejects client supplied school identifiers on every write endpoint', function (): void {

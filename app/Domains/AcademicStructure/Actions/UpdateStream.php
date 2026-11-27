@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\AcademicStructure\Actions;
 
 use App\Domains\AcademicStructure\Concerns\GuardsAcademicStructure;
+use App\Domains\AcademicStructure\Concerns\RecordsAcademicStructureAudit;
 use App\Domains\AcademicStructure\Models\Stream;
 use App\Domains\AcademicStructure\Support\AcademicStructureRules;
 use App\Domains\School\Models\School;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Validator;
 final class UpdateStream
 {
     use GuardsAcademicStructure;
+    use RecordsAcademicStructureAudit;
 
     /**
      * @param  array<string, mixed>  $data
@@ -79,6 +81,8 @@ final class UpdateStream
                 (int) $stream->id,
             );
 
+            $before = $this->streamAuditSnapshot($stream);
+
             $stream->fill([
                 'name' => $name,
                 'code' => $code,
@@ -87,6 +91,15 @@ final class UpdateStream
             ]);
             $stream->class_definition_id = $class->id;
             $stream->save();
+
+            $this->recordStructureAudit(
+                $school,
+                'stream.updated',
+                'stream',
+                (string) $stream->id,
+                $before,
+                $this->streamAuditSnapshot($stream),
+            );
 
             return $stream;
         });

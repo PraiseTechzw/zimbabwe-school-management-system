@@ -1,8 +1,8 @@
 # Academic Structure foundation
 
-**Status:** implemented backend foundation, not deployed and not user-facing. Rules marked **PROPOSED** are either research candidates awaiting confirmation or provisional engineering safeguards; they are not approved product requirements.
+**Status:** implemented backend foundation integrated with the current authorization and audit foundations, not deployed and not user-facing. Rules marked **PROPOSED** are either research candidates awaiting confirmation or provisional engineering safeguards; they are not approved product requirements.
 **Evidence basis:** [Findings 02 — school structures, stages and organisational units](../../research/findings/02-organisational-structures.md) (source IDs `STR-*`), [module specification template](../../templates/module-specification.md).
-**Not included:** authentication, roles/permissions, learner/student records, enrolment, attendance, fees, assessment, reporting, HR, boarding or a user interface.
+**Not included:** learner/student records, enrolment, attendance, fees, assessment, reporting, HR, boarding or a user interface. Authentication, school context, roles and permissions are reused from the existing foundations rather than reimplemented here.
 
 ## Purpose and non-goals
 
@@ -11,9 +11,9 @@ A school defines its own structural hierarchy: educational level → grade level
 - **EVIDENCE (STR-05, indexed excerpt):** MoPSE statistical nomenclature includes ECD A, ECD B, Grades 1–7, Forms 1–4, Lower 6 and Upper 6. These names are examples for configuration only. The module seeds no levels, grades, classes or streams and makes no claim about a universal national model.
 - **No universal assumptions:** no prescribed stage count, no Grade ↔ Form crosswalk, no fixed class size, no mapping of a stream to a subject pathway or a parallel group.
 - **No school functionality beyond structure:** no admissions, attendance, fees, learner records, assessment, reporting, HR or boarding.
-- **No authentication work:** endpoints rely on the existing `auth` + `school.context` middleware; no new login, role or permission model is introduced.
+- **Existing access foundations:** endpoints rely on the existing `auth` + `school.context` middleware and add `EnsurePermission` at the route boundary. No new login, role or permission model is introduced.
 - **API-only bootstrap:** there is no seeder, CLI command or UI for creating the initial structure. Schools must use the JSON endpoints.
-- **No delete surface:** cascade rules exist in the database, but this slice exposes no delete/archive endpoint.
+- **No delete surface:** cascade rules exist in the database, but this slice exposes no delete/archive endpoint. History retention after deletion is an unresolved product decision.
 
 ## Data ownership and model
 
@@ -83,7 +83,7 @@ All four are **PROPOSED** engineering safeguards, chosen for structural integrit
 
 ## Interfaces
 
-Routes are isolated in `routes/academic-structure.php`, loaded by `AcademicStructureServiceProvider` under `web`, `auth` and `school.context` with the `/api` prefix. `php artisan route:list --path=api/academic-structure --json` returned **16 route objects / 21 method–path bindings** (six `GET`, five `POST`, five `PUT|PATCH` match routes; each match route registers both aliases), exit `0`. The table follows the route file exactly; query parameters are shown in the Purpose column.
+Routes are isolated in `routes/academic-structure.php`, loaded by `AcademicStructureServiceProvider` under `web`, `auth` and `school.context` with the `/api` prefix. Every route also applies `EnsurePermission`: reads require `academic_structure.view`, writes require `academic_structure.manage`. `php artisan route:list --path=api/academic-structure --json` returned **16 route objects / 21 declared method–path bindings** (six `GET|HEAD` objects counted once, five `POST`, five `PUT|PATCH` objects registering both aliases), exit `0`; Laravel expands those to 27 individual HTTP methods. The table follows the route file exactly; query parameters are shown in the Purpose column.
 
 | Method | Path | Purpose |
 | --- | --- | --- |
@@ -104,9 +104,16 @@ Routes are isolated in `routes/academic-structure.php`, loaded by `AcademicStruc
 | `POST` | `/api/academic-structure/class-offerings` | Offer a class in an owned academic year |
 | `PUT\|PATCH` | `/api/academic-structure/class-offerings/{classOffering}` | Update an owned offering |
 
-**Request/response shape.** Requests are JSON objects containing the writable fields shown in the data model. Create responses use `201` with a singular envelope (`educational_level`, `grade_level`, `class_definition`, `stream`, `class_offering`). Update responses use `200` with the same singular envelope. List responses use `200` with `school_id` and a plural envelope (`educational_levels`, `grade_levels`, `classes`, `streams`, `class_offerings`). List endpoints return all owned rows: there is no pagination and no `is_active` filter. Nested reads add the parent ID to the envelope.
+**Request/response shape.** Requests are JSON objects containing the writable fields shown in the data model. Create responses use `201` with a singular envelope (`educational_level`, `grade_level`, `class`, `stream`, `class_offering`). Update responses use `200` with the same singular envelope. The class envelope key is `class`, not `class_definition`; the model and table remain named `ClassDefinition`. List responses use `200` with `school_id` and a plural envelope (`educational_levels`, `grade_levels`, `classes`, `streams`, `class_offerings`). List endpoints return all owned rows: there is no pagination and no `is_active` filter. Nested reads add the parent ID to the envelope.
 
 Domain actions live under `app/Domains/AcademicStructure/Actions/` (`Create*`/`Update*` for each of the five entities) and use `GuardsAcademicStructure` for ownership, active-parent and duplicate checks. The controller validates requests, resolves `SchoolContext` and delegates to those actions. On **creates**, parent IDs come from the route, never from client input. On **updates**, parent IDs are accepted from the request but resolved through the current school, so reparenting is possible only between owned parents.
+
+## Permissions and audit
+
+- `academic_structure.view` is granted to `school_member`, `school_editor` and `school_admin` (the last via `*`). `academic_structure.manage` is granted to `school_editor` and `school_admin`. `role_viewer`, roleless users and users whose matching role is assigned in another school are denied.
+- Permissions are resolved by `SchoolPermissions` from active role assignments in the server-resolved school. The middleware never reads a school or role from client input.
+- All ten create/update actions append a deliberate `AuditEvent` through `RecordAuditEvent`, in category `school_configuration` with source `domain`. Actions are `educational_level.created|updated`, `grade_level.created|updated`, `class_definition.created|updated`, `stream.created|updated` and `class_offering.created|updated`.
+- Audit snapshots contain selected scalar fields. School-defined `configuration` payloads are represented by `configuration_present` rather than copied verbatim. Rejected validation and rejected ownership checks emit no structure audit event. Events are scoped to the server-resolved school and use the existing authenticated actor resolver.
 
 ## Isolation behaviour
 
@@ -115,7 +122,7 @@ Domain actions live under `app/Domains/AcademicStructure/Actions/` (`Create*`/`U
 - Route-parent lookups use `forCurrentSchool()->findOrFail()`, so foreign IDs return `404`. Domain writes resolve parents against the resolved school and return the same generic "not available" message for missing and foreign IDs, so records cannot be probed through validation errors. Foreign names are not echoed.
 - `school_id` is not mass-assignable on any model; actions set it from the resolved `School` after validation. Composite foreign keys block cross-school parents at the database layer. Parent row locks are taken only after the school-scoped lookup.
 - Tenant-varying JSON responses send `Cache-Control: no-store` and `Vary: X-School-Id, school_id`, mirroring the academic calendar API.
-- No roles or permissions are enforced in this slice: any authenticated user with a valid school membership can use the endpoints until the permissions slice is implemented. This is a known medium-severity limitation for exposure beyond a foundation review.
+- Structure permissions are enforced at the route boundary from active role assignments in the server-resolved school. A valid school membership alone is not sufficient for writes; `school_member` can read but cannot write. Permission decisions are not delegated to client headers or request bodies.
 
 ## Implementation decisions
 
@@ -125,17 +132,18 @@ Domain actions live under `app/Domains/AcademicStructure/Actions/` (`Create*`/`U
 | AS-D-02 | Include `school_id` in every parent foreign key. | PROPOSED shared-database boundary with defence in depth; verified by schema tests. |
 | AS-D-03 | Make streams optional and semantically neutral. | UNRESOLVED STR-21. |
 | AS-D-04 | Keep integrity switches in configuration. | PROPOSED safeguards; reversible without code changes. |
-| AS-D-05 | Reuse the existing `auth` + `school.context` middleware; add no new permissions. | Out of scope for this foundation slice. |
-| AS-D-06 | Expose create/update/list only; rely on DB cascades for deletion semantics. | No delete/archive decision has been made. |
+| AS-D-05 | Reuse the existing `auth` + `school.context` middleware and add two catalogue permissions to the existing RBAC model. | The current mainline has roles and permissions; the canonical foundation predated them. |
+| AS-D-06 | Expose create/update/list only; rely on DB cascades for deletion semantics. | No delete/archive decision has been made; hard cascade deletion is a known product risk. |
+| AS-D-07 | Append deliberate `school_configuration` audit events for every structure write. | The current mainline has an audit foundation; the canonical foundation predated it. |
 
 ## Unresolved questions for product and engineering
 
 - **Product:** does "stream" mean a parallel class, an A-Level subject pathway, or both, and may a school define its own meaning (STR-21)?
 - **Product:** should a Grade ↔ Form crosswalk be modelled, and if so where does it come from (finding 22)?
 - **Product:** should any stage names be offered as optional templates, or must every school start from an empty structure?
-- **Product:** is an explicit delete/archive API needed, and what happens to historical offerings?
+- **Product:** is an explicit delete/archive API needed, and what happens to historical offerings? Today deletion is only a database cascade from a school or ancestor; no archive API or immutability rule exists, so historical structure references can disappear while audit events remain. This is an unresolved product decision, not an approved policy.
 - **Engineering:** should `require_active_parent` remain `true`, and should deactivating a parent be blocked when active children exist?
-- **Engineering:** is `LOWER(...)` application uniqueness sufficient, or should a normalized/generated lowercase column or expression index be added?
+- **Engineering:** is `LOWER(...)` application uniqueness sufficient, or should a normalized/generated lowercase column or expression index be added? MySQL 8 fresh migrations and rollback are verified below, but no non-ASCII collation comparison was exercised, so collation-dependent duplicate behaviour remains untested.
 - **Engineering:** should `configuration` have a serialized-size cap, depth limit or key allowlist?
 - **Engineering:** is the offering `name` needed at all, and should multiple unnamed offerings for different classes in one year be explicitly allowed?
 - **Engineering:** what reordering semantics should `display_order` have (gap handling and moves between parents)?
@@ -143,19 +151,21 @@ Domain actions live under `app/Domains/AcademicStructure/Actions/` (`Create*`/`U
 
 ## Verification evidence
 
-All checks below were run from the isolated worktree `/tmp/opencode/p1-academic-structure-foundation` using Compose project `zsmm-structure`; commands, exit codes and output are recorded in `/tmp/opencode/final-verify2.txt` (local evidence, **not** GitHub Actions).
+All checks below were run from the isolated worktree `/tmp/opencode/p1-academic-structure-integration` using Compose project `p1-academic-structure-integration` with override `/tmp/opencode/docs-compose-p1-academic-integration.override.yaml` (MySQL on `127.0.0.1:3308`, nginx on `127.0.0.1:8001`). Logs are in `/tmp/opencode/academic-*.log`. This is local evidence, **not** GitHub Actions or remote CI.
 
 | Command | Exit | Result |
 | --- | ---: | --- |
-| `docker compose -p zsmm-structure -f docker-compose.yml config -q` | 0 | Compose config valid |
-| `docker compose -p zsmm-structure run --rm --no-deps app ./vendor/bin/pest tests/Feature/Domains/AcademicStructure --colors=never` | 0 | 41 passed, 243 assertions |
-| `docker compose -p zsmm-structure run --rm --no-deps app php artisan test` | 0 | 137 passed, 595 assertions |
-| `docker compose -p zsmm-structure run --rm --no-deps app ./vendor/bin/pint --test` | 0 | 135 files, no style issues |
-| `docker compose -p zsmm-structure run --rm --no-deps app ./vendor/bin/phpstan analyse --no-progress --memory-limit=1G` | 0 | `[OK] No errors` |
-| `docker compose -p zsmm-structure run --rm --no-deps app composer validate --strict` | 0 | `./composer.json is valid` |
-| `docker compose -p zsmm-structure run --rm --no-deps app composer audit --locked` | 0 | No security vulnerability advisories |
-| `docker compose -p zsmm-structure run --rm --no-deps app php artisan migrate:fresh --env=testing --force --no-interaction` | 0 | All migrations ran on SQLite |
-| `docker compose -p zsmm-structure run --rm --no-deps app php artisan route:list --path=api/academic-structure --json` | 0 | 16 route objects |
+| `docker compose ... config -q` | 0 | Compose config valid |
+| `docker compose ... run --rm --no-deps app ./vendor/bin/pest tests/Feature/Domains/AcademicStructure --colors=never` | 0 | 50 passed, 282 assertions |
+| `make verify COMPOSE="docker compose ..."` | 0 | Pint: 207 files clean; PHPStan/Larastan: `[OK] No errors`; Composer audit: no advisories; full Pest: 243 passed, 990 assertions |
+| `docker compose ... exec -T app composer validate --strict` | 0 | `./composer.json is valid` |
+| `docker compose ... exec -T mysql sh -c 'mysql ... -e "SELECT VERSION();"'` | 0 | MySQL `8.0.46` |
+| `docker compose ... exec -T app php artisan migrate:fresh --force --no-interaction` | 0 | All 21 migrations ran on MySQL 8 (see note below) |
+| `docker compose ... exec -T app php artisan migrate:status` | 0 | All 21 migrations reported `Ran` in batch 1 |
+| `docker compose ... exec -T app php artisan migrate:rollback --force --no-interaction` | 0 | All 21 migrations rolled back on MySQL 8 |
+| `docker compose ... run --rm --no-deps app php artisan route:list --path=api/academic-structure --json` | 0 | 16 route objects / 21 declared bindings / 27 expanded HTTP methods; every route has `EnsurePermission` |
 | `git diff --check` | 0 | No whitespace errors |
 
-The 33 named cases in the three AcademicStructure Pest files expand to 41 instances through datasets. A read-only tenant-safety review found no high or critical findings; scoped parent locking and explicit-`null` `is_active` handling were hardened in response, with a regression test for the latter. A fresh-reader documentation review was performed by a read-only agent and its factual findings were applied. No human reader review and no remote CI result is claimed.
+The Pest suite is forced to in-memory SQLite by `phpunit.xml`; the MySQL results above are **migration checks only**, not Pest coverage against MySQL. No non-ASCII collation case was run. Fresh-install verification initially failed because four generated index names exceeded MySQL's 64-character identifier limit (one in the existing school identity migration and three in Academic Structure); explicit short names now avoid that limit without changing constraints. No remote CI result is claimed.
+
+Read-only data-model, API/test, and replay-scope reviews were completed before implementation. The first resolved the cross-school composite-key and rollback-batch risks, the second drove the permission/audit integration, and the third confirmed no shipped frontend, docs, config or Livewire work was reverted by the replay. No human reader review is claimed.

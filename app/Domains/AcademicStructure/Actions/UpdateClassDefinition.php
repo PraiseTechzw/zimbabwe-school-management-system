@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\AcademicStructure\Actions;
 
 use App\Domains\AcademicStructure\Concerns\GuardsAcademicStructure;
+use App\Domains\AcademicStructure\Concerns\RecordsAcademicStructureAudit;
 use App\Domains\AcademicStructure\Models\ClassDefinition;
 use App\Domains\AcademicStructure\Support\AcademicStructureRules;
 use App\Domains\School\Models\School;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Validator;
 final class UpdateClassDefinition
 {
     use GuardsAcademicStructure;
+    use RecordsAcademicStructureAudit;
 
     /**
      * @param  array<string, mixed>  $data
@@ -83,6 +85,8 @@ final class UpdateClassDefinition
                 (int) $class->id,
             );
 
+            $before = $this->classDefinitionAuditSnapshot($class);
+
             $class->fill([
                 'name' => $name,
                 'code' => $code,
@@ -92,6 +96,15 @@ final class UpdateClassDefinition
             ]);
             $class->grade_level_id = $grade->id;
             $class->save();
+
+            $this->recordStructureAudit(
+                $school,
+                'class_definition.updated',
+                'class_definition',
+                (string) $class->id,
+                $before,
+                $this->classDefinitionAuditSnapshot($class),
+            );
 
             return $class;
         });
