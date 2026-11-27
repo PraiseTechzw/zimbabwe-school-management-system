@@ -20,6 +20,22 @@ return [
         'archived' => ['label' => 'Archived'],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Current-year resolution
+    |--------------------------------------------------------------------------
+    |
+    | PROPOSED engineering rule: a year is current when its configured status
+    | allows current use and today falls inside its inclusive date range. If
+    | more than one qualifies, the latest start date wins, then the highest ID.
+    | There is deliberately no fuzzy fallback to draft or out-of-range years.
+    |
+    */
+
+    'current_year_statuses' => [
+        'published' => ['label' => 'Published'],
+    ],
+
     'period_statuses' => [
         'draft' => ['label' => 'Draft'],
         'published' => ['label' => 'Published'],

@@ -29,6 +29,7 @@ Records are school-owned and scoped by the server-side `SchoolContext` establish
 - Academic year overlap is disabled by default (`academic-calendar.prevent_year_overlap`). It is an engineering safeguard, not an evidence-backed requirement, so it can be enabled by configuration.
 - Statuses, period types and counting bases are read from `config/academic-calendar.php`. Unknown values are rejected.
 - New records default to `draft`. The configured values do not prove that every school uses the same publication workflow.
+- Current-year resolution is deterministic: a year qualifies only when its status is in `academic-calendar.current_year_statuses` (currently `published`) and today falls inside its inclusive date range. If several qualify, the latest start date wins, then the highest ID. There is no fallback to draft or out-of-range years.
 - Shrinking an academic year is rejected when existing periods would fall outside the new boundaries, unless `require_periods_within_year` is disabled.
 - Year references on period writes are validated against the current school, so a foreign or missing year produces the same generic validation error and cannot be used to enumerate identifiers.
 - `counting_basis` exists because source day counts conflict (C-07: school days versus calendar days).
@@ -47,10 +48,11 @@ Records are school-owned and scoped by the server-side `SchoolContext` establish
 
 ## Interfaces
 
-All endpoints sit behind `auth` and `school.context` in `routes/web.php`.
+All endpoints sit behind `auth` and `school.context`. They are isolated in `routes/academic-calendar.php`, loaded by `AcademicCalendarServiceProvider`, so shared routing files used by other slices remain untouched.
 
 | Method | Path | Purpose |
 | --- | --- | --- |
+| `GET` | `/api/academic-years/current` | Resolve the single current year for the authorised school, or `null` |
 | `GET` | `/api/academic-years` | List the current school's academic years by start date and ID |
 | `POST` | `/api/academic-years` | Create an academic year |
 | `PUT\|PATCH` | `/api/academic-years/{academicYear}` | Update an academic year in the current school |
@@ -61,7 +63,7 @@ All endpoints sit behind `auth` and `school.context` in `routes/web.php`.
 
 Domain actions live under `app/Domains/AcademicCalendar/Actions/`: `CreateAcademicYear`, `UpdateAcademicYear`, `CreateAcademicPeriod`, `UpdateAcademicPeriod` and `ValidateAcademicCalendar`. Controllers validate requests, resolve the school context and delegate to those actions.
 
-The route identifier is authoritative for period creation: a client-supplied `academic_year_id` in the body cannot redirect a period to another year. `school_id` is rejected as client input on calendar writes and validation requests. Year references on period writes must belong to the current school.
+The route identifier is authoritative for period creation: a client-supplied `academic_year_id` in the body cannot redirect a period to another year. `school_id` is rejected as client input on every calendar endpoint. Year references on period writes must belong to the current school.
 
 Tenant-varying JSON responses send `Cache-Control: no-store` and `Vary: X-School-Id, school_id` because both the header and the request input can select a school.
 
@@ -84,3 +86,4 @@ Tenant-varying JSON responses send `Cache-Control: no-store` and `Vary: X-School
 | AC-D-03 | Keep statuses, period types and counting basis in configuration. | D-02 prohibits treating unverified formats or structures as confirmed requirements. |
 | AC-D-04 | Do not implement exam windows or revision history. | PF-031 is separate; audit trail and permissions are later slices. |
 | AC-D-05 | Use the provisional shared-database boundary from D-04 with explicit server-side scoping. | Evidence does not mandate a tenancy topology; the boundary remains reversible. |
+| AC-D-06 | Resolve the current year only from configured current statuses and inclusive dates, breaking ties by latest start date then highest ID. | A deterministic, fail-closed rule avoids ambiguous assumptions; the rule is configurable and labelled PROPOSED. |

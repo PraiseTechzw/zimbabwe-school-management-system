@@ -9,6 +9,7 @@ use App\Domains\AcademicCalendar\Models\AcademicPeriod;
 use App\Domains\AcademicCalendar\Models\AcademicYear;
 use App\Domains\School\Models\School;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
@@ -332,4 +333,42 @@ it('does not reveal foreign year identifiers when reassigning a period', functio
         'academic_year_id' => $ownedYear->id,
         'name' => 'Own period',
     ]);
+});
+
+it('resolves the current year only for the authorised school and rejects client school input', function (): void {
+    Carbon::setTestNow(Carbon::parse('2031-06-15'));
+
+    try {
+        $school = School::factory()->create();
+        $otherSchool = School::factory()->create();
+        $user = calendarHttpUser($school);
+
+        $current = AcademicYear::factory()->for($school)->create(calendarHttpYearData([
+            'name' => 'Current year',
+            'start_date' => '2031-01-01',
+            'end_date' => '2031-12-31',
+        ]));
+        AcademicYear::factory()->for($otherSchool)->create(calendarHttpYearData([
+            'name' => 'Foreign current year',
+            'start_date' => '2031-05-01',
+            'end_date' => '2031-12-31',
+        ]));
+
+        $this->actingAs($user)
+            ->getJson('/api/academic-years/current')
+            ->assertOk()
+            ->assertJsonPath('school_id', $school->id)
+            ->assertJsonPath('academic_year.id', $current->id);
+
+        $this->actingAs($user)
+            ->getJson('/api/academic-years/current?school_id='.$otherSchool->id)
+            ->assertForbidden();
+
+        $this->actingAs($user)
+            ->getJson('/api/academic-years/current?school_id='.$school->id)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('school_id');
+    } finally {
+        Carbon::setTestNow();
+    }
 });

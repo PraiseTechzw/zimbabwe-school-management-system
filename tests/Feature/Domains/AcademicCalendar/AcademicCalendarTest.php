@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 use App\Domains\AcademicCalendar\Actions\CreateAcademicPeriod;
 use App\Domains\AcademicCalendar\Actions\CreateAcademicYear;
+use App\Domains\AcademicCalendar\Actions\ResolveCurrentAcademicYear;
 use App\Domains\AcademicCalendar\Actions\UpdateAcademicPeriod;
 use App\Domains\AcademicCalendar\Actions\UpdateAcademicYear;
 use App\Domains\AcademicCalendar\Actions\ValidateAcademicCalendar;
 use App\Domains\AcademicCalendar\Models\AcademicPeriod;
 use App\Domains\AcademicCalendar\Models\AcademicYear;
 use App\Domains\School\Models\School;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
 
@@ -413,4 +415,74 @@ it('rejects a year update that would leave existing periods outside the year', f
         'name' => 'Shortened year',
         'start_date' => '2027-06-01 00:00:00',
     ]);
+});
+
+it('resolves one current year deterministically from inclusive dates and configured status', function (): void {
+    Carbon::setTestNow(Carbon::parse('2031-06-15'));
+
+    try {
+        $school = School::factory()->create();
+        $resolver = app(ResolveCurrentAcademicYear::class);
+
+        AcademicYear::factory()->for($school)->create([
+            'name' => 'Draft year',
+            'start_date' => '2031-01-01',
+            'end_date' => '2031-12-31',
+            'status' => 'draft',
+        ]);
+        AcademicYear::factory()->for($school)->create([
+            'name' => 'Past year',
+            'start_date' => '2029-01-01',
+            'end_date' => '2029-12-31',
+        ]);
+        AcademicYear::factory()->for($school)->create([
+            'name' => 'Future year',
+            'start_date' => '2032-01-01',
+            'end_date' => '2032-12-31',
+        ]);
+        $earlier = AcademicYear::factory()->for($school)->create([
+            'name' => 'Earlier current year',
+            'start_date' => '2031-01-01',
+            'end_date' => '2031-12-31',
+        ]);
+        $later = AcademicYear::factory()->for($school)->create([
+            'name' => 'Later current year',
+            'start_date' => '2031-05-01',
+            'end_date' => '2031-12-31',
+        ]);
+        $tie = AcademicYear::factory()->for($school)->create([
+            'name' => 'Tied current year',
+            'start_date' => '2031-05-01',
+            'end_date' => '2031-11-30',
+        ]);
+
+        expect($resolver->execute($school)?->id)->toBe($tie->id)
+            ->and($resolver->execute($school)?->id)->not->toBe($earlier->id)
+            ->and($resolver->execute($school)?->id)->not->toBe($later->id);
+    } finally {
+        Carbon::setTestNow();
+    }
+});
+
+it('returns no current year when no published year covers today', function (): void {
+    Carbon::setTestNow(Carbon::parse('2031-06-15'));
+
+    try {
+        $school = School::factory()->create();
+        AcademicYear::factory()->for($school)->create([
+            'name' => 'Future year',
+            'start_date' => '2032-01-01',
+            'end_date' => '2032-12-31',
+        ]);
+        AcademicYear::factory()->for($school)->create([
+            'name' => 'Draft year',
+            'start_date' => '2031-01-01',
+            'end_date' => '2031-12-31',
+            'status' => 'draft',
+        ]);
+
+        expect(app(ResolveCurrentAcademicYear::class)->execute($school))->toBeNull();
+    } finally {
+        Carbon::setTestNow();
+    }
 });

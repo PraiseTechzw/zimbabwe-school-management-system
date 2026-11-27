@@ -14,4 +14,4 @@ This directory holds product discovery and traceability artefacts for Phase 1 â€
 
 Research evidence lives under [../../research/README.md](../../research/README.md).
 
-**Gate:** Issue `P1-G01` must be approved before implementation begins. No implementation, migrations or UI are authorised by these documents. Implemented slices and the later Product Owner execution instruction are recorded in [decision-log.md](decision-log.md); this note describes the original discovery artefacts only.
+**Gate:** Issue `P1-G01` must be approved before implementation begins. No implementation, migrations or UI are authorised by these discovery documents. Implemented slices are recorded separately in their module records.

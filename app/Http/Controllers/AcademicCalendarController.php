@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Domains\AcademicCalendar\Actions\CreateAcademicPeriod;
 use App\Domains\AcademicCalendar\Actions\CreateAcademicYear;
+use App\Domains\AcademicCalendar\Actions\ResolveCurrentAcademicYear;
 use App\Domains\AcademicCalendar\Actions\UpdateAcademicPeriod;
 use App\Domains\AcademicCalendar\Actions\UpdateAcademicYear;
 use App\Domains\AcademicCalendar\Actions\ValidateAcademicCalendar;
@@ -24,6 +25,21 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class AcademicCalendarController extends Controller
 {
+    public function current(Request $request, SchoolContext $context): JsonResponse
+    {
+        Validator::make($request->all(), [
+            'school_id' => ['prohibited'],
+        ])->validate();
+
+        $school = $context->assertCurrent();
+        $year = app(ResolveCurrentAcademicYear::class)->execute($school);
+
+        return $this->tenantJson([
+            'school_id' => (int) $school->id,
+            'academic_year' => $year === null ? null : $this->yearPayload($year),
+        ]);
+    }
+
     public function years(SchoolContext $context): JsonResponse
     {
         $school = $context->assertCurrent();
