@@ -70,5 +70,6 @@ The committed Vite/Laravel plugin/Tailwind files are minimal asset build infrast
 | Symptom | Check |
 | --- | --- |
 | `No application encryption key` | Run `php artisan key:generate` in the app container after copying `.env.example`. |
+| nginx reports unhealthy immediately after `make up` | Expected on a fresh `.env` with an empty `APP_KEY`: the healthcheck probes `/`, which returns 500 until the key is generated. Generate the key with `php artisan key:generate`; health recovers without recreating containers. |
 | MySQL healthcheck never passes | Inspect `docker compose logs mysql`; confirm no local service occupies port 3307. |
 | Permission errors writing `storage/` | Confirm host UID/GID matches the container `user` setting (`${UID:-1000}`). |
