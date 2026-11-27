@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use App\Domains\AcademicCalendar\Models\AcademicYear;
 use App\Domains\AcademicStructure\Models\ClassDefinition;
-use App\Domains\AcademicStructure\Models\EducationalLevel;
 use App\Domains\AcademicStructure\Models\ClassOffering;
+use App\Domains\AcademicStructure\Models\EducationalLevel;
 use App\Domains\AcademicStructure\Models\GradeLevel;
 use App\Domains\AcademicStructure\Models\Stream;
 use App\Domains\Authorization\Models\RoleAssignment;
