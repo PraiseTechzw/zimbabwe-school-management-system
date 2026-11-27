@@ -11,6 +11,13 @@ Sprint 0 established the engineering foundation. Phase 1 school-scoped backend f
 - [ADR-0003 — Frontend strategy](adr/0003-frontend-strategy.md)
 - [ADR-0004 — Deployment and backup](adr/0004-deployment-and-backup.md)
 
+## Frontend (ADR-0003 accepted 2026-11-27)
+
+- [Product intent](../PRODUCT.md) — audience, constraints and scope gate
+- [Design system](../DESIGN.md) — tokens, components and visual rules
+- [Frontend progress](frontend/progress.md) — module statuses, evidence and verification log
+- [API dependency tracker](frontend/api-dependencies.md) — verified endpoints and provisional contracts
+
 ## Development
 
 - [Environment setup](development/setup.md) — Docker and local host commands
