@@ -1,0 +1,35 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Controllers\Frontend;
+
+use App\Frontend\Contracts\FrontendDataProvider;
+use App\Http\Controllers\Controller;
+use Illuminate\Contracts\View\View;
+
+final class AcademicCalendarViewController extends Controller
+{
+    public function __construct(private readonly FrontendDataProvider $data) {}
+
+    public function index(): View
+    {
+        $years = $this->data->years();
+        $selectedId = (int) request()->query('year', (string) ($years[0]['id'] ?? 0));
+        $selected = null;
+
+        foreach ($years as $year) {
+            if ($year['id'] === $selectedId) {
+                $selected = $year;
+                break;
+            }
+        }
+
+        return view('frontend.academic-calendar', [
+            'user' => $this->data->user(),
+            'years' => $years,
+            'selectedYear' => $selected,
+            'periods' => $selected === null ? [] : $this->data->periods($selected['id']),
+        ]);
+    }
+}

@@ -59,7 +59,21 @@ npm run build
 npm audit --audit-level=high
 ```
 
-The committed Vite/Laravel plugin/Tailwind files are minimal asset build infrastructure permitted by ADR-0003. They are not an accepted UI framework choice, and application views or UI dependencies remain frozen until ADR-0003 is accepted.
+## Frontend development
+
+Stage A provides three working screens behind the existing session middleware: `/login`, `/app`, `/app/school` and `/app/academic-calendar` (plus honest "not built yet" notices for planned modules). Sign-in and sign-out call the documented `/api/auth/login` and `/api/auth/logout` endpoints; server-rendered screens read school, identifier and calendar data through `app/Frontend/ServerFrontendDataProvider`, which mirrors the verified JSON payloads without extra HTTP round trips.
+
+Real data is always authoritative. The dashboard's cross-module figures are opt-in demo values controlled by `FRONTEND_DEMO` in `.env`; the committed default is `false`. When enabled for a local demo, the UI labels them `Demo data`. Never enable demo mode in a deployment that presents figures as school records.
+
+To run the full Docker quality gates against a worktree while the normal development stack is still running, give Compose a separate project name and start only the app service:
+
+```bash
+docker compose -p school-fe-check up -d --build --no-deps app
+make COMPOSE="docker compose -p school-fe-check" verify
+docker compose -p school-fe-check down
+```
+
+ADR-0003 was accepted on 2026-11-27. The Vite/Laravel plugin/Tailwind build is now part of the approved Blade + Livewire + Alpine + Tailwind frontend; Livewire is installed through Composer, not Node. See `docs/frontend/progress.md` for verification evidence and `DESIGN.md` for the visual system.
 
 ## Environment variables
 
