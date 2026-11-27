@@ -34,6 +34,7 @@ Sprint 0 established the engineering foundation. All seven Phase 1 foundation sl
 - [Backup and restore](operations/backup-and-restore.md)
 - [GitHub project board guidance](github/project-board.md)
 - [Phase 1 integration tracker](github/integration-tracker.md) — verified PR, CI, board and merge states
+- [B-05 audit trail coverage review](reports/b05-audit-trail-coverage.md) — operation inventory, coverage matrix and evidence
 
 ## Sprint 0 report
 
