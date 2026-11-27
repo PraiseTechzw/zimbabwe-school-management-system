@@ -24,8 +24,8 @@
 <div class="min-h-screen lg:flex" x-data="{
     menu: false,
     menuOpener: null,
-    openMenu() {
-        this.menuOpener = $event.currentTarget;
+    openMenu(event) {
+        this.menuOpener = event.currentTarget;
         this.menu = true;
         this.$nextTick(() => this.$refs.mobileNavigation?.querySelector('button')?.focus());
     },
@@ -62,7 +62,7 @@
             <div class="flex h-14 items-center justify-between gap-4 px-4 sm:px-6">
                 <div class="flex min-w-0 items-center gap-3">
                     <button type="button" class="fs-btn fs-btn-secondary fs-btn-compact lg:hidden"
-                            aria-label="Open navigation" aria-controls="mobile-navigation" @click="openMenu()">
+                            aria-label="Open navigation" aria-controls="mobile-navigation" @click="openMenu($event)">
                         <x-icon name="menu" class="h-4 w-4" />
                     </button>
                     <nav aria-label="Breadcrumb" class="min-w-0">

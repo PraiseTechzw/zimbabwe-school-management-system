@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Domains\School\Context\SchoolContext;
+use App\Frontend\Contracts\AcademicStructureGateway;
 use App\Frontend\Contracts\CalendarManagementGateway;
 use App\Frontend\Contracts\FrontendDataProvider;
 use App\Frontend\DemoFrontendDataProvider;
+use App\Frontend\DomainAcademicStructureGateway;
 use App\Frontend\DomainCalendarManagementGateway;
 use App\Frontend\ServerFrontendDataProvider;
 use App\Http\Middleware\ResolveSchoolContext;
@@ -34,6 +36,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->app->bind(CalendarManagementGateway::class, DomainCalendarManagementGateway::class);
+        $this->app->bind(AcademicStructureGateway::class, DomainAcademicStructureGateway::class);
     }
 
     /**

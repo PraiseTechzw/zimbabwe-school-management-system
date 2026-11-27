@@ -7,6 +7,8 @@ use App\Http\Controllers\Frontend\LoginController;
 use App\Http\Controllers\Frontend\ModuleNoticeController;
 use App\Http\Controllers\Frontend\SchoolProfileController;
 use App\Http\Controllers\SchoolContextController;
+use App\Http\Middleware\EnsurePermission;
+use App\Livewire\AcademicStructure;
 use App\Livewire\CalendarAdministration;
 use App\Livewire\Dashboard;
 use Illuminate\Support\Facades\Route;
@@ -24,6 +26,9 @@ Route::middleware(['auth', 'school.context'])->prefix('app')->group(function ():
     Route::get('/school', [SchoolProfileController::class, 'index'])->name('frontend.school-profile');
     Route::get('/academic-calendar', [AcademicCalendarViewController::class, 'index'])->name('frontend.academic-calendar');
     Route::get('/academic-calendar/manage', CalendarAdministration::class)->name('frontend.calendar-manage');
+    Route::get('/academic-structure', AcademicStructure::class)
+        ->middleware(EnsurePermission::class.':academic_structure.view')
+        ->name('frontend.academic-structure');
     Route::get('/modules/{module}', [ModuleNoticeController::class, 'show'])
         ->where('module', '[a-z0-9-]+')
         ->name('frontend.module');
