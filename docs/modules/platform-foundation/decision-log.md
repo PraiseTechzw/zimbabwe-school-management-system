@@ -14,7 +14,7 @@ The proposed specification and research documents were merged into `main` as PR 
 | 2 — School isolation | #35 | #43 | Merged |
 | 3 — Authentication/users | #36 | #44 | Merged |
 | 4 — Roles/permissions | #37 | — | Not started |
-| 5 — School configuration | #38 | — | Not started |
+| 5 — School configuration | #38 | — | Implemented on `feat/p1-school-settings`; PR pending |
 | 6 — Academic calendar | #39 | #45 | Merged |
 | 7 — Audit trail | #40 | — | Not started |
 
@@ -30,6 +30,7 @@ The proposed specification and research documents were merged into `main` as PR 
 | D-06 | **Deferred** | Do not claim stakeholder-interview validation. | No interviews were conducted; research evidence remains classified as documented/official/legal/proposed only. |
 | D-07 | **Unresolved** | No branch-protection governance change is relied upon by implementation. | `P1-G02` (#32) remains open. Required approvals stay as currently configured; CI remains mandatory. |
 | D-08 | **Recorded / superseded** | The no-implementation rule was respected through discovery. The Product Owner's later direct implementation instruction is treated as the gate release for this execution phase. | Future gates should be recorded on `P1-G01`; the GitHub issue comment was not used as the sole authority for this decision. |
+| D-09 | **Implemented / provisional catalogue** | Slice 5 implements a school-scoped settings mechanism with typed values, explicit allow-lists, provenance and prior-version snapshots. The catalogue is limited to framework-supported `locale` and `timezone` defaults. | Issue #38 confirms the mechanism but not a catalogue; U-13 remains unresolved. Currency, terminology, attendance, finance, calendar, structure and module settings are not inferred from PROPOSED candidates. Full audit events remain with #40 and permissions with #37. |
 
 ## Standing constraints
 
@@ -52,6 +53,15 @@ The proposed specification and research documents were merged into `main` as PR 
 - `forSchool()` is reserved for trusted server-side callers that have already resolved a school. School-owned models opt into the scope explicitly rather than through a global scope.
 - This is the provisional shared-database design recorded in D-04. A final tenancy topology ADR is still required; no topology decision is treated as settled by this implementation.
 - Permissions are not part of this slice. The two JSON endpoints use the existing `auth` middleware plus school context; role and permission enforcement is deferred to Slice 4.
+
+## Slice 5: implemented school settings mechanism
+
+- One structured `school_settings` row is stored per server-resolved school. There is no generic key/value API; only allow-listed locale and timezone fields are writable and unknown fields are not persisted.
+- Configured defaults are returned without writing on reads. They do not assert a universal calendar, school code/identifier format or academic structure.
+- The first save establishes version 1 and records its source and effective date. Each later save increments the version and writes an append-oriented `school_setting_revisions` snapshot of the previous values, source and effective date in the same transaction.
+- This provenance satisfies the narrowed #38 mechanism and PROPOSED NFR-013/WF-08 shape only. It is not the #40 audit event model: no actor, event taxonomy, retention policy or generic entity metadata is introduced.
+- Writes use `auth` + `school.context`, reject client `school_id`, set ownership from the resolved school, and lock the school and existing settings rows before incrementing the version. Database unique constraints are the final guard.
+- Role/permission enforcement, a wider catalogue and stakeholder validation remain deferred; see [school-settings.md](school-settings.md) and D-09 for assumptions and unresolved decisions.
 
 ## Slice 6: implemented academic calendar
 
