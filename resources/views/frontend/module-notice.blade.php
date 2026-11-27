@@ -1,4 +1,6 @@
-<x-app-shell title="{{ $label }}" :user="$user" :breadcrumbs="[['label' => 'Planned module']]">
+<x-layouts.app :title="$title ?? $label">
+<x-app-shell title="{{ $label }}" :user="$user" :school="$school" :academic-year="$academicYear"
+             :breadcrumbs="[['label' => 'Planned module']]">
     <x-card>
         <x-empty-state title="This module is not built yet"
                        message="The navigation shows planned areas so the full system is visible, but no screens or records exist for {{ $label }} yet.">
@@ -11,3 +13,4 @@
         No data is shown here because no API contract has been approved for it.
     </p>
 </x-app-shell>
+</x-layouts.app>
