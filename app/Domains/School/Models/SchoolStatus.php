@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domains\School\Models;
 
+use App\Domains\School\Scopes\ScopesToCurrentSchool;
 use Database\Factories\SchoolStatusFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class SchoolStatus extends Model
 {
     /** @use HasFactory<SchoolStatusFactory> */
-    use HasFactory;
+    use HasFactory, ScopesToCurrentSchool;
 
     protected static function newFactory(): Factory
     {
