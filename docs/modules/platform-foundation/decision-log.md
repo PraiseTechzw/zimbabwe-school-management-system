@@ -33,3 +33,11 @@ The proposed specification and research documents live on branch `docs/phase-1-d
 - Identifier values are unique case-insensitively after trimming. The syntax itself remains unverified and configurable.
 - Status periods cannot overlap for a school. `currentStatus()` resolves ties deterministically by effective date, creation time and ID.
 
+## Slice 2: implemented school isolation
+
+- `school_user` is the only source of school membership. `ResolveSchoolContext` resolves the active school from the authenticated user's memberships; a client-supplied school ID can only select among those memberships and never grants access to another school.
+- `SchoolContext` is request-scoped, registered as a singleton, populated only by the middleware and cleared after each request. Queries using `forCurrentSchool()` fail closed when no school has been authorised.
+- `forSchool()` is reserved for trusted server-side callers that have already resolved a school. School-owned models opt into the scope explicitly rather than through a global scope.
+- This is the provisional shared-database design recorded in D-04. A final tenancy topology ADR is still required; no topology decision is treated as settled by this implementation.
+- Permissions are not part of this slice. The two JSON endpoints use the existing `auth` middleware plus school context; role and permission enforcement is deferred to Slice 4.
+
