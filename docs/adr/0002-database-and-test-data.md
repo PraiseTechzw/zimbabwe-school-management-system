@@ -13,7 +13,7 @@ The system will be self-hosted by schools and therefore needs a database that is
 - **SQLite `:memory:`** is used for the automated test suite, configured in `phpunit.xml`. Tests never depend on a running MySQL container.
 - Schema changes go through **Laravel migrations** only. No hand-maintained SQL schema dumps in version control.
 - Use foreign keys and transactions for data integrity. Keep domain-specific queries inside the owning domain's repositories/services.
-- Development database credentials in `.env.example` are obvious placeholders and must never be reused in production.
+- Development database credentials are injected by Docker Compose from operator/shell values with local-only defaults and are deliberately absent from `.env.example`. They must never be reused in production.
 
 ## Alternatives considered
 

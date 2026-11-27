@@ -13,7 +13,7 @@ The project needs a maintainable, self-hostable PHP application that a distribut
 - Keep **one deployable monolith**. Within it, organise domain code in `app/Domains/<Context>/` (for example `Actions`, `Models`, `Services`, `Requests`, `Resources`) and shared technical concerns in `app/Support/`. HTTP controllers and routes stay thin.
 - Enforce boundaries with conventions and, later, Pest architecture tests. Do not add a third-party module package in Sprint 0.
 - **No microservices, no service mesh, no separate queues or caches** until a concrete scaling or team-ownership need is documented in a new ADR.
-- Node/npm is used only if the frontend decision (ADR-0003) requires an asset build.
+- Minimal Vite/Laravel-plugin/Tailwind asset build infrastructure is retained in Sprint 0 as foundation tooling, not as a frontend architecture decision. UI frameworks, component libraries, application views and UI dependencies remain frozen until ADR-0003 is accepted.
 
 ## Alternatives considered
 

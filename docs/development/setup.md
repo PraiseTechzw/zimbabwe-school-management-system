@@ -18,12 +18,14 @@ exit
 make test
 ```
 
+Commands after `make shell` run inside the application container. The committed Compose stack is labelled and documented as a **DEVELOPMENT** stack; it is not a production deployment and must not be exposed beyond the local machine.
+
 - Application: <http://localhost:8000>
-- MySQL: `localhost:3307` (development only). Credentials are injected into the app container by Docker Compose from `DB_USERNAME` / `DB_PASSWORD` shell variables, defaulting to local-only development values. They are deliberately absent from `.env.example`.
-- `make help` lists all targets; `make verify` runs lint, static analysis, audit and tests.
+- MySQL: `127.0.0.1:3307` (development only). The port is bound to the loopback interface. Credentials are injected into the app container by Docker Compose from `DB_USERNAME` / `DB_PASSWORD` shell variables, defaulting to local-only development values. They are deliberately absent from `.env.example`.
+- `make help` lists all targets; `make verify` runs lint, static analysis, Composer audit and tests.
 - `make down` stops containers but preserves the MySQL named volume. `make fresh` **destroys** development data.
 
-The app container runs `composer install` from `composer.lock` on start, so dependency changes require `make up`/rebuild, not manual host installs.
+The app container runs `composer install` from `composer.lock` on start, so dependency changes require `make up`/rebuild, not manual host installs. The PHP image intentionally does not contain Node; asset commands are host-side commands documented below and are verified by CI.
 
 ## Local host workflow (documented, not the source of truth)
 
@@ -36,6 +38,8 @@ cp .env.example .env
 php artisan key:generate
 ```
 
+`composer setup` installs Composer dependencies, creates `.env` if absent and generates `APP_KEY`. It deliberately does **not** run migrations: local database configuration varies, and forcing a MySQL migration before credentials are configured caused silent setup failures. Configure a database first, then run `php artisan migrate` explicitly.
+
 For a SQLite-only local database, set `DB_CONNECTION=sqlite`, create `database/database.sqlite` and run `php artisan migrate`. To use MySQL locally, point `DB_HOST` at a MySQL 8 instance and add your own `DB_USERNAME` / `DB_PASSWORD` to the gitignored `.env` — these two keys are intentionally absent from `.env.example` so no credential-shaped value is committed.
 
 Local quality commands:
@@ -47,7 +51,15 @@ composer analyse
 composer security-audit
 ```
 
-Node/npm is not required until ADR-0003 is accepted and frontend assets exist.
+Asset build commands require Node 24 on the host (the PHP application container does not include Node). These commands run outside Docker:
+
+```bash
+npm ci
+npm run build
+npm audit --audit-level=high
+```
+
+The committed Vite/Laravel plugin/Tailwind files are minimal asset build infrastructure permitted by ADR-0003. They are not an accepted UI framework choice, and application views or UI dependencies remain frozen until ADR-0003 is accepted.
 
 ## Environment variables
 

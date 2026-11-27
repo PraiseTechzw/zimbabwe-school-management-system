@@ -1,12 +1,12 @@
 # AGENTS.md — project rules for every agent
 
-This file applies to OpenCode, Copilot, Cursor, Codex and any other agent working **in this repository**. The workspace-level `~/.AGENTS.md` (home directory) also applies; this file adds project-specific rules.
+This file applies to OpenCode, Copilot, Cursor, Codex and any other agent working **in this repository**. The workspace-level `~/AGENTS.md` (home directory) also applies; this file adds project-specific rules.
 
 ## Scope
 
 - **Sprint 0 is engineering foundation only.** Do not implement admissions, attendance, fees, learner/student records, assessment, reporting, HR, boarding or any other school functionality.
 - Do not add microservices, new frameworks or major dependencies without an accepted ADR in `docs/adr/`.
-- Frontend tooling is frozen until ADR-0003 is accepted.
+- Application UI and frontend architecture decisions are frozen until ADR-0003 is accepted. Only the minimal asset build infrastructure explicitly permitted by ADR-0003 may be maintained in Sprint 0; do not add UI frameworks, component libraries, application views or UI dependencies.
 
 ## How to work here
 

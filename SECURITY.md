@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-The repository is in Sprint 0 (foundation only). Security fixes are applied to `main` and the latest tagged release.
+The repository is in Sprint 0 (foundation only). Security fixes are applied to `main`. No tagged releases exist yet; this policy applies to `main` until the first release tag is published.
 
 ## Reporting a vulnerability
 

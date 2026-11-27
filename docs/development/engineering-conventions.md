@@ -26,7 +26,7 @@
 - Never commit `.env`, keys, tokens, learner personal data or production dumps.
 - Validate all input; authorise every action; use Laravel's password/crypto/session facilities rather than custom code.
 - Log events, not sensitive payloads. Report vulnerabilities per [SECURITY.md](../../SECURITY.md).
-- Dependency updates run through `composer audit` and Dependabot PRs.
+- Dependency updates run through `composer audit`, `npm audit` and Dependabot PRs for Composer, npm and GitHub Actions.
 
 ## Documentation and changes
 

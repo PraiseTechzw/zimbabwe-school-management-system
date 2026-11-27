@@ -2,6 +2,7 @@
 
 - Status: **Accepted as a strategy; operational targets still require stakeholder confirmation**
 - Date: 2026-11-27
+- Updated: 2026-11-27 (Sprint 0.1 — development/production boundary clarified)
 
 ## Context
 
@@ -9,9 +10,11 @@ The system must be self-hostable, with no dependency on a single commercial clou
 
 ## Decision
 
-- **One Docker Compose stack** (app, nginx, MySQL) is the reference deployment unit. The same images used in development are promoted to production with environment-specific values from `.env`, never committed secrets.
+- The committed Docker Compose stack is a **DEVELOPMENT** stack only. It must not be used as a production deployment because it exposes MySQL on loopback with development credential defaults, enables `APP_DEBUG`, runs Composer with dev dependencies and binds only HTTP.
+- Production uses one application and one database, built from the same released source commit, with an operator-managed runtime configuration and environment-specific values supplied from a secret store. No production Compose file, image variant or automated deployment is added in Sprint 0.
+- Production requirements are mandatory before real data is stored: `APP_DEBUG=false`, HTTPS at an operator-managed reverse proxy, `SESSION_SECURE_COOKIE=true`, secrets injected from a secret store (never committed), `composer install --no-dev` in the production image/artifact, hardened database credentials, and a verified backup/restore path.
 - TLS terminates at a reverse proxy managed by the operator (for example Caddy or an existing Nginx). Application containers are not publicly exposed except through the proxy.
-- Releases are tagged commits. Deployment runs `composer install --no-dev`, migrations, cache/route/config refresh, then switches traffic. Rollback = previous image tag plus a verified database restore point.
+- Releases are tagged commits. Deployment runs production dependency installation, migrations, cache/route/config refresh, then switches traffic. Rollback = previous release plus a verified database restore point.
 - Backups: nightly logical MySQL dump plus application storage files; encrypted off-site copy; retention and restore drill described in [backup and restore](../operations/backup-and-restore.md).
 - No automated production deployment is configured in Sprint 0.
 

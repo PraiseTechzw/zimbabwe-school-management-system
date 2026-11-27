@@ -18,7 +18,7 @@ Browser ──▶ nginx ──▶ PHP-FPM (Laravel) ──▶ MySQL 8
 | `app/Domains/<Context>/` | Domain logic owned by one bounded context (actions, models, services) |
 | `app/Support/` | Cross-cutting technical helpers with no domain meaning |
 | `database/migrations/` | Schema history; one source of truth for structure |
-| `resources/` | Views/assets (frontend choice still pending in ADR-0003) |
+| `resources/` | Minimal Vite/Tailwind asset inputs only; UI framework decision pending in ADR-0003 |
 | `routes/` | Route definitions only; no business logic |
 | `tests/Unit`, `tests/Feature` | Pest tests; feature tests use SQLite in memory |
 
