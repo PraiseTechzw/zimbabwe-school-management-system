@@ -85,3 +85,12 @@ it('cascades academic calendar records when their school is deleted', function (
     $this->assertDatabaseCount('academic_years', 0)
         ->assertDatabaseCount('academic_periods', 0);
 });
+
+it('cascades periods when their academic year is deleted', function (): void {
+    $year = AcademicYear::factory()->create();
+    AcademicPeriod::factory()->inYear($year)->create();
+
+    $year->delete();
+
+    $this->assertDatabaseCount('academic_periods', 0);
+});

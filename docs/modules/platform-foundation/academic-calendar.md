@@ -22,8 +22,8 @@ Records are school-owned and scoped by the server-side `SchoolContext` establish
 ## Rules enforced on writes
 
 - Dates use `Y-m-d`; the end date must be after the start date.
-- Academic year names are unique within a school. They may repeat across schools.
-- Period names and period sequences are unique within an academic year. They may repeat across years.
+- Academic year names are unique within a school, case-insensitively. They may repeat across schools.
+- Period names and period sequences are unique within an academic year; names are compared case-insensitively. They may repeat across years.
 - A period must fall inside its academic year by default (`academic-calendar.require_periods_within_year`).
 - Periods cannot overlap by default (`academic-calendar.prevent_period_overlap`). Date ranges are inclusive, so a period ending on 31 March and one starting on 1 April are adjacent; a period starting on 31 March overlaps.
 - Academic year overlap is disabled by default (`academic-calendar.prevent_year_overlap`). It is an engineering safeguard, not an evidence-backed requirement, so it can be enabled by configuration.
@@ -33,7 +33,7 @@ Records are school-owned and scoped by the server-side `SchoolContext` establish
 - Shrinking an academic year is rejected when existing periods would fall outside the new boundaries, unless `require_periods_within_year` is disabled.
 - Year references on period writes are validated against the current school, so a foreign or missing year produces the same generic validation error and cannot be used to enumerate identifiers.
 - `counting_basis` exists because source day counts conflict (C-07: school days versus calendar days).
-- Integrity checks and writes run in one transaction. The school row is locked for update first, serialising all calendar writes for that school on databases that support `SELECT ... FOR UPDATE`; SQLite serialises writers at the engine level. Database unique constraints remain the final guard for names and sequences.
+- Integrity checks and writes run in one transaction. The school row is locked for update first, serialising all calendar writes for that school on databases that support `SELECT ... FOR UPDATE`; SQLite serialises writers at the engine level. Exact database unique constraints remain the final guard for exact name and sequence duplicates. Case-insensitive name uniqueness is enforced in the locked application path because the tests run on SQLite; it is not yet guaranteed by a database expression index.
 
 `ValidateAcademicCalendar` reports stored-data problems without mutating records. The validation endpoint returns `valid` plus a list of human-readable issues.
 
@@ -45,6 +45,9 @@ Records are school-owned and scoped by the server-side `SchoolContext` establish
 - Examination windows are a separate domain (PF-031) and are not implemented here.
 - No numeric offline or resilience targets were inferred.
 - No stakeholder-interview validation is claimed.
+- This record documents a Phase 1 backend slice. It does not amend Sprint 0 scope or any accepted ADR.
+- The use of `SELECT ... FOR UPDATE` activates the review trigger in ADR-0002. SQLite tests cannot prove MySQL lock behaviour; that verification and any ADR note belong to the architecture/governance owner.
+- The database enforces `academic_periods.school_id` and `academic_periods.academic_year_id` separately but does not constrain them to the same owning school. Current actions set both from one authorised context. A database invariant or equivalent guard is required before imports, async jobs or direct SQL writers are introduced.
 
 ## Interfaces
 

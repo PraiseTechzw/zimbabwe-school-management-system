@@ -46,14 +46,17 @@ trait GuardsCalendarIntegrity
 
     private function assertYearNameAvailable(School $school, string $name, ?int $ignoreId = null): void
     {
-        $exists = AcademicYear::query()
+        $names = AcademicYear::query()
             ->where('school_id', $school->id)
-            ->where('name', $name)
             ->when($ignoreId !== null, function (Builder $query) use ($ignoreId): void {
                 $query->whereKeyNot($ignoreId);
             })
             ->lockForUpdate()
-            ->exists();
+            ->pluck('name');
+
+        $exists = $names->contains(
+            fn ($existing): bool => mb_strtolower((string) $existing) === mb_strtolower($name)
+        );
 
         if ($exists) {
             throw ValidationException::withMessages([
@@ -87,14 +90,17 @@ trait GuardsCalendarIntegrity
 
     private function assertPeriodNameAvailable(AcademicYear $year, string $name, ?int $ignoreId = null): void
     {
-        $exists = AcademicPeriod::query()
+        $names = AcademicPeriod::query()
             ->where('academic_year_id', $year->id)
-            ->where('name', $name)
             ->when($ignoreId !== null, function (Builder $query) use ($ignoreId): void {
                 $query->whereKeyNot($ignoreId);
             })
             ->lockForUpdate()
-            ->exists();
+            ->pluck('name');
+
+        $exists = $names->contains(
+            fn ($existing): bool => mb_strtolower((string) $existing) === mb_strtolower($name)
+        );
 
         if ($exists) {
             throw ValidationException::withMessages([
