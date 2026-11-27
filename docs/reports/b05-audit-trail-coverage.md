@@ -233,7 +233,7 @@ A single “percentage of all security-sensitive operations” would mix documen
 - `docs/modules/platform-foundation/audit-trail.md`: settings integration, expanded append-only list, B-05 limitation note.
 - `docs/modules/platform-foundation/school-settings.md`: revisions versus #40 events, A-02 and #40 notes.
 - `docs/modules/platform-foundation/decision-log.md`: B-05 integration record; D-01–D-11 untouched.
-- `docs/github/integration-tracker.md`: verified baseline, PR #61 merge, open PR #63, B-05 verification row and PR.
+- `docs/github/integration-tracker.md`: verified baseline, PR #61 merge, open PR #63, B-05 verification row and [PR #65](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/65).
 - `docs/README.md`: report link.
 
 ## 10. Remaining risks and next backend task
@@ -246,4 +246,4 @@ Recommended next backend task: **B-06 — owner decision on role-change and CLI 
 
 - Branch: `audit/b05-audit-trail-coverage`.
 - Commits: conventional commits on the branch — append-only builder fix, settings audit feature, coverage documentation, inventory consolidation and PR link. Final SHAs are available in `git log` rather than in this self-referential file.
-- PR: pending (filled after push).
+- PR: [#65](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/65) — open for human review; not merged by this task.

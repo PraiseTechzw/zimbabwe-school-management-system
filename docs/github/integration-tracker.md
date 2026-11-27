@@ -29,6 +29,7 @@
 | Frontend academic-structure contracts | — / [#60](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/60) | head `17125df`; merge `fd3a6b8` | Yes | Yes | Yes | Opened | `quality`, `tests`, `docker`, GitGuardian SUCCESS; CodeRabbit pending at final read | Not recorded here | Yes, `2026-11-27T19:25:27Z` | Not on board |
 | Academic-structure docs/test follow-up | — / [#61](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/61) | head `3fdc0ca`; merge `6844b42` | Yes | Yes | Yes | Opened | `quality`, `tests`, `docker`, GitGuardian SUCCESS; CodeRabbit pending at final read | No approval claimed | Yes, `2026-11-27T19:33:02Z` | Not on board |
 | B-04 authorization/isolation | — / [#63](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/63) | head `7567ebc` | Yes | Yes | Yes | Open | `quality`, `tests`, `docker`, GitGuardian, CodeRabbit SUCCESS at final read | No approval claimed | No | Not on board |
+| B-05 audit trail coverage | — / [#65](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/65) | head `9b1c24e` | Yes | Yes | Yes | Open | Pending remote checks at creation | No approval claimed | No | Not on board |
 | Admissions application foundation (canonical) | — / none | local `8a7a21d404f627430dce0d9b7e8d852f2045ed02` | Yes | Yes | No | No | Not applicable | No | No | Not on board |
 
 ## Local verification evidence
