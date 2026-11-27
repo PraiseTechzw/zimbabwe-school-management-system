@@ -225,6 +225,7 @@ No GitHub Actions check-run result, review approval, deployment, or merge is cla
 - Audited baseline: `c21d0a90530cc2764853e6b3eabb277501da696b`.
 - Current remote baseline at report time: `6844b4289af6c5446b80d897f73de39d4bb6aa7b`.
 - Change branch: `audit/b04-authorization-tenant-isolation` (rebased onto `6844b42`).
+- Review PR: [#62](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/62) — opened, not merged; no remote check result is claimed here.
 - Route evidence: `/home/praisetechzw/b04-audit-evidence/route-list.json` and `/home/praisetechzw/b04-audit-evidence/route-inventory.tsv`.
 - Verification evidence: `/home/praisetechzw/b04-audit-evidence/make-verify.log`, `/home/praisetechzw/b04-audit-evidence/focused-tests.log`, `/home/praisetechzw/b04-audit-evidence/compose-override.yml`, and `/home/praisetechzw/b04-audit-evidence/final-verify.log` (host-equivalent rerun). Earlier `/tmp/opencode/b04-*` artifacts were removed by an environment restart; their results are preserved in this report.
 - This report is the authoritative B-04 role/permission matrix and risk register.

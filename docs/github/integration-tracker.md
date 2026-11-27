@@ -30,7 +30,7 @@
 | Academic structure integration | — / [#59](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/59) | head `9fc4804`; merge `c21d0a9` | Yes | Yes | Yes | Opened | `quality`, `tests`, `docker`, GitGuardian SUCCESS; CodeRabbit pending at final read | No review threads or approvals recorded | Yes, `2026-11-27T19:01:30Z` | Not on board |
 | Frontend academic-structure contracts | — / [#60](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/60) | head `17125df`; merge `fd3a6b8` | Yes | Yes | Yes | Opened | `quality`, `tests`, `docker`, GitGuardian SUCCESS; CodeRabbit pending at final read | Not recorded here | Yes, `2026-11-27T19:25:27Z` | Not on board |
 | Academic-structure evidence follow-up | — / [#61](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/61) | merge `6844b42` | Yes | Yes | Yes | Opened | Not re-read in B-04 | Not recorded here | Yes, `2026-11-27T21:33:01+02:00` | Not on board |
-| B-04 authorization / tenant-isolation audit | — / proposed | `audit/b04-authorization-tenant-isolation` | Yes | Yes | Pending | Pending | Not claimed | Not recorded here | No | Not on board |
+| B-04 authorization / tenant-isolation audit | — / [#62](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/62) | `audit/b04-authorization-tenant-isolation` | Yes | Yes | Yes | Opened | Not claimed | Not recorded here | No | Not on board |
 | Admissions application foundation (canonical) | — / none | local `8a7a21d404f627430dce0d9b7e8d852f2045ed02` | Yes | Yes | No | No | Not applicable | No | No | Not on board |
 
 ## Local verification evidence
