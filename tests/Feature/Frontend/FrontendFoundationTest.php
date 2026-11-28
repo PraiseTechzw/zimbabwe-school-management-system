@@ -20,7 +20,6 @@ function frontendUserWithSchool(School $school, ?string $role = 'school_member')
 {
     $user = User::factory()->create();
     $user->schools()->attach($school);
-    grantSchoolRole($user, $school);
 
     if ($role !== null) {
         RoleAssignment::query()->forceCreate([
