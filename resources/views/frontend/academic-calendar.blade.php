@@ -6,9 +6,11 @@
     </x-slot:header>
 
     <x-card title="Year overview" subtitle="The selected year and the periods recorded in it.">
-        <x-slot:action>
-            <a href="{{ route('frontend.calendar-manage') }}" class="fs-btn fs-btn-secondary fs-btn-compact">Manage calendar</a>
-        </x-slot:action>
+        @if($canManageCalendar)
+            <x-slot:action>
+                <a href="{{ route('frontend.calendar-manage') }}" class="fs-btn fs-btn-secondary fs-btn-compact">Manage calendar</a>
+            </x-slot:action>
+        @endif
 
         @if($selectedYear === null)
             <x-empty-state title="No academic years"

@@ -61,7 +61,7 @@ The proposed specification and research documents were merged into `main` as PR 
 - `EnsurePermission` reads the actor from authentication and the school from `SchoolContext`, never from client input. Domain actions repeat the authorization check for trusted server-side callers.
 - Role-management endpoints are permission-protected and tenant-scoped. `AssignSchoolRole` refuses to grant a role containing permissions the actor does not hold, preventing privilege escalation through role assignment.
 - A CLI bootstrap command creates the first assignment with an allow-listed `cli` source. HTTP inputs cannot set the source or school.
-- Existing school-context and calendar endpoints are intentionally unchanged until their owning slices opt into the middleware. MFA, separation of duties, time-bounded delegation, periodic review, permission-change audit and a role UI remain deferred. See [roles-and-permissions.md](roles-and-permissions.md).
+- B-04 completes the opt-in for school-context, identifier, calendar and settings endpoints using the catalogued permissions. MFA, separation of duties, time-bounded delegation, periodic review, permission-change audit and a role UI remain deferred. See [roles-and-permissions.md](roles-and-permissions.md).
 ## Slice 5: implemented school settings mechanism
 
 - One structured `school_settings` row is stored per server-resolved school. There is no generic key/value API; only allow-listed locale and timezone fields are writable and unknown fields are not persisted.
@@ -69,7 +69,7 @@ The proposed specification and research documents were merged into `main` as PR 
 - The first save establishes version 1 and records its source and effective date. Each later save increments the version and writes an append-oriented `school_setting_revisions` snapshot of the previous values, source and effective date in the same transaction.
 - This provenance satisfies the narrowed #38 mechanism and PROPOSED NFR-013/WF-08 shape only. It is not the #40 audit event model: no actor, event taxonomy, retention policy or generic entity metadata is introduced.
 - Writes use `auth` + `school.context`, reject client `school_id`, set ownership from the resolved school, and lock the school and existing settings rows before incrementing the version. Database unique constraints are the final guard.
-- Role/permission enforcement, a wider catalogue and stakeholder validation remain deferred; see [school-settings.md](school-settings.md) and D-09 for assumptions and unresolved decisions.
+- B-04 adds permission enforcement with `school_settings.view` for reads/revisions and `school_settings.manage` for writes; a wider catalogue and stakeholder validation remain deferred. See [school-settings.md](school-settings.md) and D-09 for assumptions and unresolved decisions.
 
 ## Slice 6: implemented academic calendar
 
@@ -79,7 +79,7 @@ The proposed specification and research documents were merged into `main` as PR 
 - Period boundaries and overlap protection are enabled by default. Year overlap is configurable and off by default because it is an engineering safeguard, not an evidence-backed requirement.
 - Year updates must keep existing periods inside the year. Calendar writes lock the school row inside the transaction to serialise concurrent integrity checks; database unique constraints remain the final guard.
 - Year references on period writes are scoped to the current school so ownership cannot be probed through validation errors. Tenant JSON responses vary on both tenant selection inputs.
-- Review before publication, auditable revisions, permissions and examination windows are deferred; see [academic-calendar.md](academic-calendar.md) for the full rules, interfaces and implementation decisions.
+- B-04 enforces `academic_calendar.view` on reads and `academic_calendar.manage` on writes and the management screen. Review before publication, auditable revisions and examination windows remain deferred; see [academic-calendar.md](academic-calendar.md) for the full rules, interfaces and implementation decisions.
 
 ## Slice 7: implemented audit trail foundation
 

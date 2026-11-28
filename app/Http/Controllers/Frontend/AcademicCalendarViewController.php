@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Frontend;
 
+use App\Domains\School\Context\SchoolContext;
 use App\Frontend\Contracts\CalendarManagementGateway;
 use App\Frontend\Contracts\FrontendDataProvider;
 use App\Http\Controllers\Controller;
@@ -14,6 +15,7 @@ final class AcademicCalendarViewController extends Controller
     public function __construct(
         private readonly FrontendDataProvider $data,
         private readonly CalendarManagementGateway $calendar,
+        private readonly SchoolContext $context,
     ) {}
 
     public function index(): View
@@ -38,6 +40,10 @@ final class AcademicCalendarViewController extends Controller
             'selectedYear' => $selected,
             'periods' => $selected === null ? [] : $this->data->periods($selected['id']),
             'validation' => $selected === null ? null : $this->calendar->validateYear((int) $selected['id']),
+            'canManageCalendar' => $this->hasSchoolPermission(
+                $this->context->assertCurrent(),
+                'academic_calendar.manage',
+            ),
         ]);
     }
 }

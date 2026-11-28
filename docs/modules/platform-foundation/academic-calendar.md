@@ -2,7 +2,7 @@
 
 **Status:** implemented backend foundation for issue #39.
 **Evidence basis:** research topic 7 in [../../research/findings/03-calendar-and-access.md](../../research/findings/03-calendar-and-access.md), workflow WF-02 in [../../research/proposed-workflows.md](../../research/proposed-workflows.md) and the phase decisions in [decision-log.md](decision-log.md).
-**Not included:** examination windows, audit revisions or a user interface. The original slice deferred permissions; B-04 now enforces `academic_calendar.manage` on calendar writes and the management screen.
+**Not included:** examination windows, audit revisions or a user interface. The original slice deferred permissions; B-04 now enforces `academic_calendar.manage` on calendar writes and the management screen, and `academic_calendar.view` on calendar reads.
 
 ## Domain overview
 
@@ -78,7 +78,7 @@ Tenant-varying JSON responses send `Cache-Control: no-store` and `Vary: X-School
 - An unauthorised client-selected school ID is rejected with `403` by the existing context middleware; conflicting or malformed IDs are rejected with `400`.
 - A missing context never falls back to a client value or to another tenant's data.
 - `school_id` is not mass-assignable on either model; create actions set it from the resolved `School` after validation.
-- Reads remain membership-scoped and are not gated by `academic_calendar.view`; that permission is catalogued but not enforced, tracked as an unresolved B-04 finding.
+- Reads require `academic_calendar.view` on all calendar API read routes and the read-only calendar screen. The frontend data provider also filters year/period payloads by this permission.
 - Writes require `academic_calendar.manage`, held by `school_editor` and `school_admin`. A roleless member, `school_member` or `role_viewer` receives `403`; a role assigned in another school does not grant access.
 - The management screen and all frontend gateway writes apply the same write permission, so Livewire update requests cannot bypass the route gate.
 

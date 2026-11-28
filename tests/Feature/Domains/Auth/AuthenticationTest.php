@@ -241,6 +241,7 @@ it('does not let a client-supplied school id at login grant school access', func
 
     $user = authTestUser();
     $user->schools()->attach($owned);
+    grantSchoolRole($user, $owned);
 
     $this->postJson('/api/auth/login', authCredentials('user@example.test', AUTH_TEST_SECRET) + [
         'school_id' => $unowned->id,
@@ -262,6 +263,8 @@ it('requires an explicit school selection after login for multi-school users', f
     $user = authTestUser();
     $user->schools()->attach($first);
     $user->schools()->attach($second);
+    grantSchoolRole($user, $first);
+    grantSchoolRole($user, $second);
 
     $this->postJson('/api/auth/login', authCredentials('user@example.test', AUTH_TEST_SECRET))->assertOk();
 

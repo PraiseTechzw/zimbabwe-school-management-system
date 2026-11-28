@@ -15,6 +15,18 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
+function schoolContextUser(School ...$schools): User
+{
+    $user = User::factory()->create();
+
+    foreach ($schools as $school) {
+        $user->schools()->attach($school);
+        grantSchoolRole($user, $school);
+    }
+
+    return $user;
+}
+
 it('rejects an unauthenticated request before resolving a school', function (): void {
     $this->getJson('/api/school')->assertUnauthorized();
 
@@ -29,8 +41,7 @@ it('rejects an authenticated user with no school membership', function (): void 
 
 it('uses the only school of a single-school user without client input', function (): void {
     $school = School::factory()->create();
-    $user = User::factory()->create();
-    $user->schools()->attach($school);
+    $user = schoolContextUser($school);
 
     $this->actingAs($user)
         ->getJson('/api/school')
@@ -56,9 +67,7 @@ it('returns only the selected school identifiers from an authorised multi-school
     $selectedIdentifier = SchoolIdentifier::factory()->for($selected)->create();
     $otherIdentifier = SchoolIdentifier::factory()->for($other)->create();
 
-    $user = User::factory()->create();
-    $user->schools()->attach($selected);
-    $user->schools()->attach($other);
+    $user = schoolContextUser($selected, $other);
 
     $response = $this->actingAs($user)
         ->withHeader('X-School-Id', (string) $selected->id)
@@ -143,8 +152,7 @@ it('treats empty school identifiers as absent without widening access', function
 
 it('clears the school context after the request completes', function (): void {
     $school = School::factory()->create();
-    $user = User::factory()->create();
-    $user->schools()->attach($school);
+    $user = schoolContextUser($school);
 
     $this->actingAs($user)->getJson('/api/school')->assertOk();
 
@@ -170,8 +178,7 @@ it('scopes school-owned records explicitly for trusted console paths', function 
 
 it('sends tenant-aware cache headers on school context responses', function (): void {
     $school = School::factory()->create();
-    $user = User::factory()->create();
-    $user->schools()->attach($school);
+    $user = schoolContextUser($school);
 
     $current = $this->actingAs($user)->getJson('/api/school')
         ->assertOk()

@@ -1,6 +1,6 @@
 # School Settings API
 
-All endpoints are mounted by `SchoolSettingsServiceProvider` under `/api` with `web`, `auth` and `school.context` middleware. They return JSON and require an authenticated user with at least one school membership.
+All endpoints are mounted by `SchoolSettingsServiceProvider` under `/api` with `web`, `auth`, `school.context` and `EnsurePermission` middleware. Reads require `school_settings.view` (`school_member`, `school_editor`, `school_admin`); writes require `school_settings.manage` (`school_editor`, `school_admin`). They return JSON and require an authenticated user with at least one school membership.
 
 Tenant selection:
 

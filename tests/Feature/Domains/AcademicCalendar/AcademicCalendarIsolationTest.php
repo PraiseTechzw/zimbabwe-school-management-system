@@ -240,9 +240,12 @@ it('rejects an authorised school selection the user cannot access', function ():
 
 it('requires an explicit school selection for multi-school calendar access', function (): void {
     $selected = School::factory()->create();
+    $other = School::factory()->create();
     $user = User::factory()->create();
-    $user->schools()->attach(School::factory()->create());
+    $user->schools()->attach($other);
     $user->schools()->attach($selected);
+    grantSchoolRole($user, $other);
+    grantSchoolRole($user, $selected);
 
     $this->actingAs($user)
         ->getJson('/api/academic-years')

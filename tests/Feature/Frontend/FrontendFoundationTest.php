@@ -19,6 +19,7 @@ function frontendUserWithSchool(School $school): User
 {
     $user = User::factory()->create();
     $user->schools()->attach($school);
+    grantSchoolRole($user, $school);
 
     return $user;
 }

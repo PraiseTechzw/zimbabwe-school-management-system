@@ -72,7 +72,7 @@ Route::post('/role-assignments', [RoleAssignmentController::class, 'store'])
 
 The domain actions repeat the check so direct server-side callers cannot bypass it. `AssignSchoolRole` also refuses to grant a role whose permissions are not already held by the actor. This prevents a manager from escalating privileges through role assignment.
 
-Academic Structure (#59) opts in with `academic_structure.view` for reads and `academic_structure.manage` for writes. After B-04, calendar writes and the calendar management screen also opt in with `academic_calendar.manage`. Each future domain must opt in to the relevant permission before its endpoints are considered authorized. Calendar reads, school-context reads and school settings remain membership-only; see the B-04 audit for unresolved decisions.
+Academic Structure (#59) opts in with `academic_structure.view` for reads and `academic_structure.manage` for writes. After B-04, calendar writes and the calendar management screen opt in with `academic_calendar.manage`; calendar reads use `academic_calendar.view`; school context and identifiers use `school.view` / `school_identifiers.view`; school settings use `school_settings.view` / `school_settings.manage`. Each future domain must opt in to the relevant permission before its endpoints are considered authorized. Roleless school members no longer inherit permission-gated reads, so existing memberships need an explicit role assignment before rollout; see the B-04 audit for the role-impact record.
 
 ## HTTP surface
 

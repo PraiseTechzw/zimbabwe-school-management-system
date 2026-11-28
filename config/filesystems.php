@@ -33,7 +33,9 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            // Tenant file access uses the application's signed storage routes,
+            // which require authentication and bind the signature to a school.
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],
