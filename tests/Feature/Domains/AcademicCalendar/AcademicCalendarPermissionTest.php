@@ -141,6 +141,8 @@ it('allows configured editors and administrators to perform calendar writes', fu
 })->with(['school_editor', 'school_admin']);
 
 it('enforces the calendar view permission on read endpoints', function (): void {
+    $this->withoutVite();
+
     $school = School::factory()->create();
     $viewer = calendarPermissionUser($school, 'role_viewer');
     $member = calendarPermissionUser($school, 'school_member');
