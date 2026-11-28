@@ -8,6 +8,7 @@ use App\Http\Controllers\Frontend\ModuleNoticeController;
 use App\Http\Controllers\Frontend\SchoolProfileController;
 use App\Http\Controllers\SchoolContextController;
 use App\Http\Middleware\EnsurePermission;
+use App\Livewire\AcademicStructure;
 use App\Livewire\CalendarAdministration;
 use App\Livewire\Dashboard;
 use App\Livewire\RoleAssignments;
@@ -31,6 +32,9 @@ Route::middleware(['auth', 'school.context'])->prefix('app')->group(function ():
     Route::get('/academic-calendar/manage', CalendarAdministration::class)
         ->middleware(EnsurePermission::class.':academic_calendar.manage')
         ->name('frontend.calendar-manage');
+    Route::get('/academic-structure', AcademicStructure::class)
+        ->middleware(EnsurePermission::class.':academic_structure.view')
+        ->name('frontend.academic-structure');
     Route::get('/school-settings', SchoolSettings::class)->name('frontend.school-settings');
     Route::get('/roles', RoleAssignments::class)->name('frontend.roles');
     Route::get('/modules/{module}', [ModuleNoticeController::class, 'show'])

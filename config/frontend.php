@@ -32,6 +32,7 @@ return [
         'School' => [
             ['key' => 'school-profile', 'label' => 'School profile', 'icon' => 'school', 'available' => true, 'route' => 'frontend.school-profile'],
             ['key' => 'academic-calendar', 'label' => 'Academic calendar', 'icon' => 'calendar', 'available' => true, 'route' => 'frontend.academic-calendar'],
+            ['key' => 'academic-structure', 'label' => 'Academic structure', 'icon' => 'school', 'available' => true, 'route' => 'frontend.academic-structure'],
             ['key' => 'school-settings', 'label' => 'School settings', 'icon' => 'cog', 'available' => true, 'route' => 'frontend.school-settings'],
         ],
         'Learners' => [
