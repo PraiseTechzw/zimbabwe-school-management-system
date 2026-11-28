@@ -10,6 +10,7 @@ use App\Http\Controllers\SchoolContextController;
 use App\Http\Controllers\TenantFileController;
 use App\Http\Middleware\EnsurePermission;
 use App\Http\Middleware\EnsureTenantSignedStorage;
+use App\Livewire\AcademicStructure;
 use App\Livewire\CalendarAdministration;
 use App\Livewire\Dashboard;
 use App\Livewire\RoleAssignments;
@@ -37,6 +38,9 @@ Route::middleware(['auth', 'school.context'])->prefix('app')->group(function ():
     Route::get('/academic-calendar/manage', CalendarAdministration::class)
         ->middleware(EnsurePermission::class.':academic_calendar.manage')
         ->name('frontend.calendar-manage');
+    Route::get('/academic-structure', AcademicStructure::class)
+        ->middleware(EnsurePermission::class.':academic_structure.view')
+        ->name('frontend.academic-structure');
     Route::get('/school-settings', SchoolSettings::class)
         ->middleware(EnsurePermission::class.':school_settings.view')
         ->name('frontend.school-settings');
