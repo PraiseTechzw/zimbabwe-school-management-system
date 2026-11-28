@@ -18,7 +18,10 @@ final class ModuleNoticeController extends Controller
         $label = $this->labelFor($module);
 
         return view('frontend.module-notice', [
+            'title' => $label,
             'user' => $this->data->user(),
+            'school' => $this->data->school(),
+            'academicYear' => $this->data->currentYear(),
             'module' => $module,
             'label' => $label,
         ]);

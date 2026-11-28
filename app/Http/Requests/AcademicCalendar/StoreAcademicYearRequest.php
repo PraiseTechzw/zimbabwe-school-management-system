@@ -20,7 +20,7 @@ final class StoreAcademicYearRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'school_id' => ['prohibited'],
+            'school_id' => ['missing'],
             'name' => ['required', 'string', 'max:255'],
             'start_date' => ['required', 'date_format:Y-m-d'],
             'end_date' => ['required', 'date_format:Y-m-d', 'after:start_date'],

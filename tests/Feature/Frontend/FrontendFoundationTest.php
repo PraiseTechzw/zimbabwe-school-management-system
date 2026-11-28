@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Domains\AcademicCalendar\Models\AcademicPeriod;
 use App\Domains\AcademicCalendar\Models\AcademicYear;
+use App\Domains\Authorization\Models\RoleAssignment;
 use App\Domains\School\Models\School;
 use App\Domains\School\Models\SchoolIdentifier;
 use App\Models\User;
@@ -15,10 +16,20 @@ uses(RefreshDatabase::class);
 // require a manifest for these view-rendering assertions.
 beforeEach(fn (): mixed => $this->withoutVite());
 
-function frontendUserWithSchool(School $school): User
+function frontendUserWithSchool(School $school, ?string $role = 'school_member'): User
 {
     $user = User::factory()->create();
     $user->schools()->attach($school);
+
+    if ($role !== null) {
+        RoleAssignment::query()->forceCreate([
+            'school_id' => (int) $school->id,
+            'user_id' => (int) $user->id,
+            'role' => $role,
+            'source' => 'domain',
+            'created_at' => now(),
+        ]);
+    }
 
     return $user;
 }
@@ -68,7 +79,10 @@ it('renders a parseable Alpine navigation expression in the app shell', function
         ->get('/app')
         ->assertOk()
         ->assertSee("[tabindex]:not([tabindex='-1'])", false)
-        ->assertDontSee('[tabindex]:not([tabindex="-1"])', false);
+        ->assertDontSee('[tabindex]:not([tabindex="-1"])', false)
+        ->assertSee('openMenu(event)', false)
+        ->assertSee('@click="openMenu($event)"', false)
+        ->assertDontSee('this.menuOpener = $event.currentTarget', false);
 });
 
 it('labels demo figures so they cannot be mistaken for school records', function (): void {
@@ -141,6 +155,20 @@ it('states plainly when a planned module has no screens', function (): void {
         ->assertOk()
         ->assertSee('This module is not built yet')
         ->assertSee('Fees');
+});
+
+it('renders controller screens inside the application layout', function (): void {
+    $school = School::factory()->create();
+    $user = frontendUserWithSchool($school);
+
+    foreach (['/app/school', '/app/academic-calendar', '/app/modules/fees'] as $uri) {
+        $this->actingAs($user)
+            ->get($uri)
+            ->assertOk()
+            ->assertSee('<!DOCTYPE html>', false)
+            ->assertSee('name="csrf-token"', false)
+            ->assertSee('· School Manager</title>', false);
+    }
 });
 
 it('lets deployments hide navigation items from the shell', function (): void {

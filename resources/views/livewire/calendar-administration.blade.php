@@ -1,4 +1,4 @@
-<x-app-shell title="Academic calendar administration" :user="$user"
+<x-app-shell title="Academic calendar administration" :user="$user" :school="$school" :academic-year="$academicYear"
              :breadcrumbs="[
                  ['label' => 'School', 'url' => route('frontend.school-profile')],
                  ['label' => 'Academic calendar', 'url' => route('frontend.academic-calendar')],
