@@ -16,6 +16,7 @@ use App\Frontend\DomainCalendarManagementGateway;
 use App\Frontend\DomainRoleAssignmentGateway;
 use App\Frontend\DomainSchoolSettingsGateway;
 use App\Frontend\ServerFrontendDataProvider;
+use App\Http\Middleware\EnsurePermission;
 use App\Http\Middleware\ResolveSchoolContext;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Blade;
@@ -53,7 +54,9 @@ class AppServiceProvider extends ServiceProvider
         Blade::component('layouts.guest', 'guest-layout');
 
         // Livewire updates bypass the original page route. Re-run the school
-        // context resolver so writes remain tenant-scoped on every update.
+        // context resolver and the originating route's permission gate so a
+        // signed snapshot cannot replay an action after access is revoked.
         Livewire::addPersistentMiddleware(ResolveSchoolContext::class);
+        Livewire::addPersistentMiddleware(EnsurePermission::class);
     }
 }

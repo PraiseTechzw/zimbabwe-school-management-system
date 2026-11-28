@@ -16,6 +16,7 @@ function settingsHttpUser(School ...$schools): User
 
     foreach ($schools as $school) {
         $user->schools()->attach($school);
+        grantSchoolRole($user, $school, 'school_editor');
     }
 
     return $user;

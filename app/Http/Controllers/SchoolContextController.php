@@ -13,6 +13,7 @@ final class SchoolContextController extends Controller
     public function current(SchoolContext $context): JsonResponse
     {
         $school = $context->assertCurrent();
+        $this->authorizeSchoolPermission($school, 'school.view');
 
         return $this->tenantJson([
             'school' => [
@@ -26,6 +27,7 @@ final class SchoolContextController extends Controller
     public function identifiers(SchoolContext $context): JsonResponse
     {
         $school = $context->assertCurrent();
+        $this->authorizeSchoolPermission($school, 'school_identifiers.view');
 
         $identifiers = SchoolIdentifier::query()
             ->forCurrentSchool()

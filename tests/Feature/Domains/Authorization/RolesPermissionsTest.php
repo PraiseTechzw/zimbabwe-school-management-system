@@ -145,7 +145,14 @@ it('lets an authorised manager assign a configured role to a school member', fun
 it('prevents a manager from granting permissions they do not hold', function (): void {
     config()->set('authorization.roles.limited_manager', [
         'label' => 'Limited manager',
-        'permissions' => ['school.view', 'academic_calendar.view', 'academic_structure.view', 'roles.manage'],
+        'permissions' => [
+            'school.view',
+            'school_identifiers.view',
+            'school_settings.view',
+            'academic_calendar.view',
+            'academic_structure.view',
+            'roles.manage',
+        ],
     ]);
 
     $school = School::factory()->create();

@@ -15,11 +15,15 @@ uses(RefreshDatabase::class);
 
 beforeEach(fn (): mixed => $this->withoutVite());
 
-function roleScreenActorWithSchool(School $school, string $role): User
+function roleScreenActorWithSchool(School $school, ?string $role): User
 {
     $user = User::factory()->create();
     $user->schools()->attach($school);
-    RoleAssignment::factory()->for($school)->for($user)->create(['role' => $role]);
+
+    if ($role !== null) {
+        RoleAssignment::factory()->for($school)->for($user)->create(['role' => $role]);
+    }
+
     app(SchoolContext::class)->set($school);
     Auth::login($user);
 
@@ -82,15 +86,26 @@ it('does not offer assignment controls to an account without manage permission',
     $this->assertDatabaseMissing('role_assignments', ['user_id' => $target->id]);
 });
 
-it('hides assignments from an account without view permission', function (): void {
+it('requires roles.view to open the role screen', function (?string $role, int $status): void {
+    $school = School::factory()->create();
+    roleScreenActorWithSchool($school, $role);
+
+    $this->get('/app/roles')->assertStatus($status);
+})->with([
+    'roleless member' => [null, 403],
+    'school member' => ['school_member', 403],
+    'role viewer' => ['role_viewer', 200],
+    'school admin' => ['school_admin', 200],
+]);
+
+it('does not expose assignments through the component without view permission', function (): void {
     $school = School::factory()->create();
     roleScreenActorWithSchool($school, 'school_member');
 
     $foreignUser = User::factory()->create();
     RoleAssignment::factory()->for($school)->for($foreignUser)->create(['role' => 'role_viewer']);
 
-    $this->get('/app/roles')
-        ->assertOk()
+    Livewire::test(RoleAssignments::class)
         ->assertSee('Not available to this account')
         ->assertDontSee('>'.$foreignUser->id.'</td>', false);
 });

@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Livewire;
 
+use App\Domains\Authorization\Services\SchoolPermissions;
+use App\Domains\School\Context\SchoolContext;
 use App\Frontend\Contracts\FrontendDataProvider;
+use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Config;
 use Livewire\Attributes\Title;
@@ -13,21 +16,37 @@ use Livewire\Component;
 #[Title('Dashboard')]
 final class Dashboard extends Component
 {
-    public function render(FrontendDataProvider $data): View
-    {
+    public function render(
+        FrontendDataProvider $data,
+        SchoolPermissions $permissions,
+        SchoolContext $context,
+    ): View {
         $identifiers = $data->identifiers();
         $verified = count(array_filter(
             $identifiers,
             static fn (array $identifier): bool => $identifier['verification_status'] === 'verified',
         ));
 
-        /** @var array<string, list<array{key: string, label: string, available?: bool, route?: string}>> $groups */
+        /** @var array<string, list<array{key: string, label: string, available?: bool, route?: string, permission?: string}>> $groups */
         $groups = Config::get('frontend.navigation', []);
+        $actor = auth()->user();
+        $permissionSchool = $context->current();
+        $canSee = static function (array $item) use ($actor, $permissionSchool, $permissions): bool {
+            $permission = $item['permission'] ?? null;
+
+            if ($permission === null) {
+                return true;
+            }
+
+            return $actor instanceof User
+                && $permissionSchool !== null
+                && $permissions->has($actor, $permissionSchool, $permission);
+        };
         $ready = [];
 
         foreach ($groups as $items) {
             foreach ($items as $item) {
-                if (($item['available'] ?? false) === true && $item['key'] !== 'dashboard') {
+                if (($item['available'] ?? false) === true && $item['key'] !== 'dashboard' && $canSee($item)) {
                     $ready[] = [
                         'label' => $item['label'],
                         'key' => $item['key'],

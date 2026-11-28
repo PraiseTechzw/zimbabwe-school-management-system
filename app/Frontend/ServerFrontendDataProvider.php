@@ -7,6 +7,7 @@ namespace App\Frontend;
 use App\Domains\AcademicCalendar\Actions\ResolveCurrentAcademicYear;
 use App\Domains\AcademicCalendar\Models\AcademicPeriod;
 use App\Domains\AcademicCalendar\Models\AcademicYear;
+use App\Domains\Authorization\Services\SchoolPermissions;
 use App\Domains\School\Context\SchoolContext;
 use App\Domains\School\Models\SchoolIdentifier;
 use App\Frontend\Contracts\FrontendDataProvider;
@@ -23,7 +24,10 @@ use Illuminate\Support\Facades\Auth;
  */
 final class ServerFrontendDataProvider implements FrontendDataProvider
 {
-    public function __construct(private readonly SchoolContext $context) {}
+    public function __construct(
+        private readonly SchoolContext $context,
+        private readonly SchoolPermissions $permissions,
+    ) {}
 
     public function user(): ?array
     {
@@ -45,7 +49,7 @@ final class ServerFrontendDataProvider implements FrontendDataProvider
     {
         $school = $this->context->current();
 
-        if ($school === null) {
+        if ($school === null || ! $this->hasPermission('school.view')) {
             return null;
         }
 
@@ -58,7 +62,7 @@ final class ServerFrontendDataProvider implements FrontendDataProvider
 
     public function identifiers(): array
     {
-        if ($this->context->id() === null) {
+        if ($this->context->id() === null || ! $this->hasPermission('school_identifiers.view')) {
             return [];
         }
 
@@ -80,7 +84,7 @@ final class ServerFrontendDataProvider implements FrontendDataProvider
     {
         $school = $this->context->current();
 
-        if ($school === null) {
+        if ($school === null || ! $this->hasPermission('academic_calendar.view')) {
             return null;
         }
 
@@ -91,7 +95,7 @@ final class ServerFrontendDataProvider implements FrontendDataProvider
 
     public function years(): array
     {
-        if ($this->context->id() === null) {
+        if ($this->context->id() === null || ! $this->hasPermission('academic_calendar.view')) {
             return [];
         }
 
@@ -107,7 +111,9 @@ final class ServerFrontendDataProvider implements FrontendDataProvider
 
     public function periods(int $academicYearId): array
     {
-        if ($this->context->id() === null || ! $this->yearExistsInContext($academicYearId)) {
+        if ($this->context->id() === null
+            || ! $this->hasPermission('academic_calendar.view')
+            || ! $this->yearExistsInContext($academicYearId)) {
             return [];
         }
 
@@ -134,6 +140,16 @@ final class ServerFrontendDataProvider implements FrontendDataProvider
     {
         // No verified endpoint exists for cross-module aggregates.
         return [];
+    }
+
+    private function hasPermission(string $permission): bool
+    {
+        $user = Auth::user();
+        $school = $this->context->current();
+
+        return $user instanceof User
+            && $school !== null
+            && $this->permissions->has($user, $school, $permission);
     }
 
     /**

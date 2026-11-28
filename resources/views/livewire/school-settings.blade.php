@@ -24,26 +24,30 @@
             </p>
         @endif
 
-        <form wire:submit="save" class="grid gap-4 sm:grid-cols-2">
-            <x-select name="settings_locale" label="Locale" :options="$localeOptions"
-                      wire:model.blur="locale" :error="$errorsByField['locale'] ?? null" />
-            <x-select name="settings_timezone" label="Timezone" :options="$timezoneOptions"
-                      wire:model.blur="timezone" :error="$errorsByField['timezone'] ?? null" />
-            <div class="sm:col-span-2">
-                <x-input name="settings_source" label="Source" wire:model.blur="source" required
-                         help="For example, a school circular or an authorised instruction."
-                         :error="$errorsByField['source'] ?? null" />
-            </div>
-            <x-input name="settings_effective_from" label="Effective from" type="date"
-                     wire:model.blur="effectiveFrom"
-                     help="Optional. Use the date the preference takes effect."
-                     :error="$errorsByField['effective_from'] ?? null" />
+        @if($canManage)
+            <form wire:submit="save" class="grid gap-4 sm:grid-cols-2">
+                <x-select name="settings_locale" label="Locale" :options="$localeOptions"
+                          wire:model.blur="locale" :error="$errorsByField['locale'] ?? null" />
+                <x-select name="settings_timezone" label="Timezone" :options="$timezoneOptions"
+                          wire:model.blur="timezone" :error="$errorsByField['timezone'] ?? null" />
+                <div class="sm:col-span-2">
+                    <x-input name="settings_source" label="Source" wire:model.blur="source" required
+                             help="For example, a school circular or an authorised instruction."
+                             :error="$errorsByField['source'] ?? null" />
+                </div>
+                <x-input name="settings_effective_from" label="Effective from" type="date"
+                         wire:model.blur="effectiveFrom"
+                         help="Optional. Use the date the preference takes effect."
+                         :error="$errorsByField['effective_from'] ?? null" />
 
-            <div class="flex flex-wrap items-center gap-2 sm:col-span-2">
-                <x-button type="submit" wire:loading.attr="disabled" wire:target="save">Save settings</x-button>
-                <span class="text-[13px] text-muted" wire:loading wire:target="save">Saving…</span>
-            </div>
-        </form>
+                <div class="flex flex-wrap items-center gap-2 sm:col-span-2">
+                    <x-button type="submit" wire:loading.attr="disabled" wire:target="save">Save settings</x-button>
+                    <span class="text-[13px] text-muted" wire:loading wire:target="save">Saving…</span>
+                </div>
+            </form>
+        @else
+            <p class="text-[13px] text-muted">Your account can view these preferences but cannot change them.</p>
+        @endif
     </x-card>
 
     <x-card title="Revision history" class="mt-4"

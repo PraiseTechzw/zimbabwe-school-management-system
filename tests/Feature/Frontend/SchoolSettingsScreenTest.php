@@ -14,10 +14,14 @@ uses(RefreshDatabase::class);
 
 beforeEach(fn (): mixed => $this->withoutVite());
 
-function settingsScreenActorWithSchool(School $school): User
+function settingsScreenActorWithSchool(School $school, ?string $role = 'school_editor'): User
 {
     $user = User::factory()->create();
     $user->schools()->attach($school);
+
+    if ($role !== null) {
+        grantSchoolRole($user, $school, $role);
+    }
     app(SchoolContext::class)->set($school);
     Auth::login($user);
 
@@ -103,4 +107,35 @@ it('surfaces validation errors instead of silently saving invalid settings', fun
         ->assertSet('formError', 'Check the highlighted fields and try again.');
 
     $this->assertDatabaseCount('school_settings', 0);
+});
+
+it('requires a configured settings role to open the settings screen', function (?string $role): void {
+    $school = School::factory()->create();
+    settingsScreenActorWithSchool($school, $role);
+
+    $this->get('/app/school-settings')->assertForbidden();
+})->with(['roleless' => null, 'role viewer' => 'role_viewer']);
+
+it('hides settings save controls from a read-only member', function (): void {
+    $school = School::factory()->create();
+    settingsScreenActorWithSchool($school, 'school_member');
+
+    $this->get('/app/school-settings')
+        ->assertOk()
+        ->assertDontSee('Save settings')
+        ->assertSee('Your account can view these preferences but cannot change them.');
+});
+
+it('does not let a member save settings through a Livewire update', function (): void {
+    $school = School::factory()->create();
+    settingsScreenActorWithSchool($school, 'school_member');
+
+    Livewire::test(SchoolSettings::class)
+        ->set('timezone', 'Africa/Harare')
+        ->set('source', 'Unauthorised change')
+        ->call('save')
+        ->assertSet('formError', 'Your account cannot manage school settings in this school.');
+
+    $this->assertDatabaseCount('school_settings', 0)
+        ->assertDatabaseCount('school_setting_revisions', 0);
 });

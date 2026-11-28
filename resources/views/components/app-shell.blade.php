@@ -9,12 +9,26 @@
 @php
     $currentRoute = request()->route()?->getName();
     $hidden = array_fill_keys(array_values((array) config('frontend.hidden_modules', [])), true);
+    $actor = auth()->user();
+    $permissionSchool = app(\App\Domains\School\Context\SchoolContext::class)->current();
+    $permissions = app(\App\Domains\Authorization\Services\SchoolPermissions::class);
+    $canSee = static function (array $item) use ($actor, $permissionSchool, $permissions): bool {
+        $permission = $item['permission'] ?? null;
+
+        if ($permission === null) {
+            return true;
+        }
+
+        return $actor instanceof \App\Models\User
+            && $permissionSchool !== null
+            && $permissions->has($actor, $permissionSchool, $permission);
+    };
     $groups = [];
 
     foreach ((array) config('frontend.navigation', []) as $heading => $items) {
         $visible = array_values(array_filter(
             $items,
-            static fn (array $item): bool => ! isset($hidden[$item['key'] ?? '']),
+            static fn (array $item): bool => ! isset($hidden[$item['key'] ?? '']) && $canSee($item),
         ));
 
         if ($visible !== []) {

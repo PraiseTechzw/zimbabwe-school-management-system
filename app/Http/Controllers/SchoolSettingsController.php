@@ -22,6 +22,7 @@ final class SchoolSettingsController extends Controller
         $this->rejectClientSchoolId($request);
 
         $school = $context->assertCurrent();
+        $this->authorizeSchoolPermission($school, 'school_settings.view');
         $settings = app(ResolveSchoolSettings::class)->execute($school);
 
         return $this->tenantJson($this->settingsPayload($settings));
@@ -29,8 +30,11 @@ final class SchoolSettingsController extends Controller
 
     public function update(UpdateSchoolSettingsRequest $request, SchoolContext $context): JsonResponse
     {
+        $school = $context->assertCurrent();
+        $this->authorizeSchoolPermission($school, 'school_settings.manage');
+
         $settings = app(UpdateSchoolSettings::class)->execute(
-            $context->assertCurrent(),
+            $school,
             $request->validated()
         );
 
@@ -42,6 +46,7 @@ final class SchoolSettingsController extends Controller
         $this->rejectClientSchoolId($request);
 
         $school = $context->assertCurrent();
+        $this->authorizeSchoolPermission($school, 'school_settings.view');
 
         /** @var array<int, array<string, mixed>> $revisions */
         $revisions = app(ListSchoolSettingRevisions::class)->execute($school);

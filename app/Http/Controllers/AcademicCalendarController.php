@@ -30,6 +30,7 @@ final class AcademicCalendarController extends Controller
         $this->rejectClientSchoolId($request);
 
         $school = $context->assertCurrent();
+        $this->authorizeSchoolPermission($school, 'academic_calendar.view');
         $year = app(ResolveCurrentAcademicYear::class)->execute($school);
 
         return $this->tenantJson([
@@ -43,6 +44,7 @@ final class AcademicCalendarController extends Controller
         $this->rejectClientSchoolId($request);
 
         $school = $context->assertCurrent();
+        $this->authorizeSchoolPermission($school, 'academic_calendar.view');
 
         /** @var array<int, array<string, mixed>> $years */
         $years = AcademicYear::query()
@@ -61,15 +63,21 @@ final class AcademicCalendarController extends Controller
 
     public function storeYear(StoreAcademicYearRequest $request, SchoolContext $context): JsonResponse
     {
-        $year = app(CreateAcademicYear::class)->execute($context->assertCurrent(), $request->validated());
+        $school = $context->assertCurrent();
+        $this->authorizeSchoolPermission($school, 'academic_calendar.manage');
+
+        $year = app(CreateAcademicYear::class)->execute($school, $request->validated());
 
         return $this->tenantJson(['academic_year' => $this->yearPayload($year)], Response::HTTP_CREATED);
     }
 
     public function updateYear(UpdateAcademicYearRequest $request, SchoolContext $context, int $academicYear): JsonResponse
     {
+        $school = $context->assertCurrent();
+        $this->authorizeSchoolPermission($school, 'academic_calendar.manage');
+
         $year = $this->scopedYear($academicYear);
-        $updated = app(UpdateAcademicYear::class)->execute($context->assertCurrent(), $year, $request->validated());
+        $updated = app(UpdateAcademicYear::class)->execute($school, $year, $request->validated());
 
         return $this->tenantJson(['academic_year' => $this->yearPayload($updated)]);
     }
@@ -77,6 +85,7 @@ final class AcademicCalendarController extends Controller
     public function periods(Request $request, SchoolContext $context, int $academicYear): JsonResponse
     {
         $this->rejectClientSchoolId($request);
+        $this->authorizeSchoolPermission($context->assertCurrent(), 'academic_calendar.view');
 
         $year = $this->scopedYear($academicYear);
 
@@ -99,17 +108,23 @@ final class AcademicCalendarController extends Controller
 
     public function storePeriod(StoreAcademicPeriodRequest $request, SchoolContext $context, int $academicYear): JsonResponse
     {
+        $school = $context->assertCurrent();
+        $this->authorizeSchoolPermission($school, 'academic_calendar.manage');
+
         $year = $this->scopedYear($academicYear);
         $data = array_merge($request->validated(), ['academic_year_id' => (int) $year->id]);
-        $period = app(CreateAcademicPeriod::class)->execute($context->assertCurrent(), $data);
+        $period = app(CreateAcademicPeriod::class)->execute($school, $data);
 
         return $this->tenantJson(['period' => $this->periodPayload($period)], Response::HTTP_CREATED);
     }
 
     public function updatePeriod(UpdateAcademicPeriodRequest $request, SchoolContext $context, int $academicPeriod): JsonResponse
     {
+        $school = $context->assertCurrent();
+        $this->authorizeSchoolPermission($school, 'academic_calendar.manage');
+
         $period = $this->scopedPeriod($academicPeriod);
-        $updated = app(UpdateAcademicPeriod::class)->execute($context->assertCurrent(), $period, $request->validated());
+        $updated = app(UpdateAcademicPeriod::class)->execute($school, $period, $request->validated());
 
         return $this->tenantJson(['period' => $this->periodPayload($updated)]);
     }
@@ -117,6 +132,7 @@ final class AcademicCalendarController extends Controller
     public function validateCalendar(Request $request, SchoolContext $context): JsonResponse
     {
         $this->rejectClientSchoolId($request);
+        $this->authorizeSchoolPermission($context->assertCurrent(), 'academic_calendar.view');
 
         $validated = Validator::make($request->all(), [
             'academic_year_id' => ['required', 'integer'],

@@ -18,6 +18,8 @@ return [
     'permissions' => [
         'school.view' => ['label' => 'View the authorised school context'],
         'school_identifiers.view' => ['label' => 'View school identifiers'],
+        'school_settings.view' => ['label' => 'View school settings'],
+        'school_settings.manage' => ['label' => 'Update school settings'],
         'academic_calendar.view' => ['label' => 'View academic calendars'],
         'academic_calendar.manage' => ['label' => 'Create and update academic calendars'],
         'academic_structure.view' => ['label' => 'View school structure configuration'],
@@ -43,6 +45,8 @@ return [
             'label' => 'School member',
             'permissions' => [
                 'school.view',
+                'school_identifiers.view',
+                'school_settings.view',
                 'academic_calendar.view',
                 'academic_structure.view',
             ],
@@ -51,6 +55,9 @@ return [
             'label' => 'School editor',
             'permissions' => [
                 'school.view',
+                'school_identifiers.view',
+                'school_settings.view',
+                'school_settings.manage',
                 'academic_calendar.view',
                 'academic_calendar.manage',
                 'academic_structure.view',

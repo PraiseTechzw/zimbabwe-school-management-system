@@ -72,7 +72,7 @@ See [School Settings API](../../api/school-settings.md).
 - **A-02:** retaining source, effective date and prior version satisfies "auditable where critical" for this mechanism. B-05 additionally integrates the existing #40 audit domain for settings writes; actor attribution is now recorded, while retention, legal hold and a read UI remain deferred.
 - **A-03:** defaults are minimal and config-driven. They do not assert a school calendar, school code/identifier format, academic structure, currency or terminology.
 - **U-13:** which school-level settings genuinely vary remains unresolved. The catalogue must not expand until this is answered or a Product Owner makes an explicit decision.
-- **#37:** role/permission enforcement is not implemented. Endpoints use authentication and school membership only.
+- **#37 / B-04:** endpoints now use `school_settings.view` for reads and revisions and `school_settings.manage` for writes, in addition to authentication and school context. `school_member` can read; `school_editor` can write. Roleless members no longer inherit access implicitly.
 - **#40:** audit event storage and actor metadata are implemented for settings writes by B-05; retention, legal hold and privileged read controls remain owner decisions.
 - **D-04:** shared-database tenancy remains provisional pending a final ADR.
 

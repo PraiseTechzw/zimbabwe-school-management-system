@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Frontend;
 
+use App\Domains\Authorization\Services\SchoolPermissions;
 use App\Domains\School\Context\SchoolContext;
 use App\Domains\School\Models\School;
 use App\Domains\SchoolSettings\Actions\ListSchoolSettingRevisions;
@@ -11,6 +12,9 @@ use App\Domains\SchoolSettings\Actions\ResolveSchoolSettings;
 use App\Domains\SchoolSettings\Actions\UpdateSchoolSettings;
 use App\Domains\SchoolSettings\Models\SchoolSetting;
 use App\Frontend\Contracts\SchoolSettingsGateway;
+use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * School settings adapter backed by the verified domain actions.
@@ -22,6 +26,7 @@ final class DomainSchoolSettingsGateway implements SchoolSettingsGateway
 {
     public function __construct(
         private readonly SchoolContext $context,
+        private readonly SchoolPermissions $permissions,
         private readonly ResolveSchoolSettings $resolveAction,
         private readonly UpdateSchoolSettings $updateAction,
         private readonly ListSchoolSettingRevisions $revisionsAction,
@@ -47,10 +52,21 @@ final class DomainSchoolSettingsGateway implements SchoolSettingsGateway
 
     public function update(array $data): array
     {
+        $this->assertCanManage();
+
         $school = $this->school();
         $setting = $this->updateAction->execute($school, $data);
 
         return $this->payload($setting, true);
+    }
+
+    private function assertCanManage(): void
+    {
+        $user = Auth::user();
+
+        if (! $user instanceof User || ! $this->permissions->has($user, $this->school(), 'school_settings.manage')) {
+            throw new AuthorizationException('The user does not have permission to manage school settings.');
+        }
     }
 
     private function school(): School

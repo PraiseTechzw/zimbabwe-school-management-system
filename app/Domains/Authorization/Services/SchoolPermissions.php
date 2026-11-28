@@ -7,6 +7,7 @@ namespace App\Domains\Authorization\Services;
 use App\Domains\Authorization\Models\RoleAssignment;
 use App\Domains\School\Models\School;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 
 /**
  * Resolves permissions only from active role assignments in one school.
@@ -32,6 +33,22 @@ final class SchoolPermissions
         }
 
         return array_key_exists($permission, $this->effectivePermissions($user, $school));
+    }
+
+    /**
+     * Fail-closed authorization contract for callers outside route middleware.
+     *
+     * Controllers, gateways, server-side read adapters and Livewire actions can
+     * all use this method with an explicit actor and school instead of relying
+     * on the authenticated session being present in the call stack.
+     *
+     * @throws AuthorizationException
+     */
+    public function authorize(User $user, School $school, string $permission): void
+    {
+        if (! $this->has($user, $school, $permission)) {
+            throw new AuthorizationException('The user does not have permission to perform this action.');
+        }
     }
 
     /**
