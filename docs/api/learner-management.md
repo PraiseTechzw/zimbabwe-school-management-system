@@ -1,6 +1,6 @@
 # Learner Management API (PROPOSED contract)
 
-**Status:** implemented and locally verified on `feature/backend-learner-management-foundation` against merged `origin/main` `6f2d868`; see [verification evidence](../reports/learner-management-verification.md). It remains **PROPOSED** until human review and merge, is not a deployed API, and has no frontend UI in this slice.
+**Status:** implemented and locally verified on `feature/backend-learner-management-foundation` against merged `origin/main` `5e5c726`; see [verification evidence](../reports/learner-management-verification.md). It remains **PROPOSED** until human review and merge, is not a deployed API, and has no frontend UI in this slice.
 **Module record:** [Learner Management foundation](../modules/learner-management.md).
 **Evidence:** [Findings 07 — learner records](../research/findings/07-learner-records.md). No field below is represented as a statutory or MoPSE-required field.
 

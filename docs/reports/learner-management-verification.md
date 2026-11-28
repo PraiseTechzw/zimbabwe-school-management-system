@@ -2,7 +2,7 @@
 
 **Branch:** `feature/backend-learner-management-foundation`
 **Feature commit:** `e210ece` (`feat(learner-management): add school-scoped foundation`)
-**Merged base:** `origin/main` `6f2d868` (includes #63, #64 and #65)
+**Merged base:** `origin/main` `5e5c726` (includes #63, #64, #65 and the B-06 decision brief #66)
 **Status:** implemented and locally verified; still **PROPOSED** until human review and merge. No deployment or remote CI success is claimed.
 
 ## Isolation and method
