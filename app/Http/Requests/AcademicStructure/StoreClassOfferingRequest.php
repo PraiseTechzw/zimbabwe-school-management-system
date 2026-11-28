@@ -20,7 +20,7 @@ final class StoreClassOfferingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'school_id' => ['prohibited'],
+            'school_id' => ['missing'],
             'class_definition_id' => ['required', 'integer', 'min:1'],
             'academic_year_id' => ['required', 'integer', 'min:1'],
             'name' => array_merge(['nullable'], array_slice(AcademicStructureRules::name(), 1)),

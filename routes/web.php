@@ -26,7 +26,9 @@ Route::get('/login', [LoginController::class, 'show'])
 Route::middleware(['auth', 'school.context'])->prefix('app')->group(function (): void {
     Route::get('/', Dashboard::class)->name('frontend.dashboard');
     Route::get('/school', [SchoolProfileController::class, 'index'])->name('frontend.school-profile');
-    Route::get('/academic-calendar', [AcademicCalendarViewController::class, 'index'])->name('frontend.academic-calendar');
+    Route::get('/academic-calendar', [AcademicCalendarViewController::class, 'index'])
+        ->middleware(EnsurePermission::class.':academic_calendar.view')
+        ->name('frontend.academic-calendar');
     Route::get('/academic-calendar/manage', CalendarAdministration::class)
         ->middleware(EnsurePermission::class.':academic_calendar.manage')
         ->name('frontend.calendar-manage');

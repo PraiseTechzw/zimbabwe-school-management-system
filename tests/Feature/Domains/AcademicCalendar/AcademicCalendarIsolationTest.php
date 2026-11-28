@@ -240,9 +240,8 @@ it('rejects an authorised school selection the user cannot access', function ():
 
 it('requires an explicit school selection for multi-school calendar access', function (): void {
     $selected = School::factory()->create();
-    $user = User::factory()->create();
+    $user = calendarHttpUser($selected, 'school_member');
     $user->schools()->attach(School::factory()->create());
-    $user->schools()->attach($selected);
 
     $this->actingAs($user)
         ->getJson('/api/academic-years')
@@ -463,17 +462,20 @@ it('rejects client supplied school identifiers on calendar updates', function ()
     ]);
 });
 
-it('ignores a null client school id without widening calendar ownership', function (): void {
+it('rejects a null client school id without widening calendar ownership', function (): void {
     $school = School::factory()->create();
     $user = calendarHttpUser($school);
 
-    $created = $this->actingAs($user)
+    $this->actingAs($user)
         ->postJson('/api/academic-years', calendarHttpYearData([
             'name' => 'Null school id',
             'school_id' => null,
         ]))
-        ->assertCreated()
-        ->json('academic_year');
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('school_id');
 
-    expect((int) $created['school_id'])->toBe((int) $school->id);
+    $this->assertDatabaseMissing('academic_years', [
+        'school_id' => $school->id,
+        'name' => 'Null school id',
+    ]);
 });
