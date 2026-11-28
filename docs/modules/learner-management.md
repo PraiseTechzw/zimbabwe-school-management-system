@@ -1,6 +1,6 @@
 # Learner Management foundation (PROPOSED specification)
 
-**Status:** Draft specification for an isolated backend foundation. Every product-facing rule below is **PROPOSED DESIGN** until a Product Owner decision is recorded. This branch is not merged, not deployed and not user-facing.
+**Status:** Implemented and locally verified specification for an isolated backend foundation; see [verification evidence](../../reports/learner-management-verification.md). Every product-facing rule below remains **PROPOSED DESIGN** until a Product Owner decision is recorded. This branch is not merged, not deployed and not user-facing.
 **Evidence basis:** [Findings 07 — learner records](../../research/findings/07-learner-records.md) (source IDs `LRN-S01`–`LRN-S09`, findings `LRN-F1`–`LRN-F7`), [evidence classification](../../research/evidence-classification.md) and the [module specification template](../../templates/module-specification.md).
 **Not included:** admissions, enrolment, guardians/next of kin, medical, attendance, assessment, discipline, safeguarding, transport, boarding, finance, notifications, document storage, data-subject requests, deletion/export workflows or a frontend.
 

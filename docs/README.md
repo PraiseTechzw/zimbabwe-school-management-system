@@ -42,6 +42,7 @@ Sprint 0 established the engineering foundation. All seven Phase 1 foundation sl
 
 - [Verification evidence](reports/sprint-0-verification.md) — actual command output and GitHub checks
 - [B-04 authorization, RBAC and tenant-isolation audit](reports/b04-authorization-rbac-tenant-audit.md) — route coverage, findings, risk register and unresolved decisions
+- [Learner Management foundation verification](reports/learner-management-verification.md) — local Pest, static analysis, MySQL migration and route evidence
 
 ## Phase 1 — Platform Foundation discovery (historical; D-08 released the execution gate)
 

@@ -51,7 +51,7 @@ Integration constraints verified from the controller, FormRequests, domain actio
 
 ### Learner Management contracts (PROPOSED, not available on this base)
 
-A separate backend branch proposes a learner-record foundation. It is **not merged into `main`**, no route exists on this base, and the contract below must not be used to claim a live endpoint. Field-level detail is in the [PROPOSED Learner Management API](../api/learner-management.md).
+A separate backend branch proposes a learner-record foundation. It is **not merged into `main`**, no route exists on this base, and the contract below must not be used to claim a live endpoint. The branch has [local verification evidence](../reports/learner-management-verification.md), but the contract remains **PROPOSED** until review and merge. Field-level detail is in the [PROPOSED Learner Management API](../api/learner-management.md).
 
 | Resource | Proposed routes | Proposed envelope | Status |
 | --- | --- | --- | --- |
