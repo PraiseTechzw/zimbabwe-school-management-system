@@ -20,6 +20,7 @@ use App\Domains\AcademicStructure\Models\GradeLevel;
 use App\Domains\School\Models\School;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -471,6 +472,107 @@ it('fails closed when an update target belongs to another school', function () u
         ->toThrow(AuthorizationException::class);
 
     $this->assertDatabaseHas('grade_levels', ['id' => $foreignGrade->id, 'name' => $foreignGrade->name]);
+});
+
+it('uses the configured default active state when create input omits it', function (): void {
+    config()->set('academic-structure.default_is_active', false);
+
+    $school = School::factory()->create();
+    $parentLevel = app(CreateEducationalLevel::class)->execute($school, structureLevelData([
+        'name' => 'Parent level',
+        'code' => 'PL',
+        'display_order' => 1,
+    ]));
+    $parentGrade = app(CreateGradeLevel::class)->execute($school, structureGradeData($parentLevel, [
+        'name' => 'Parent grade',
+        'code' => 'PG',
+        'display_order' => 1,
+    ]));
+    $parentClass = app(CreateClassDefinition::class)->execute($school, structureClassData($parentGrade, [
+        'name' => 'Parent class',
+        'code' => 'PC',
+        'display_order' => 1,
+    ]));
+    $year = structureYearFor($school);
+
+    $level = app(CreateEducationalLevel::class)->execute($school, Arr::except(structureLevelData([
+        'name' => 'Configured level',
+        'code' => 'CL',
+        'display_order' => 2,
+    ]), ['is_active']));
+    $grade = app(CreateGradeLevel::class)->execute($school, Arr::except(structureGradeData($parentLevel, [
+        'name' => 'Configured grade',
+        'code' => 'CG',
+        'display_order' => 2,
+    ]), ['is_active']));
+    $class = app(CreateClassDefinition::class)->execute($school, Arr::except(structureClassData($parentGrade, [
+        'name' => 'Configured class',
+        'code' => 'CC',
+        'display_order' => 2,
+    ]), ['is_active']));
+    $stream = app(CreateStream::class)->execute($school, Arr::except(structureStreamData($parentClass, [
+        'name' => 'Configured stream',
+        'code' => 'CS',
+        'display_order' => 1,
+    ]), ['is_active']));
+    $offering = app(CreateClassOffering::class)->execute($school, Arr::except(
+        structureOfferingData($parentClass, $year),
+        ['is_active'],
+    ));
+
+    expect($level->is_active)->toBeFalse()
+        ->and($grade->is_active)->toBeFalse()
+        ->and($class->is_active)->toBeFalse()
+        ->and($stream->is_active)->toBeFalse()
+        ->and($offering->is_active)->toBeFalse();
+});
+
+it('honours the configured maximum display order', function (): void {
+    config()->set('academic-structure.max_display_order', 5);
+
+    $school = School::factory()->create();
+
+    expect(fn () => app(CreateEducationalLevel::class)->execute($school, structureLevelData([
+        'name' => 'Too high',
+        'code' => 'TH',
+        'display_order' => 6,
+    ])))->toThrow(ValidationException::class);
+
+    $level = app(CreateEducationalLevel::class)->execute($school, structureLevelData([
+        'name' => 'At limit',
+        'code' => 'AL',
+        'display_order' => 5,
+    ]));
+
+    expect($level->display_order)->toBe(5);
+});
+
+it('always stamps the acting school on offerings when callers supply a school identifier', function (): void {
+    $school = School::factory()->create();
+    $foreign = School::factory()->create();
+    $level = EducationalLevel::factory()->for($school)->create();
+    $grade = GradeLevel::factory()->inLevel($level)->create();
+    $class = ClassDefinition::factory()->inGrade($grade)->create();
+    $year = structureYearFor($school);
+
+    $offering = app(CreateClassOffering::class)->execute($school, structureOfferingData($class, $year, [
+        'school_id' => $foreign->id,
+    ]));
+
+    app(UpdateClassOffering::class)->execute($school, $offering, [
+        'school_id' => $foreign->id,
+        'name' => 'Renamed offering',
+    ]);
+
+    expect((int) $offering->school_id)->toBe((int) $school->id)
+        ->and((int) $offering->fresh()->school_id)->toBe((int) $school->id)
+        ->and($offering->fresh()->name)->toBe('Renamed offering');
+
+    $this->assertDatabaseHas('class_offerings', [
+        'id' => $offering->id,
+        'school_id' => $school->id,
+    ]);
+    $this->assertDatabaseCount('class_offerings', 1);
 });
 
 it('rolls back a structure write when the surrounding transaction fails', function (): void {
