@@ -56,7 +56,8 @@ Sprint 0 established the engineering foundation. All seven Phase 1 foundation sl
 - [Roles and permissions](modules/platform-foundation/roles-and-permissions.md) — merged authorization foundation for #37
 - [School settings](modules/platform-foundation/school-settings.md) — implemented backend settings mechanism for #38
 - [Audit trail](modules/platform-foundation/audit-trail.md) — append-only, privacy-minimised audit foundation for #40
-- [Academic structure](modules/academic-structure.md) — merged backend foundation, no UI
+- [Academic structure](modules/academic-structure.md) — merged configurable backend foundation with management UI in #69
+- Admissions foundation (held locally at `255ba60`; not in `main`) — unapproved backend slice; outside accepted Phase 1 scope; research tracked in [issue #53](https://github.com/PraiseTechzw/zimbabwe-school-management-system/issues/53)
 - [Research coverage matrix](research/research-coverage-matrix.md) — evidence classes and gaps
 
 ## Templates
