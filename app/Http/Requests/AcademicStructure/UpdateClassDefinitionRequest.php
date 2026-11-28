@@ -20,7 +20,7 @@ final class UpdateClassDefinitionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'school_id' => ['prohibited'],
+            'school_id' => ['missing'],
             'grade_level_id' => ['sometimes', 'required', 'integer', 'min:1'],
             'name' => AcademicStructureRules::optional(AcademicStructureRules::name()),
             'code' => AcademicStructureRules::optional(AcademicStructureRules::code()),

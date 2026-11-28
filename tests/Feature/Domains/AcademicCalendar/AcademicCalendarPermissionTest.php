@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Domains\AcademicCalendar\Models\AcademicPeriod;
 use App\Domains\AcademicCalendar\Models\AcademicYear;
+use App\Domains\AuditTrail\Models\AuditEvent;
 use App\Domains\Authorization\Models\RoleAssignment;
 use App\Domains\School\Models\School;
 use App\Models\User;
@@ -31,22 +32,22 @@ function calendarPermissionUser(School $school, ?string $role): User
 }
 
 /**
- * @param  array<string, mixed>  $overrides
  * @return array<string, mixed>
  */
 function calendarPermissionYearData(array $overrides = []): array
 {
     return array_merge([
         'name' => 'Permission year',
-        'start_date' => '2032-01-01',
-        'end_date' => '2032-12-31',
+        'start_date' => '2031-01-01',
+        'end_date' => '2031-12-31',
         'status' => 'published',
         'source' => 'School calendar register',
+        'source_reference' => 'calendar-register/2031',
+        'source_published_at' => '2030-11-01',
     ], $overrides);
 }
 
 /**
- * @param  array<string, mixed>  $overrides
  * @return array<string, mixed>
  */
 function calendarPermissionPeriodData(AcademicYear $year, array $overrides = []): array
@@ -56,78 +57,104 @@ function calendarPermissionPeriodData(AcademicYear $year, array $overrides = [])
         'name' => 'Permission period',
         'type' => 'term',
         'sequence' => 1,
-        'start_date' => '2032-01-10',
-        'end_date' => '2032-03-31',
+        'start_date' => '2031-01-10',
+        'end_date' => '2031-03-31',
         'status' => 'published',
         'counting_basis' => 'school_days',
         'source' => 'School calendar register',
     ], $overrides);
 }
 
-it('denies calendar writes without the academic_calendar.manage permission', function (?string $role): void {
+it('rejects anonymous academic calendar writes', function (): void {
+    $school = School::factory()->create();
+    $year = AcademicYear::factory()->for($school)->create(calendarPermissionYearData());
+    $period = AcademicPeriod::factory()->inYear($year)->create(calendarPermissionPeriodData($year));
+
+    $this->postJson('/api/academic-years', calendarPermissionYearData())->assertUnauthorized();
+    $this->postJson('/api/academic-years/'.$year->id.'/periods', calendarPermissionPeriodData($year))->assertUnauthorized();
+    $this->putJson('/api/academic-years/'.$year->id, calendarPermissionYearData(['name' => 'Anonymous write']))->assertUnauthorized();
+    $this->putJson('/api/academic-periods/'.$period->id, calendarPermissionPeriodData($year, ['name' => 'Anonymous write']))->assertUnauthorized();
+
+    expect(AcademicYear::query()->where('name', 'Anonymous write')->count())->toBe(0)
+        ->and(AcademicPeriod::query()->where('name', 'Anonymous write')->count())->toBe(0);
+});
+
+it('denies calendar writes to authenticated members without the manage permission', function (?string $role): void {
     $school = School::factory()->create();
     $user = calendarPermissionUser($school, $role);
-    $year = AcademicYear::factory()->for($school)->create(calendarPermissionYearData(['name' => 'Existing year']));
-    $period = AcademicPeriod::factory()->inYear($year)->create([
-        'name' => 'Existing period',
-        'start_date' => '2032-01-10',
-        'end_date' => '2032-03-31',
-    ]);
+    $year = AcademicYear::factory()->for($school)->create(calendarPermissionYearData());
+    $period = AcademicPeriod::factory()->inYear($year)->create(calendarPermissionPeriodData($year));
+    $before = AuditEvent::query()->count();
 
-    $cases = [
-        ['post', '/api/academic-years', calendarPermissionYearData(['name' => 'Denied year'])],
-        ['put', '/api/academic-years/'.$year->id, calendarPermissionYearData(['name' => 'Tampered year'])],
-        ['post', '/api/academic-years/'.$year->id.'/periods', calendarPermissionPeriodData($year, ['name' => 'Denied period'])],
-        ['put', '/api/academic-periods/'.$period->id, calendarPermissionPeriodData($year, ['name' => 'Tampered period'])],
-    ];
+    $this->actingAs($user)
+        ->postJson('/api/academic-years', calendarPermissionYearData(['name' => 'Forbidden year']))
+        ->assertForbidden();
+    $this->actingAs($user)
+        ->postJson('/api/academic-years/'.$year->id.'/periods', calendarPermissionPeriodData($year, ['name' => 'Forbidden period']))
+        ->assertForbidden();
+    $this->actingAs($user)
+        ->putJson('/api/academic-years/'.$year->id, calendarPermissionYearData(['name' => 'Forbidden update']))
+        ->assertForbidden();
+    $this->actingAs($user)
+        ->putJson('/api/academic-periods/'.$period->id, calendarPermissionPeriodData($year, ['name' => 'Forbidden update']))
+        ->assertForbidden();
 
-    foreach ($cases as [$method, $endpoint, $payload]) {
-        $this->actingAs($user)
-            ->json(strtoupper($method), $endpoint, $payload)
-            ->assertForbidden();
-    }
+    expect(AcademicYear::query()->where('name', 'Forbidden year')->count())->toBe(0)
+        ->and(AcademicYear::query()->where('name', 'Forbidden update')->count())->toBe(0)
+        ->and(AcademicPeriod::query()->where('name', 'Forbidden period')->count())->toBe(0)
+        ->and(AcademicPeriod::query()->where('name', 'Forbidden update')->count())->toBe(0)
+        ->and(AuditEvent::query()->count())->toBe($before);
+})->with([null, 'role_viewer', 'school_member']);
 
-    $this->assertDatabaseHas('academic_years', [
-        'id' => $year->id,
-        'name' => 'Existing year',
-        'school_id' => $school->id,
-    ])->assertDatabaseHas('academic_periods', [
-        'id' => $period->id,
-        'name' => 'Existing period',
-        'school_id' => $school->id,
-    ])->assertDatabaseMissing('academic_years', ['name' => 'Denied year'])
-        ->assertDatabaseMissing('academic_periods', ['name' => 'Denied period']);
-})->with([
-    'no role' => null,
-    'school member' => 'school_member',
-    'role viewer' => 'role_viewer',
-]);
-
-it('lets calendar editors and administrators manage calendars', function (string $role): void {
+it('allows configured editors and administrators to perform calendar writes', function (string $role): void {
     $school = School::factory()->create();
     $user = calendarPermissionUser($school, $role);
 
     $created = $this->actingAs($user)
-        ->postJson('/api/academic-years', calendarPermissionYearData(['name' => 'Managed year']))
+        ->postJson('/api/academic-years', calendarPermissionYearData(['name' => 'Authorised year']))
         ->assertCreated()
         ->json('academic_year');
 
-    $this->actingAs($user)
-        ->patchJson('/api/academic-years/'.$created['id'], calendarPermissionYearData(['name' => 'Renamed year']))
-        ->assertOk()
-        ->assertJsonPath('academic_year.name', 'Renamed year');
+    expect($created)->not->toBeNull();
 
-    $createdYear = AcademicYear::query()->findOrFail((int) $created['id']);
     $period = $this->actingAs($user)
-        ->postJson('/api/academic-years/'.$created['id'].'/periods', calendarPermissionPeriodData($createdYear, ['name' => 'Managed period']))
+        ->postJson('/api/academic-years/'.$created['id'].'/periods', calendarPermissionPeriodData(
+            AcademicYear::query()->findOrFail($created['id']),
+            ['name' => 'Authorised period'],
+        ))
         ->assertCreated()
         ->json('period');
 
+    expect($period)->not->toBeNull();
+
     $this->actingAs($user)
-        ->patchJson('/api/academic-periods/'.$period['id'], calendarPermissionPeriodData($createdYear, ['name' => 'Renamed period']))
+        ->putJson('/api/academic-years/'.$created['id'], calendarPermissionYearData(['name' => 'Updated year']))
         ->assertOk()
-        ->assertJsonPath('period.name', 'Renamed period');
-})->with(['school editor' => 'school_editor', 'school administrator' => 'school_admin']);
+        ->assertJsonPath('academic_year.name', 'Updated year');
+    $this->actingAs($user)
+        ->putJson('/api/academic-periods/'.$period['id'], calendarPermissionPeriodData(
+            AcademicYear::query()->findOrFail($created['id']),
+            ['name' => 'Updated period'],
+        ))
+        ->assertOk()
+        ->assertJsonPath('period.name', 'Updated period');
+})->with(['school_editor', 'school_admin']);
+
+it('enforces the calendar view permission on read endpoints', function (): void {
+    $this->withoutVite();
+
+    $school = School::factory()->create();
+    $viewer = calendarPermissionUser($school, 'role_viewer');
+    $member = calendarPermissionUser($school, 'school_member');
+    AcademicYear::factory()->for($school)->create(calendarPermissionYearData());
+
+    $this->actingAs($viewer)->getJson('/api/academic-years')->assertForbidden();
+    $this->actingAs($viewer)->getJson('/api/academic-years/current')->assertForbidden();
+    $this->actingAs($viewer)->getJson('/app/academic-calendar')->assertForbidden();
+
+    $this->actingAs($member)->getJson('/api/academic-years')->assertOk();
+    $this->actingAs($member)->getJson('/app/academic-calendar')->assertOk();
+});
 
 it('does not grant calendar permissions from a role assigned in another school', function (): void {
     $school = School::factory()->create();

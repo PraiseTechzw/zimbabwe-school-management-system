@@ -32,7 +32,7 @@ return [
         'School' => [
             ['key' => 'school-profile', 'label' => 'School profile', 'icon' => 'school', 'available' => true, 'route' => 'frontend.school-profile'],
             ['key' => 'academic-calendar', 'label' => 'Academic calendar', 'icon' => 'calendar', 'available' => true, 'route' => 'frontend.academic-calendar'],
-            ['key' => 'school-settings', 'label' => 'School settings', 'icon' => 'cog'],
+            ['key' => 'school-settings', 'label' => 'School settings', 'icon' => 'cog', 'available' => true, 'route' => 'frontend.school-settings'],
         ],
         'Learners' => [
             ['key' => 'admissions', 'label' => 'Admissions', 'icon' => 'users'],
@@ -106,7 +106,7 @@ return [
         ],
         'System' => [
             ['key' => 'users', 'label' => 'Users', 'icon' => 'users'],
-            ['key' => 'roles', 'label' => 'Roles', 'icon' => 'cog'],
+            ['key' => 'roles', 'label' => 'Roles', 'icon' => 'cog', 'available' => true, 'route' => 'frontend.roles'],
             ['key' => 'audit-logs', 'label' => 'Audit logs', 'icon' => 'clipboard'],
         ],
     ],

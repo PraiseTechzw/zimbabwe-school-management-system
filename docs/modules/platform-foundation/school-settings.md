@@ -47,7 +47,7 @@ Append-oriented snapshots of the **previous** state. A revision is inserted in t
 | `source`, `effective_from` | previous provenance and effective date |
 | `created_at`, `updated_at` | record timestamps |
 
-This is minimal configuration provenance for #38 and PROPOSED NFR-013/WF-08. It is not the audit trail from #40: it has no actor, event type, retention policy or generic entity metadata. Those belong to the separate audit slice.
+This is minimal configuration provenance for #38 and PROPOSED NFR-013/WF-08. The separate #40 audit trail now records actor-attributed `school_settings.created`/`school_settings.updated` events in the same transaction, using this snapshot shape for both sides of the change. Revisions remain provenance snapshots; they are not a generic audit record and have no retention policy.
 
 ## Behaviour
 
@@ -69,11 +69,11 @@ See [School Settings API](../../api/school-settings.md).
 ## Assumptions and unresolved decisions
 
 - **A-01:** regional locale/timezone preferences are a safe initial mechanism because they already exist as framework concepts; this is an engineering choice, not evidence that schools configure them differently.
-- **A-02:** retaining source, effective date and prior version satisfies "auditable where critical" for this mechanism without implementing #40. Full audit events, actor attribution and retention remain deferred.
+- **A-02:** retaining source, effective date and prior version satisfies "auditable where critical" for this mechanism. B-05 additionally integrates the existing #40 audit domain for settings writes; actor attribution is now recorded, while retention, legal hold and a read UI remain deferred.
 - **A-03:** defaults are minimal and config-driven. They do not assert a school calendar, school code/identifier format, academic structure, currency or terminology.
 - **U-13:** which school-level settings genuinely vary remains unresolved. The catalogue must not expand until this is answered or a Product Owner makes an explicit decision.
 - **#37:** role/permission enforcement is not implemented. Endpoints use authentication and school membership only.
-- **#40:** audit event storage, actor metadata, tamper evidence and retention are not implemented.
+- **#40:** audit event storage and actor metadata are implemented for settings writes by B-05; retention, legal hold and privileged read controls remain owner decisions.
 - **D-04:** shared-database tenancy remains provisional pending a final ADR.
 
 ## Verification intent

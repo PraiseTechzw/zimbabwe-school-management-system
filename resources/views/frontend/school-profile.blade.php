@@ -1,4 +1,5 @@
-<x-app-shell title="School profile" :user="$user"
+<x-layouts.app :title="$title ?? 'School profile'">
+<x-app-shell title="School profile" :user="$user" :school="$school" :academic-year="$academicYear"
              :breadcrumbs="[['label' => 'School']]">
     <x-card title="Identity" subtitle="Read-only view of the authorised school context.">
         @if($school === null)
@@ -45,3 +46,4 @@
         @endif
     </x-card>
 </x-app-shell>
+</x-layouts.app>
