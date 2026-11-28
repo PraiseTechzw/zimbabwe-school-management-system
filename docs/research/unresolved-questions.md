@@ -41,6 +41,24 @@
 | U-18 | Which stakeholders must validate documented-practice findings? | Interview programme planned, none conducted | Execute `P1-R19` with consent |
 | U-19 | Which PROPOSED candidates will the Product Owner approve for the Phase 1 specification? | All are PROPOSED | Approval gate `P1-G01` |
 
+## Learner records (PROPOSED IDs for a separate slice)
+
+These IDs are introduced by [Findings 07 — learner records](findings/07-learner-records.md) and repeated in the [Learner Management module record](../modules/learner-management.md). They remain open and must not be answered by an engineering default.
+
+| ID | Question | Evidence status | Needed to resolve |
+| --- | --- | --- | --- |
+| LM-U-01 | What do SI 13 of 2025 and other prescribed Education regulations require in an enrolment register? | SI text not verified | Product Owner / legal review |
+| LM-U-02 | Do MoPSE ED 46 / EMIS prescribe learner-level fields or identifiers? | Forms and schemas not verified | Product Owner / MoPSE guidance |
+| LM-U-03 | Is any mandated national learner identifier in use, and may systems store ZIMSEC candidate numbers? | No primary source found (LRN-F3) | Product Owner / legal review |
+| LM-U-04 | Who is controller/processor for a deployment, and what DPO/licence duties apply? | CDPA duties apply; application unresolved (LRN-F4) | Product Owner / legal review |
+| LM-U-05 | What lawful basis and guardian-verification process apply to routine school records? | Guidance found; policy unresolved | Product Owner / legal review |
+| LM-U-06 | What retention/deletion schedule and legal-hold process apply to learner records? | No period found; U-15 remains open | Product Owner / legal review |
+| LM-U-07 | Which roles may view or manage learner records; should `school_member` have any access? | No approved role policy | Product Owner |
+| LM-U-08 | What status vocabulary and transitions are valid? | Unresolved | Product Owner |
+| LM-U-09 | Should a learner record carry external EMIS/ZIMSEC identifiers, and under what provenance rules? | Unresolved | Product Owner |
+| LM-U-10 | What data-portability/export format is required, and to whom may it be given? | Unresolved | Product Owner / legal review |
+| LM-U-11 | When an Academic Structure offering is deleted or retired while learners reference it, should placement be cleared, blocked or migrated? | No approved placement-lifecycle policy; restrictive FK is PROPOSED | Product Owner + Academic Structure owner |
+
 ## Handling rule
 
 Every unresolved question remains open until a source is added to the [source register](source-register.md) and the corresponding finding is updated with a source ID. An interview answer must be classified **INTERVIEW VALIDATED**, not promoted to OFFICIAL by assumption.

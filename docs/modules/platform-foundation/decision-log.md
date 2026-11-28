@@ -41,6 +41,21 @@ These entries map to the **B-04 review's** D-05/D-06 (risks B04-O05/B04-O06) and
 | B06-D-05 | **PROPOSED — awaiting owner approval** | Record `role_assignment.created`/`role_assignment.deleted` events in category `authorization` for successful HTTP role assignment/removal, with named scalar subject metadata, authenticated actor, server-resolved school and one event per user/role inside the same transaction. Rejected writes produce no event. | B-04 D-05/B04-O05 and B-05 mark authority changes as unaudited. Privacy-safe fields, failure policy and taxonomy remain owner decisions; NFR-007/PF-037 are PROPOSED and U-04 is open. |
 | B06-D-06 | **PROPOSED — awaiting owner approval** | For CLI/bootstrap role grants, use `source = cli` with an explicit `system` actor and `command` metadata; optionally attribute a validated operator id as a `user` actor. Do not add a `cli` actor type. Correct the `roles:assign` docblock rather than enforce “first only”; avoid school-less audit events until a read path is approved. | B-04 D-06/B04-O06 records an unattributed trusted CLI path and a docblock/behavior mismatch. `config/audit.php` has no `cli` actor type; the resolver falls back to `system` when no user exists, and `QueryAuditEvents` cannot read null-school events. Deployment attribution policy needs owner approval. |
 
+## Learner management foundation (PROPOSED; separate unmerged slice)
+
+These entries are namespaced so they cannot be confused with the merged Phase 1 `D-*` decisions. They record engineering proposals for a separate learner-record foundation, not Product Owner approval, not a merged feature and not permission to add admissions, enrolment, guardian, medical, safeguarding or export workflows.
+
+| ID | Status | Decision | Rationale / consequence |
+| --- | --- | --- | --- |
+| LM-D-01 | **PROPOSED** | Store a minimal school-owned learner record: an internal reference, a full name, optional date of birth, a server-controlled record status and an optional class-offering placement link. | LRN-F1/LRN-F4 support a records capability but no statutory field catalogue. No field is labelled mandatory by law. |
+| LM-D-02 | **PROPOSED** | Generate `LRN-<ULID>` server-side and reject client identifiers. | LRN-F3 found no verified national learner ID; the reference is explicitly internal only. |
+| LM-D-03 | **PROPOSED** | Use one server-set record status, `registered`, with no transition endpoint. | LM-U-08 is unresolved; enrolment/transfer/completion semantics are not inferred. |
+| LM-D-04 | **PROPOSED** | Link learners only to a school-owned, active `class_offerings` row and treat it as indicative placement, not enrolment. | LRN-F5 and the existing Academic Structure boundary; no duplicate structure or enrolment data. |
+| LM-D-05 | **PROPOSED** | Add `learners.view` and `learners.manage` to the catalogue, granted only via the `school_admin` wildcard. | LM-U-07 is unresolved; no staff-access policy is invented. |
+| LM-D-06 | **PROPOSED** | Audit writes with scalar presence flags only; do not audit reads, names, dates of birth, references or deletions. | LRN-F4 privacy minimisation; no retention policy is asserted. |
+| LM-D-07 | **PROPOSED** | Defer deletion, retention, portability, consent/DPIA and data-subject workflows. | LM-U-04/05/06/10 remain open. No export or delete endpoint is added. |
+| LM-D-08 | **PROPOSED** | Use a restrictive composite FK for an occupied placement; clear the placement before deleting the offering. | `nullOnDelete` on the composite key could null the non-nullable `school_id` on some engines. LM-U-11 remains open; this is not an approved offering-lifecycle policy. |
+
 ## Standing constraints
 
 - No new framework, module package, microservice or UI framework.

@@ -22,6 +22,8 @@ return [
         'academic_calendar.manage' => ['label' => 'Create and update academic calendars'],
         'academic_structure.view' => ['label' => 'View school structure configuration'],
         'academic_structure.manage' => ['label' => 'Create and update school structure configuration'],
+        'learners.view' => ['label' => 'View school learner records'],
+        'learners.manage' => ['label' => 'Register and correct school learner records'],
         'roles.view' => ['label' => 'View role assignments'],
         'roles.manage' => ['label' => 'Assign and remove school roles'],
     ],
