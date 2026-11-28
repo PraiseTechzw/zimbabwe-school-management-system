@@ -1,15 +1,15 @@
-<x-app-shell title="Dashboard" :user="$user">
+<x-app-shell title="Dashboard" :user="$user" :school="$school" :academic-year="$currentYear">
     <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <x-kpi label="Current academic year" :value="$currentYear['name'] ?? '—'" :data="$currentYear !== null"
                :note="$currentYear === null
-                   ? 'No published year in this school context'
-                   : ($currentYear['start_date'].' to '.$currentYear['end_date'])" />
+                    ? 'No published year in this school context'
+                    : ($currentYear['start_date'].' to '.$currentYear['end_date'])" />
 
         <x-kpi label="School identifiers" :value="(string) $identifierCount"
                :note="$identifierCount === 0 ? 'No identifiers recorded' : $verifiedCount.' verified'" />
 
         <x-kpi label="Screens ready" :value="(string) count($readyModules)"
-               :note="'of '.count($readyModules).' listed as available'" />
+               :note="'Available destinations in this school context'" />
 
         @if($attention !== [])
             @php($demo = (bool) ($attention[0]['is_demo'] ?? false))
@@ -20,8 +20,23 @@
         @endif
     </div>
 
-    <div class="mt-6 grid gap-4 lg:grid-cols-3">
-        <x-card title="Your school" class="lg:col-span-2">
+    <x-card title="School at a glance" class="mt-4"
+            subtitle="A dash means the module has no verified live endpoint in this branch. No placeholder counts are shown.">
+        <ul class="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            @foreach($gaps as $gap)
+                <li class="fs-panel px-3 py-3">
+                    <p class="text-[13px] text-muted">{{ $gap['label'] }}</p>
+                    <p class="fs-figure mt-2 text-[24px] leading-none {{ $gap['label'] === 'Calendar events' && $currentYear !== null ? 'text-data' : 'text-ink' }}">
+                        {{ $gap['value'] }}
+                    </p>
+                    <p class="mt-2 text-[13px] text-muted">{{ $gap['note'] }}</p>
+                </li>
+            @endforeach
+        </ul>
+    </x-card>
+
+    <div class="mt-4 grid gap-4">
+        <x-card title="School record">
             @if($school === null)
                 <x-empty-state title="No school context" message="Your account is not linked to a school yet." />
             @else
@@ -69,22 +84,33 @@
         </x-card>
     </div>
 
-    <x-card title="Available now" class="mt-4"
-            subtitle="Navigation lists every planned module; only these have working screens.">
-        @if($readyModules === [])
-            <x-empty-state title="No screens enabled" />
-        @else
-            <ul class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                @foreach($readyModules as $module)
-                    <li>
-                        <a href="{{ $module['route'] !== null ? route((string) $module['route']) : route('frontend.module', $module['key']) }}"
-                           class="fs-panel flex items-center justify-between px-3 py-2.5 text-[13px] hover:bg-active">
-                            <span>{{ $module['label'] }}</span>
-                            <x-icon name="chevron" class="h-3.5 w-3.5 text-muted" />
-                        </a>
-                    </li>
-                @endforeach
-            </ul>
-        @endif
+    <div class="mt-4 grid gap-4 lg:grid-cols-2">
+        <x-card title="Available now" subtitle="Quick actions that are ready in this school context.">
+            @if($readyModules === [])
+                <x-empty-state title="No screens enabled" />
+            @else
+                <ul class="grid gap-2 sm:grid-cols-2">
+                    @foreach($readyModules as $module)
+                        <li>
+                            <a href="{{ $module['route'] !== null ? route((string) $module['route']) : route('frontend.module', $module['key']) }}"
+                               class="fs-panel flex items-center justify-between px-3 py-2.5 text-[13px] hover:bg-active">
+                                <span>{{ $module['label'] }}</span>
+                                <x-icon name="chevron" class="h-3.5 w-3.5 text-muted" />
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+        </x-card>
+
+        <x-card title="Recent activity">
+            <x-empty-state title="No activity feed yet"
+                           message="There is no verified activity endpoint in this branch, so nothing is shown here." />
+        </x-card>
+    </div>
+
+    <x-card title="Notices" class="mt-4"
+            subtitle="School notices will appear here when a verified notice endpoint is available.">
+        <x-empty-state title="No notices endpoint" message="Notices are not invented or read from another module." />
     </x-card>
 </x-app-shell>

@@ -106,6 +106,15 @@
         background: #d9d9d9;
     }
 
+    .fs-btn-danger {
+        background: #fbeaeb;
+        color: var(--color-negative);
+    }
+
+    .fs-btn-danger:hover:not(:disabled) {
+        background: #f6d7d9;
+    }
+
     .fs-btn:disabled {
         opacity: 0.55;
         cursor: not-allowed;
@@ -231,6 +240,13 @@
         height: 12px;
         border-radius: 4px;
         background: var(--color-active);
+    }
+}
+
+@media (max-width: 640px) {
+    .fs-btn,
+    .fs-input {
+        min-height: 44px;
     }
 }
 

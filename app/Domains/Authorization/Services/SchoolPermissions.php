@@ -11,13 +11,18 @@ use App\Models\User;
 /**
  * Resolves permissions only from active role assignments in one school.
  *
- * Users never receive permissions directly. Membership in a school is also
- * required, so a stale assignment cannot grant access after removal.
+ * Users never receive permissions directly. Membership in a school and an
+ * authenticatable account are also required, so a stale assignment cannot
+ * grant access after removal and a suspended session cannot keep authority.
  */
 final class SchoolPermissions
 {
     public function has(User $user, School $school, string $permission): bool
     {
+        if (! $user->canAuthenticate()) {
+            return false;
+        }
+
         if (! array_key_exists($permission, $this->permissions())) {
             return false;
         }
@@ -34,6 +39,10 @@ final class SchoolPermissions
      */
     public function effectivePermissions(User $user, School $school): array
     {
+        if (! $user->canAuthenticate()) {
+            return [];
+        }
+
         /** @var array<int, string> $roles */
         $roles = RoleAssignment::query()
             ->forSchool($school)

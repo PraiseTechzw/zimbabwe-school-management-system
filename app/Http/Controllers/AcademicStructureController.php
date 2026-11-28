@@ -197,7 +197,7 @@ final class AcademicStructureController extends Controller
     public function offerings(Request $request, SchoolContext $context): JsonResponse
     {
         $validated = Validator::make($request->all(), [
-            'school_id' => ['prohibited'],
+            'school_id' => ['missing'],
             'academic_year_id' => ['sometimes', 'required', 'integer', 'min:1'],
         ])->validate();
 

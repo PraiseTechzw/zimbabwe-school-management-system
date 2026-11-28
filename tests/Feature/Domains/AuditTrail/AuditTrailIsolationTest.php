@@ -18,20 +18,22 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-function auditIsolationUser(School $school): User
+function auditIsolationUser(School $school, ?string $role = 'school_editor'): User
 {
     $user = User::factory()->create();
     $user->schools()->attach($school);
 
-    // Calendar writes require academic_calendar.manage; these tests use that
-    // write path only to produce audit events.
-    RoleAssignment::query()->forceCreate([
-        'school_id' => (int) $school->id,
-        'user_id' => (int) $user->id,
-        'role' => 'school_editor',
-        'source' => 'domain',
-        'created_at' => Carbon::now(),
-    ]);
+    // Calendar writes require academic_calendar.manage; tests that use that
+    // write path pass an explicit role to produce audit events.
+    if ($role !== null) {
+        RoleAssignment::query()->forceCreate([
+            'school_id' => (int) $school->id,
+            'user_id' => (int) $user->id,
+            'role' => $role,
+            'source' => 'domain',
+            'created_at' => Carbon::now(),
+        ]);
+    }
 
     return $user;
 }
