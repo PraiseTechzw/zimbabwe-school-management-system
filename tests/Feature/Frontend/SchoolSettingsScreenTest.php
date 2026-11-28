@@ -116,13 +116,19 @@ it('requires a configured settings role to open the settings screen', function (
     $this->get('/app/school-settings')->assertForbidden();
 })->with(['roleless' => null, 'role viewer' => 'role_viewer']);
 
-it('does not let a member save settings through a Livewire update', function (): void {
+it('hides settings save controls from a read-only member', function (): void {
     $school = School::factory()->create();
     settingsScreenActorWithSchool($school, 'school_member');
 
     $this->get('/app/school-settings')
         ->assertOk()
-        ->assertDontSee('Save settings');
+        ->assertDontSee('Save settings')
+        ->assertSee('Your account can view these preferences but cannot change them.');
+});
+
+it('does not let a member save settings through a Livewire update', function (): void {
+    $school = School::factory()->create();
+    settingsScreenActorWithSchool($school, 'school_member');
 
     Livewire::test(SchoolSettings::class)
         ->set('timezone', 'Africa/Harare')
