@@ -25,7 +25,7 @@ The PHP test suite uses the repository's in-memory SQLite test database, as asse
 | Scope | Result |
 | --- | --- |
 | Learner suite: `php artisan test tests/Feature/Domains/LearnerManagement` | `35 passed (175 assertions)` |
-| Full suite: `make verify` → `php artisan test` | `326 passed (1455 assertions)`, `81.58s` |
+| Full suite: `make verify` → `php artisan test` | `326 passed (1455 assertions)`, `95.00s` on the final re-run after merging `40d6c0f` |
 
 The learner suite covers: registration and correction; validation datasets; search, pagination and wildcard escaping; server-owned field rejection; authentication and school context; explicit multi-school selection; cross-school route targets and placement references; generic `404` messages; wildcard-only permission grants and route bindings; privacy-minimised audit snapshots; no audit events for reads or rejected writes; schema, unique reference, composite foreign key and cascade behaviour.
 
