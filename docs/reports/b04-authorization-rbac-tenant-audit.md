@@ -36,7 +36,7 @@ No cross-school data mutation, ownership bypass, IDOR or role-assignment boundar
 
 ## 3. Authorization coverage matrix
 
-All 42 application-defined routes from the post-fix `route:list --json` output are listed. “auth + school” means `auth` plus `school.context`/`ResolveSchoolContext` are present. The 8 remaining routes are vendor/framework routes (5 Livewire asset/upload routes, 2 framework storage routes and the health check); they are not application authorization boundaries.
+The matrix below is the post-fix audit snapshot: all 42 application-defined routes from the `route:list --json` output at that time are listed. “auth + school” means `auth` plus `school.context`/`ResolveSchoolContext` are present. The 8 remaining routes were vendor/framework routes (5 Livewire asset/upload routes, 2 framework storage routes and the health check); they are not application authorization boundaries. Current `origin/main` after the later frontend PR #64 has 52 registered routes (44 application-defined); the two additional application routes are `GET app/roles` and `GET app/school-settings`, both `auth + school` with no permission gate. They are recorded below for completeness; School Settings still has no catalogued permission (D-01).
 
 | Method / path | Action | Baseline gate | Current gate |
 | --- | --- | --- | --- |
@@ -53,6 +53,8 @@ All 42 application-defined routes from the post-fix `route:list --json` output a
 | GET `app` | `Livewire\Dashboard` | auth + school, no permission | auth + school, no permission |
 | GET `app/school` | `Frontend\SchoolProfileController@index` | auth + school, no permission | auth + school, no permission |
 | GET `app/modules/{module}` | `Frontend\ModuleNoticeController@show` | auth + school, no permission | auth + school, no permission |
+| GET `app/roles` | `Livewire\RoleAssignments` | not present at audit baseline | auth + school, no permission (added by PR #64) |
+| GET `app/school-settings` | `Livewire\SchoolSettings` | not present at audit baseline | auth + school, no permission (added by PR #64) |
 | GET `api/academic-calendar/validation` | `AcademicCalendarController@validateCalendar` | auth + school, no permission | `academic_calendar.view` |
 | GET `api/academic-years` | `AcademicCalendarController@years` | auth + school, no permission | `academic_calendar.view` |
 | GET `api/academic-years/current` | `AcademicCalendarController@current` | auth + school, no permission | `academic_calendar.view` |
@@ -93,7 +95,7 @@ The application `/api/*` endpoints are registered through the `web` middleware g
 | --- | --- | --- | --- |
 | `school.view` | `school_member`, `school_editor`, `role_viewer`, `school_admin` (`*`) | none | Catalogued but never used as a route gate; see decision D-02. |
 | `school_identifiers.view` | none directly; `school_admin` only via `*` | none | Catalogued but not assigned to any named role and not enforced; see D-02. |
-| `academic_calendar.view` | `school_member`, `school_editor`, `school_admin` | 4 API reads + 1 frontend read | New in this audit. `role_viewer` is correctly denied. |
+| `academic_calendar.view` | `school_member`, `school_editor`, `school_admin` | 4 API reads + 1 frontend read | New in this audit. `role_viewer` is correctly denied. Also re-checked on Livewire read updates after role revocation (D-09). |
 | `academic_calendar.manage` | `school_editor`, `school_admin` | 4 API writes + 1 frontend route | New in this audit; also re-checked inside Livewire writes. |
 | `academic_structure.view` | `school_member`, `school_editor`, `school_admin` | 6 API reads | Already enforced at baseline. |
 | `academic_structure.manage` | `school_editor`, `school_admin` | 10 API writes | Already enforced at baseline. |
@@ -177,7 +179,7 @@ Static review found no application-layer cross-school bypass in these flows. One
 | B04-O06 | CLI role bootstrap has no audit logging and does not enforce “first only” despite its docblock | Low / high | Open decision D-06 |
 | B04-O07 | No default provisioning role for new members | Low / high | Open decision D-07 |
 | B04-O08 | `academic_periods` lacks composite school/year FK | Low / high | Open decision D-08 |
-| B04-O09 | Stale Livewire snapshot can keep returning calendar data after permission revocation | Low / high; read-only, no write bypass | Open decision D-09 |
+| B04-O09 | Stale Livewire snapshot can keep returning calendar data after permission revocation | Low / high; read-only, no write bypass | Fixed: live read re-check, tested (D-09) |
 | B04-O10 | Header-based school switching remains accepted per request | Low / high; cannot exceed memberships | Open decision D-10 |
 | B04-O11 | Structure/settings domain actions rely on route gates plus tenancy guards, not independent `SchoolPermissions` checks | Low / high | Open decision D-11 |
 
@@ -193,7 +195,7 @@ These are deliberately **not** implemented. They need a product, security or gov
 - **D-06 CLI role bootstrap.** `roles:assign` is trusted CLI-only and writes `source = cli`, but it does not log to the audit trail and does not enforce the “first role assignment in a school” wording in its docblock. Decide whether to change the command, its documentation, or both.
 - **D-07 Default provisioning role.** No code automatically assigns `school_member` or any other role. Decide the provisioning contract before deployments assume new members can view calendar/structure data.
 - **D-08 Academic-period composite key.** Add a migration for a composite `(school_id, academic_year_id)` foreign key on `academic_periods`, with an explicit MySQL-safe rollback plan, if database-level tenancy is required in addition to application validation.
-- **D-09 Livewire permission replay.** Only `ResolveSchoolContext` is persistent middleware, so `EnsurePermission` is not replayed on `livewire/update`. Writes are now re-checked in the component, but `render()`, `editYear()`, `editPeriod()` and `validateSelectedYear()` are not. A stale signed snapshot from the management page could keep returning calendar data after read/manage permission is revoked. Decide whether to add `EnsurePermission` to persistent middleware or re-check permissions in those component methods.
+- **D-09 Livewire permission replay.** Only `ResolveSchoolContext` is persistent middleware, so `EnsurePermission` is not replayed on `livewire/update`. This was closed in this branch by re-checking `academic_calendar.view` in `render()`, `editYear()`, `editPeriod()` and `validateSelectedYear()`, and `academic_calendar.manage` in `saveYear()`/`savePeriod()`. Denied reads now return empty calendar data and a permission error instead of stale snapshot data; a regression test revokes the role assignment before a Livewire update. Adding `EnsurePermission` to persistent middleware remains a possible alternative for future components, but no stale-snapshot read path remains in `CalendarAdministration`.
 - **D-10 Header-based school selection.** `ResolveSchoolContext` accepts `X-School-Id` as well as a server-side context and revalidates membership on every request. This cannot widen access beyond the user's memberships, but request validation does not reject the header. Decide whether per-request school switching is acceptable or whether context should be bound only to a server-issued session value.
 - **D-11 Domain-level actor re-checks.** Academic structure and School Settings writes rely on route middleware (where a catalogue permission exists) plus tenancy/integrity guards in domain actions; they do not independently call `SchoolPermissions`. Decide whether defence-in-depth actor checks are required in those actions. This is distinct from D-01, where no settings permission exists at all.
 
@@ -207,7 +209,7 @@ New files:
 Extended files:
 
 - `tests/Feature/Domains/AcademicStructure/AcademicStructureIsolationTest.php` — full client `school_id` shape matrix, foreign class/year relationships and duplicate offering cases.
-- `tests/Feature/Frontend/CalendarAdministrationTest.php` — route denial and direct Livewire invocation denial.
+- `tests/Feature/Frontend/CalendarAdministrationTest.php` — route denial, direct Livewire invocation denial and a role-revocation regression that fails closed on live calendar reads.
 - `tests/Feature/Domains/AcademicCalendar/AcademicCalendarIsolationTest.php`, `tests/Feature/Domains/AuditTrail/AuditTrailIsolationTest.php`, `tests/Feature/Frontend/FrontendFoundationTest.php` — fixtures now grant configured roles so existing assertions remain meaningful under the new gates.
 
 No existing assertion was removed, skipped or loosened.
@@ -235,7 +237,7 @@ Remote GitHub reads confirmed PR #60 and PR #61 are MERGED. No remote CI result 
 
 A read-only security reviewer challenged the patch without editing files or running shell commands. Result: **no confirmed defects** — no ineffective or bypassable fix, no weakened test, no regression and no demonstrated high-risk authorization gap. The reviewer specifically verified middleware ordering, server-resolved school context in `EnsurePermission`, fail-closed lifecycle checks, nested calendar scoping, Livewire write re-checks and that `school_id => ['missing']` is stricter than `['prohibited']` for `null` input.
 
-The reviewer raised three policy questions, now recorded as D-09 (stale Livewire snapshot reads), D-10 (header-based school switching) and D-11 (domain-level actor re-checks). Wildcard role semantics were independently raised and are already covered by D-04.
+The reviewer raised three policy questions. D-09 (stale Livewire snapshot reads) was subsequently fixed with a live read permission re-check and regression test; D-10 (header-based school switching) and D-11 (domain-level actor re-checks) remain open decisions. Wildcard role semantics were independently raised and are already covered by D-04. A follow-up automated review also requested the current frontend School Settings route in the inventory; it is now listed in section 3.
 
 ## 12. Required report fields
 

@@ -74,13 +74,17 @@ final class CalendarAdministration extends Component
 
     public function render(CalendarManagementGateway $gateway, FrontendDataProvider $data): View
     {
-        $years = $gateway->years();
-        $selectedYear = $this->resolveSelectedYear($years);
+        // Livewire updates do not replay the originating route gate. Re-check
+        // read permission so a revoked assignment cannot keep returning data
+        // through an already-open management page.
+        $canView = $this->canViewCalendar();
+        $years = $canView ? $gateway->years() : [];
+        $selectedYear = $years === [] ? null : $this->resolveSelectedYear($years);
 
         return view('livewire.calendar-administration', [
             'user' => $data->user(),
             'school' => $data->school(),
-            'academicYear' => $data->currentYear(),
+            'academicYear' => $canView ? $data->currentYear() : null,
             'years' => $years,
             'selectedYear' => $selectedYear,
             'periods' => $selectedYear === null ? [] : $gateway->periods((int) $selectedYear['id']),
@@ -107,6 +111,13 @@ final class CalendarAdministration extends Component
 
     public function editYear(int $yearId): void
     {
+        if (! $this->canViewCalendar()) {
+            $this->clearMessages();
+            $this->formError = 'You do not hold permission to view the academic calendar.';
+
+            return;
+        }
+
         foreach ($this->gateway()->years() as $year) {
             if ((int) $year['id'] !== $yearId) {
                 continue;
@@ -172,6 +183,13 @@ final class CalendarAdministration extends Component
 
     public function editPeriod(int $periodId): void
     {
+        if (! $this->canViewCalendar()) {
+            $this->clearMessages();
+            $this->formError = 'You do not hold permission to view the academic calendar.';
+
+            return;
+        }
+
         foreach ($this->gateway()->periods($this->selectedYearId) as $period) {
             if ((int) $period['id'] !== $periodId) {
                 continue;
@@ -237,6 +255,13 @@ final class CalendarAdministration extends Component
 
     public function validateSelectedYear(): void
     {
+        if (! $this->canViewCalendar()) {
+            $this->clearMessages();
+            $this->formError = 'You do not hold permission to view the academic calendar.';
+
+            return;
+        }
+
         if ($this->selectedYearId === 0) {
             $this->formError = 'Select an academic year before running the check.';
 
@@ -384,10 +409,20 @@ final class CalendarAdministration extends Component
     }
 
     /**
-     * Livewire updates do not replay the originating page route, so write
-     * methods must re-check the same permission the management route requires.
+     * Livewire updates do not replay the originating page route, so read and
+     * write methods must re-check the permissions their routes require.
      */
+    private function canViewCalendar(): bool
+    {
+        return $this->hasCalendarPermission('academic_calendar.view');
+    }
+
     private function canManageCalendar(): bool
+    {
+        return $this->hasCalendarPermission('academic_calendar.manage');
+    }
+
+    private function hasCalendarPermission(string $permission): bool
     {
         $user = Auth::user();
 
@@ -401,7 +436,7 @@ final class CalendarAdministration extends Component
             return false;
         }
 
-        return app(SchoolPermissions::class)->has($user, $school, 'academic_calendar.manage');
+        return app(SchoolPermissions::class)->has($user, $school, $permission);
     }
 
     private function gateway(): CalendarManagementGateway

@@ -233,6 +233,35 @@ it('shows configured calendar issues in the validation panel', function (): void
         ->assertSee('falls outside its academic year');
 });
 
+it('fails closed on Livewire calendar reads after the role assignment is revoked', function (): void {
+    $school = School::factory()->create();
+    $user = stageBUserWithSchool($school);
+    $year = AcademicYear::factory()->for($school)->create([
+        'name' => 'Revoked view year',
+        'start_date' => '2027-01-01',
+        'end_date' => '2027-12-31',
+    ]);
+    AcademicPeriod::factory()->inYear($year)->create(['name' => 'Revoked view period']);
+
+    $component = Livewire::test(CalendarAdministration::class)
+        ->assertSee('Revoked view year')
+        ->assertSee('Revoked view period');
+
+    RoleAssignment::query()
+        ->where('school_id', $school->id)
+        ->where('user_id', $user->id)
+        ->delete();
+
+    $component->call('editYear', $year->id)
+        ->assertSet('formError', 'You do not hold permission to view the academic calendar.')
+        ->assertDontSee('Revoked view year')
+        ->assertDontSee('Revoked view period');
+
+    $component->call('validateSelectedYear')
+        ->assertSet('formError', 'You do not hold permission to view the academic calendar.')
+        ->assertSet('validation', null);
+});
+
 it('registers the school context resolver as persistent Livewire middleware', function (): void {
     expect(app(PersistentMiddleware::class)->getPersistentMiddleware())
         ->toContain(ResolveSchoolContext::class);
