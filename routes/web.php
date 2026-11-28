@@ -37,7 +37,9 @@ Route::middleware(['auth', 'school.context'])->prefix('app')->group(function ():
     Route::get('/academic-calendar/manage', CalendarAdministration::class)
         ->middleware(EnsurePermission::class.':academic_calendar.manage')
         ->name('frontend.calendar-manage');
-    Route::get('/school-settings', SchoolSettings::class)->name('frontend.school-settings');
+    Route::get('/school-settings', SchoolSettings::class)
+        ->middleware(EnsurePermission::class.':school_settings.view')
+        ->name('frontend.school-settings');
     Route::get('/roles', RoleAssignments::class)->name('frontend.roles');
     Route::get('/modules/{module}', [ModuleNoticeController::class, 'show'])
         ->where('module', '[a-z0-9-]+')

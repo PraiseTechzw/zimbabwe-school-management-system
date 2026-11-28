@@ -4,6 +4,8 @@ use App\Http\Controllers\AcademicCalendarController;
 use App\Http\Middleware\EnsurePermission;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/academic-calendar/validation', [AcademicCalendarController::class, 'validateCalendar'])
+    ->middleware(EnsurePermission::class.':academic_calendar.view');
 Route::get('/academic-years/current', [AcademicCalendarController::class, 'current'])
     ->middleware(EnsurePermission::class.':academic_calendar.view');
 Route::get('/academic-years', [AcademicCalendarController::class, 'years'])
@@ -22,5 +24,3 @@ Route::post('/academic-years/{academicYear}/periods', [AcademicCalendarControlle
 Route::match(['put', 'patch'], '/academic-periods/{academicPeriod}', [AcademicCalendarController::class, 'updatePeriod'])
     ->whereNumber('academicPeriod')
     ->middleware(EnsurePermission::class.':academic_calendar.manage');
-Route::get('/academic-calendar/validation', [AcademicCalendarController::class, 'validateCalendar'])
-    ->middleware(EnsurePermission::class.':academic_calendar.view');

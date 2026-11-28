@@ -20,7 +20,7 @@ final class UpdateEducationalLevelRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'school_id' => ['prohibited'],
+            'school_id' => ['missing'],
             'name' => AcademicStructureRules::optional(AcademicStructureRules::name()),
             'code' => AcademicStructureRules::optional(AcademicStructureRules::code()),
             'display_order' => AcademicStructureRules::optional(AcademicStructureRules::displayOrder()),

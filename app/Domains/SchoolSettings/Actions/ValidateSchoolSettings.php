@@ -21,7 +21,7 @@ final class ValidateSchoolSettings
         $locales = array_values((array) config('school-settings.locales', ['en']));
 
         return [
-            'school_id' => ['prohibited'],
+            'school_id' => ['missing'],
             'password' => ['prohibited'],
             'secret' => ['prohibited'],
             'token' => ['prohibited'],

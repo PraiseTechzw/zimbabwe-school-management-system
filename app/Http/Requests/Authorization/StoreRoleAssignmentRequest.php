@@ -20,7 +20,7 @@ final class StoreRoleAssignmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'school_id' => ['prohibited'],
+            'school_id' => ['missing'],
             'user_id' => ['required', 'integer', Rule::exists('users', 'id')],
             'role' => ['required', Rule::in(array_keys((array) config('authorization.roles', [])))],
         ];

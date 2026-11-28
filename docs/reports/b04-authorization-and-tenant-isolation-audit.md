@@ -1,11 +1,11 @@
 # B-04 authorization and tenant-isolation audit
 
 **Task:** B-04 backend authorization / tenant-isolation audit and narrow remediation
-**Audited baseline:** `c21d0a90530cc2764853e6b3eabb277501da696b` (`local main` and `origin/main` at audit start)
-**Current `origin/main` observed before reporting:** `6844b4289af6c5446b80d897f73de39d4bb6aa7b` (PR #61 final Academic Structure evidence; no backend code changed)
-**Working branch:** `audit/b04-authorization-tenant-isolation`
+**Audited baseline:** `c21d0a90530cc2764853e6b3eabb277501da696b` (`origin/main` at audit start)
+**Reconciled baseline:** `6f2d86840aeb7b3cc605f7676c729408ce4a1b34` (`origin/main` after PRs #62–#65)
+**Working branch:** `audit/b04-f03-f07-followup`
 **Evidence class:** executed local application tests and command output; static route/source review. Remote GitHub Actions results are **not** claimed in this report.
-**Handoff:** Audit Coverage agent / human reviewer.
+**Handoff:** Human reviewer.
 
 ## 1. Scope and method
 
