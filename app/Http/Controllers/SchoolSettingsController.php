@@ -55,7 +55,7 @@ final class SchoolSettingsController extends Controller
     private function rejectClientSchoolId(Request $request): void
     {
         Validator::make($request->all(), [
-            'school_id' => ['prohibited'],
+            'school_id' => ['missing'],
         ])->validate();
     }
 
