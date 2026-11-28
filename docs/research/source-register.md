@@ -77,6 +77,22 @@
 | OPS-09 | Country Economic Update: Electrifying Zimbabwe's Growth Through Reliable and Universal Energy Access | World Bank | https://www.worldbank.org/en/country/zimbabwe/publication/country-economic-update-electrifying-zimbabwe-s-growth-through-reliable-and-universal-energy-access | RESEARCH (multilateral) | Fetched; published 13 Dec 2023 |
 | OPS-10 | Disaster Risk Management and Resilience in Schools Manual | UNICEF Zimbabwe / MoPSE-aligned | https://www.unicef.org/zimbabwe/reports/disaster-risk-management-and-resilience-schools-manual | OFFICIAL (guidance) | Fetched; school safety/emergency guidance, **not** an IT backup standard |
 
+## F. Learner record discovery (access date 2026-11-28)
+
+| ID | Title | Publisher | URL | Class | Fetch / reliability note |
+| --- | --- | --- | --- | --- | --- |
+| LRN-S01 | Education Act [Chapter 25:04] | Government of Zimbabwe, reproduced by Veritas / ATS | https://atszim.org/wp-content/uploads/2025/10/education-act.pdf ; https://www.veritaszim.net/node/3474 | LEGAL (mirror) | PDF fetched and extracted. Act text does not enumerate learner record fields; prescribed forms not reached. |
+| LRN-S02 | Cyber and Data Protection Act [Chapter 12:07], No. 5 of 2021 | Government of Zimbabwe, reproduced by Veritas | https://www.veritaszim.net/sites/veritas_d/files/Cyber%20%26%20Data%20Protection%20Act%20Cap1207%20No%205%20of%202021%20gaz%202022-03-11.pdf ; https://www.veritaszim.net/node/5522 | LEGAL (mirror) | PDF fetched and extracted. Correct chapter is 12:07; older chapter references in secondary material are superseded. |
+| LRN-S03 | Guideline on Processing of Children's Personal Information, CDPG 2 of 2024 | POTRAZ via Veritas | https://www.veritaszim.net/sites/veritas_d/files/02%20Processing%20of%20Children%27s%20Personal%20Information.pdf ; https://www.veritaszim.net/node/7801 | OFFICIAL (regulator guideline) | PDF fetched and extracted. Guidance, not an Act. |
+| LRN-S04 | Statistical Regulation S.I. 155 of 2024 | Government of Zimbabwe, civil-society mirror | https://www.nangozim.org/wp-content/uploads/2026/09/SI20241.pdf ; https://www.veritaszim.net/node/6774 | LEGAL (mirror) | PDF fetched via mirror; official host not reached. Do not quote as an official-host publication. |
+| LRN-S05 | Cyber and Data Protection Act Implementation Guidelines 2025 | POTRAZ via Veritas | https://www.veritaszim.net/sites/veritas_d/files/Cyber%20and%20Data%20Protection%20Act%20Implementation%20Guidlines.pdf ; https://www.veritaszim.net/node/7966 | OFFICIAL (regulator guideline) | PDF fetched and extracted. Guidance, not an Act. |
+| LRN-S06 | ISCED 2011 mapping for Zimbabwe | UNESCO Institute for Statistics | https://download.uis.unesco.org/ISCED%20mapping/ISCED_2011_Mapping_Zimbabwe.xlsx ; https://download.uis.unesco.org/ISCED%20DIAGRAMS/Zimbabwe_ENG.jpg | RESEARCH (international standard) | Files fetched. Not Zimbabwean law and not a learner-record schema. |
+| LRN-S07 | ZIMSEC candidate portal manual | ZIMSEC | https://dcmv1.zimsec.co.zw/Manual/Candidate/index.html | OFFICIAL portal / DOCUMENTED PRACTICE | Page fetched. Exam-candidate context only; not a national learner ID. |
+| LRN-S08 | MoPSE legacy EMIS portal | MoPSE | http://www.emis.co.zw/MoPSE/ | DOCUMENTED PRACTICE (limited) | Public menu visible; learner forms login-gated. No schema inferred. |
+| LRN-S09 | In-repository Phase 1 research corpus | Project repository | `docs/research/` at baseline `98e8226` | mixed | Includes LEGAL, OFFICIAL, RESEARCH, DOCUMENTED PRACTICE and ASSUMPTION entries; see individual IDs above. |
+
+Sources not verified during learner-record discovery: MoPSE `mopse.gov.zw` PDFs and annual statistical reports (DNS failure), POTRAZ direct host (DNS failure), ZimLII (HTTP 403), the full text of SI 13 of 2025 Education (General) Regulations, ED 46 census form fields and EMIS learner-level schemas. No claim is made about their contents.
+
 ## Register hygiene
 
 - Source OFF-08 needs a full URL before any implementation decision relies on it.

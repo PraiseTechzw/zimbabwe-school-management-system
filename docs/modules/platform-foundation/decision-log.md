@@ -32,6 +32,21 @@ The proposed specification and research documents were merged into `main` as PR 
 | D-08 | **Recorded / superseded** | The no-implementation rule was respected through discovery. The Product Owner's later direct implementation instruction is treated as the gate release for this execution phase. | Future gates should be recorded on `P1-G01`; the GitHub issue comment was not used as the sole authority for this decision. |
 | D-09 | **Implemented / provisional catalogue** | Slice 5 implements a school-scoped settings mechanism with typed values, explicit allow-lists, provenance and prior-version snapshots. The catalogue is limited to framework-supported `locale` and `timezone` defaults. | Issue #38 confirms the mechanism but not a catalogue; U-13 remains unresolved. Currency, terminology, attendance, finance, calendar, structure and module settings are not inferred from PROPOSED candidates. Full audit events remain with #40 and permissions with #37. |
 
+## Learner management foundation (PROPOSED; separate unmerged slice)
+
+These entries are namespaced so they cannot be confused with the merged Phase 1 `D-*` decisions. They record engineering proposals for a separate learner-record foundation, not Product Owner approval, not a merged feature and not permission to add admissions, enrolment, guardian, medical, safeguarding or export workflows.
+
+| ID | Status | Decision | Rationale / consequence |
+| --- | --- | --- | --- |
+| LM-D-01 | **PROPOSED** | Store a minimal school-owned learner record: an internal reference, a full name, optional date of birth, a server-controlled record status and an optional class-offering placement link. | LRN-F1/LRN-F4 support a records capability but no statutory field catalogue. No field is labelled mandatory by law. |
+| LM-D-02 | **PROPOSED** | Generate `LRN-<ULID>` server-side and reject client identifiers. | LRN-F3 found no verified national learner ID; the reference is explicitly internal only. |
+| LM-D-03 | **PROPOSED** | Use one server-set record status, `registered`, with no transition endpoint. | LM-U-08 is unresolved; enrolment/transfer/completion semantics are not inferred. |
+| LM-D-04 | **PROPOSED** | Link learners only to a school-owned, active `class_offerings` row and treat it as indicative placement, not enrolment. | LRN-F5 and the existing Academic Structure boundary; no duplicate structure or enrolment data. |
+| LM-D-05 | **PROPOSED** | Add `learners.view` and `learners.manage` to the catalogue, granted only via the `school_admin` wildcard. | LM-U-07 is unresolved; no staff-access policy is invented. |
+| LM-D-06 | **PROPOSED** | Audit writes with scalar presence flags only; do not audit reads, names, dates of birth, references or deletions. | LRN-F4 privacy minimisation; no retention policy is asserted. |
+| LM-D-07 | **PROPOSED** | Defer deletion, retention, portability, consent/DPIA and data-subject workflows. | LM-U-04/05/06/10 remain open. No export or delete endpoint is added. |
+| LM-D-08 | **PROPOSED** | Use a restrictive composite FK for an occupied placement; clear the placement before deleting the offering. | `nullOnDelete` on the composite key could null the non-nullable `school_id` on some engines. LM-U-11 remains open; this is not an approved offering-lifecycle policy. |
+
 ## Standing constraints
 
 - No new framework, module package, microservice or UI framework.

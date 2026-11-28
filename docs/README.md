@@ -31,6 +31,7 @@ Sprint 0 established the engineering foundation. All seven Phase 1 foundation sl
 - [B-04 authorization / tenant-isolation audit](reports/b04-authorization-and-tenant-isolation-audit.md) — route matrix, findings, evidence and residual risk
 - [School Settings API](api/school-settings.md) — school-scoped settings, provenance and revisions
 - [Academic Structure API](api/academic-structure.md) — configurable school structure endpoints merged in #59
+- [Learner Management API](api/learner-management.md) — PROPOSED backend-only contract, not merged or verified on `main`
 - [Deployment strategy](operations/deployment.md)
 - [Backup and restore](operations/backup-and-restore.md)
 - [GitHub project board guidance](github/project-board.md)
@@ -54,6 +55,8 @@ Sprint 0 established the engineering foundation. All seven Phase 1 foundation sl
 - [School settings](modules/platform-foundation/school-settings.md) — implemented backend settings mechanism for #38
 - [Audit trail](modules/platform-foundation/audit-trail.md) — append-only, privacy-minimised audit foundation for #40
 - [Academic structure](modules/academic-structure.md) — merged backend foundation, no UI
+- [Learner Management foundation](modules/learner-management.md) — PROPOSED separate slice; implementation branch under review, no UI
+- [Learner record findings](research/findings/07-learner-records.md) — classified Zimbabwe evidence and decision requests
 - [Research coverage matrix](research/research-coverage-matrix.md) — evidence classes and gaps
 
 ## Templates

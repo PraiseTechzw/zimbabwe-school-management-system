@@ -49,6 +49,24 @@ Integration constraints verified from the controller, FormRequests, domain actio
 - Writes permit the documented fields only: `name`, optional `code`, `display_order`, optional `is_active`, optional `configuration`, optional offering `name`, and owned parent IDs. Bounds and active-parent rules come from `config/academic-structure.php`.
 - Backend permissions remain authoritative. There is still no verified frontend permission map, so UI visibility must not be inferred from membership or these route rules.
 
+### Learner Management contracts (PROPOSED, not available on this base)
+
+A separate backend branch proposes a learner-record foundation. It is **not merged into `main`**, no route exists on this base, and the contract below must not be used to claim a live endpoint. Field-level detail is in the [PROPOSED Learner Management API](../api/learner-management.md).
+
+| Resource | Proposed routes | Proposed envelope | Status |
+| --- | --- | --- | --- |
+| Learner records | `GET`, `POST /api/learners`; `GET`, `PUT\|PATCH /api/learners/{learner}` | Lists: `{school_id, search, learners: {paginator}}`; singular: `{learner}` | PROPOSED — not merged, no UI built |
+
+Planned integration constraints, all subject to the same PROPOSED status:
+
+- Routes would use `web`, `auth`, `school.context`, plus `learners.view` for reads and `learners.manage` for writes. Only the `school_admin` wildcard role is proposed to hold those permissions; LM-U-07 is unresolved.
+- `school_id`, `learner_reference` and `status` are server-owned or prohibited on writes. `learner_reference` is an internal `LRN-<ULID>` value, not a national identifier.
+- Writable fields are `full_name`, optional `date_of_birth` and optional `class_offering_id`. An offering is an indicative placement link, not enrolment. An occupied placement must be cleared with `null` before its offering can be deleted. Unlisted fields would be ignored, not stored. No guardian, medical, contact, address, assessment or document field is proposed.
+- The list would accept `search`, `per_page` (default 25, maximum from config) and `page`; route targets would be school-scoped and cross-school IDs would return generic errors.
+- No delete, archive, status-transition or export endpoint is proposed. Retention and portability remain unresolved.
+
+Do not build production UI against this section until the backend branch is merged and this section is changed to VERIFIED with a route-list and test citation.
+
 ## Stage B integration notes
 
 - `app/Frontend/Contracts/CalendarManagementGateway.php` is the frontend write boundary. `DomainCalendarManagementGateway` derives the school exclusively from `SchoolContext` and calls the same create, update and validation actions used by `AcademicCalendarController`.
