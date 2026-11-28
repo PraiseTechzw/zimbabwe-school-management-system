@@ -2,7 +2,7 @@
 
 **Task:** B-04 backend authorization / tenant-isolation audit and narrow follow-up remediation
 **Audited baseline:** `c21d0a90530cc2764853e6b3eabb277501da696b` (`origin/main` at audit start)
-**Reconciled baseline:** `81cba1d84752b69d35a3ef91d407382c116355f5` (`origin/main` after PRs #62–#68; checked with `git ls-remote` before this report)
+**Reconciled baseline:** `7de682c739ac49de5d8259732ad423fe27ef1365` (`origin/main` after PRs #62–#69; checked with `git ls-remote` before this report)
 **Working branch:** `audit/b04-f03-f07-followup`
 **Review PR:** [#72](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/72) — **OPEN, unmerged**; `gh pr view 72` reported `mergedAt: null`.
 **Evidence class:** executed local application tests and command output; static route/source review. Remote GitHub Actions results, review approval, deployment, and merge of PR #72 are **not** claimed.
@@ -27,19 +27,20 @@ Scope limits:
 - MySQL was not available in the audit environment (`command -v mysql` exit 1), so MySQL-specific integration was not run. Tests used the project's SQLite test database.
 - PR #62 is MERGED at `98e8226459541a56b02df25ed640b1996f76009d` and PR #63 is MERGED at `6f2d86840aeb7b3cc605f7676c729408ce4a1b34`. Their changes were retained. F03–F07 were replayed onto the merged baseline without force-push or shared-history rewrite.
 - PR #64 added `/app/school-settings` and `/app/roles` as membership-only routes; those are covered as F10 in this follow-up.
+- PR #69 added `/app/academic-structure` with an `academic_structure.view` gate. The route was merged into `main` while this review branch was open, was reconciled without rewriting shared history, and is included in the matrix and navigation filter below.
 - No remote CI, review approval, deployment, or merge result is asserted without fresh command output.
 
 ## 2. Route inventory and authorization coverage matrix
 
 Authoritative counts after final reconciliation:
 
-- **46 application-owned route registrations** from `php artisan route:list --except-vendor --json` (80 expanded method tokens; 46 declared method choices after treating `GET|HEAD` and `PUT|PATCH` as one declared choice each).
-- **43** app routes are behind `auth`; **41** of those also resolve school context.
-- **38** app routes have an explicit `EnsurePermission` gate: 16 Academic Structure, 10 calendar, 3 role-assignment, 3 school-settings API, 3 `school.view`, 2 `roles.view`, 1 `school_identifiers.view`, 1 `school_settings.manage`, and 1 `school_settings.view` frontend route.
+- **47 application-owned route registrations** from `php artisan route:list --except-vendor --json` (82 expanded method tokens; 47 declared method choices after treating `GET|HEAD` and `PUT|PATCH` as one declared choice each).
+- **44** app routes are behind `auth`; **42** of those also resolve school context.
+- **39** app routes have an explicit `EnsurePermission` gate: 10 `academic_structure.manage`, 7 `academic_structure.view`, 5 `academic_calendar.manage`, 5 `academic_calendar.view`, 3 `school.view`, 3 `school_settings.view`, 2 `roles.manage`, 2 `roles.view`, 1 `school_identifiers.view`, and 1 `school_settings.manage`.
 - **2** app routes use the tenant-signed storage guard instead of a permission gate.
 - **1** app route is membership-only and renders no school data (`app/modules/{module}`); **2** are auth-only (`api/auth/logout`, `api/auth/me`); **3** are intentionally public (`/`, `/login`, `api/auth/login`). No school-data route remains membership-only.
 
-Middleware abbreviations: `W`=`web`, `A`=`auth`, `G`=`guest`, `S`=`ResolveSchoolContext`, `P:x`=`EnsurePermission:x`, `T`=`EnsureTenantSignedStorage`. Rows 1–42 retain the original audit numbering; rows 43–44 are the frontend routes added by PR #64 and now gated in PR #72; rows 45–46 are the replacement private-storage routes. Machine-readable evidence: `/home/praisetechzw/b04-audit-evidence/followup-routes-app.json` and `.tsv`.
+Middleware abbreviations: `W`=`web`, `A`=`auth`, `G`=`guest`, `S`=`ResolveSchoolContext`, `P:x`=`EnsurePermission:x`, `T`=`EnsureTenantSignedStorage`. Rows 1–42 retain the original audit numbering; row 43 is the frontend route merged in PR #69, rows 44–45 are the frontend routes added by PR #64 and now gated in PR #72, and rows 46–47 are the replacement private-storage routes. Machine-readable evidence: `/home/praisetechzw/b04-audit-evidence/followup-routes-app.json` and `.tsv`.
 
 | # | Method | Path | Controller / action | Module | Auth / permission | Tenant and ownership | Tests linked | Risk; required check / audit result |
 |---:|---|---|---|---|---|---|---|---|
@@ -85,24 +86,25 @@ Middleware abbreviations: `W`=`web`, `A`=`auth`, `G`=`guest`, `S`=`ResolveSchool
 | 40 | GET/HEAD | `app/modules/{module}` | `Frontend\ModuleNoticeController@show` | Frontend | `W,A,S`; membership-only | No school data rendered | `FrontendFoundationTest` | Guest redirect/no-membership covered; no tenant test required. |
 | 41 | GET/HEAD | `app/school` | `Frontend\SchoolProfileController@index` | Frontend | `W,A,S,P:school.view` | Identifiers scoped via permission-aware data provider | `FrontendFoundationTest`, `B04RemainingGapsTest` | Fixed F04. Cross-school no leak; identifiers hidden from role_viewer. |
 | 42 | GET/HEAD | `login` | `Frontend\LoginController@show` | Frontend | `W,G` | No school context | `FrontendFoundationTest` | Public guest-only intended; authenticated redirect covered. |
-| 43 | GET/HEAD | `app/school-settings` | `App\Livewire\SchoolSettings` | Frontend | `W,A,S,P:school_settings.view` | Gateway reads use server context; writes recheck `school_settings.manage` | `SchoolSettingsScreenTest`, `B04RemainingGapsTest` | Fixed F10. Roleless/role_viewer 403; member read-only; editor can save; save controls hidden from non-managers. |
-| 44 | GET/HEAD | `app/roles` | `App\Livewire\RoleAssignments` | Frontend | `W,A,S,P:roles.view` | Component self-enforces view; domain actions self-enforce manage | `RoleAssignmentsScreenTest`, `B04RemainingGapsTest` | Fixed F10. Roleless/member 403; role_viewer/admin 200; nav link hidden from member; component hides assignments without view. |
-| 45 | GET/HEAD | `storage/{path}` | `TenantFileController@show` | File storage | `W,A,S,T` | Signature binds `tenant_id` and canonical `schools/{id}/` path | `TenantSignedStorageTest` | Fixed F07. Signed read succeeds; unsigned/tampered/cross-school/dot-segment paths 403. |
-| 46 | PUT | `storage/{path}` | `TenantFileController@store` | File storage | `W,A,S,T` | Upload flag bound to signature and HTTP method | `TenantSignedStorageTest` | Fixed F07. Signed upload succeeds; download signature cannot upload and vice versa. |
+| 43 | GET/HEAD | `app/academic-structure` | `App\Livewire\AcademicStructure` | Frontend | `W,A,S,P:academic_structure.view` | Gateway/domain actions scope records to server-resolved school | `AcademicStructureTest`, `B04RemainingGapsTest` | Merged in PR #69 with its existing catalogued gate; role_viewer 403, member 200, nav link hidden from role_viewer. |
+| 44 | GET/HEAD | `app/school-settings` | `App\Livewire\SchoolSettings` | Frontend | `W,A,S,P:school_settings.view` | Gateway reads use server context; writes recheck `school_settings.manage` | `SchoolSettingsScreenTest`, `B04RemainingGapsTest` | Fixed F10. Roleless/role_viewer 403; member read-only; editor can save; save controls hidden from non-managers. |
+| 45 | GET/HEAD | `app/roles` | `App\Livewire\RoleAssignments` | Frontend | `W,A,S,P:roles.view` | Component self-enforces view; domain actions self-enforce manage | `RoleAssignmentsScreenTest`, `B04RemainingGapsTest` | Fixed F10. Roleless/member 403; role_viewer/admin 200; nav link hidden from member; component hides assignments without view. |
+| 46 | GET/HEAD | `storage/{path}` | `TenantFileController@show` | File storage | `W,A,S,T` | Signature binds `tenant_id` and canonical `schools/{id}/` path | `TenantSignedStorageTest` | Fixed F07. Signed read succeeds; unsigned/tampered/cross-school/dot-segment paths 403. |
+| 47 | PUT | `storage/{path}` | `TenantFileController@store` | File storage | `W,A,S,T` | Upload flag bound to signature and HTTP method | `TenantSignedStorageTest` | Fixed F07. Signed upload succeeds; download signature cannot upload and vice versa. |
 
 ### Framework/vendor runtime routes (outside application route files)
 
-`php artisan route:list --json` showed **52** registrations in total; the 6 additional entries are Livewire JavaScript/map assets (2), `livewire/update`, `livewire/upload-file`, `livewire/preview-file/{filename}`, and health `/up`.
+`php artisan route:list --json` showed **53** registrations in total; the 6 additional entries are Livewire JavaScript/map assets (2), `livewire/update`, `livewire/upload-file`, `livewire/preview-file/{filename}`, and health `/up`.
 
 - `livewire/update` has only `web` at route level. The application persists `ResolveSchoolContext` and `EnsurePermission` for Livewire updates, so the originating route's permission gate is replayed. Calendar, settings, and role gateways/domain actions also self-enforce their write permissions. F06 is closed for the current surface; every new Livewire write must still use the same explicit check.
-- Laravel's unauthenticated framework signed-storage routes are disabled (`local.serve => false`). The 2 replacement routes are application-owned, authenticated, school-bound, and listed as rows 45–46 above.
+- Laravel's unauthenticated framework signed-storage routes are disabled (`local.serve => false`). The 2 replacement routes are application-owned, authenticated, school-bound, and listed as rows 46–47 above.
 - Livewire upload/preview, asset, and health routes remain framework-owned. No application tenant-file usage of the Livewire upload/preview routes was found; `TenantFileStorage` is the supported path for private tenant files.
 
 ## 3. Permission and role matrix
 
 ### Configured permissions and effective enforcement
 
-| Permission | Configured roles | Enforcement after B-04 / PR #72 | Status |
+| Permission | Configured roles | Enforcement after reconciliation | Status |
 |---|---|---|---|
 | `school.view` | `school_member`, `school_editor`, `role_viewer`, `school_admin` (`*`) | `/api/school`, `/app`, `/app/school`, and provider `school()` | Fixed F04 |
 | `school_identifiers.view` | `school_member`, `school_editor`, `school_admin` (`*`) | `/api/school/identifiers` and provider `identifiers()` | Fixed F04 |
@@ -110,14 +112,14 @@ Middleware abbreviations: `W`=`web`, `A`=`auth`, `G`=`guest`, `S`=`ResolveSchool
 | `school_settings.manage` | `school_editor`, `school_admin` (`*`) | `PUT|PATCH /api/school-settings` and `DomainSchoolSettingsGateway::update()` | Fixed F03/F10 |
 | `academic_calendar.view` | `school_member`, `school_editor`, `school_admin` (`*`) | 5 calendar read routes (`validation`, `years`, `current`, `periods`, frontend calendar) and provider year/period reads | Fixed F04 |
 | `academic_calendar.manage` | `school_editor`, `school_admin` (`*`) | 4 calendar API write routes, `/app/academic-calendar/manage`, and `DomainCalendarManagementGateway` writes | Fixed F01 |
-| `academic_structure.view` | `school_member`, `school_editor`, `school_admin` (`*`) | 6 structure read routes | Existing, test coverage extended |
+| `academic_structure.view` | `school_member`, `school_editor`, `school_admin` (`*`) | 6 structure API read routes and `/app/academic-structure` | Existing gate retained through PR #69 reconciliation; coverage extended |
 | `academic_structure.manage` | `school_editor`, `school_admin` (`*`) | 10 structure write routes | Existing, test coverage extended |
 | `roles.view` | `role_viewer`, `school_admin` (`*`) | `GET api/role-assignments` and `GET /app/roles` | Existing / F10 frontend gate |
 | `roles.manage` | `school_admin` (`*`) | Role create/delete plus domain non-escalation checks | Existing |
 
 `school_admin` uses the configured wildcard `*`; `SchoolPermissions` resolves only permissions present in the catalogue and requires an active assignment in the current school. Unknown roles/permissions fail closed. There is no direct user-permission table. `SchoolPermissions::authorize(User, School, permission)` is the fail-closed contract for callers outside route middleware; a regression proves it throws without the permission and succeeds after the role is granted.
 
-Navigation links in `config/frontend.php` now carry optional `permission` keys mirroring the route gates. Both the app shell (`app-shell.blade.php`) and dashboard (`App\Livewire\Dashboard`) filter those links with the same `SchoolPermissions` service. This is presentation only; the route and gateway checks remain authoritative.
+Navigation links in `config/frontend.php` now carry optional `permission` keys mirroring the route gates, including the academic-structure entry merged in PR #69. Both the app shell (`app-shell.blade.php`) and dashboard (`App\Livewire\Dashboard`) filter those links with the same `SchoolPermissions` service. This is presentation only; the route and gateway checks remain authoritative.
 
 ### Documented role impact
 
@@ -226,7 +228,7 @@ A reconciled fixture in `FrontendFoundationTest.php` assigned `school_member` an
 
 ## 6. Tests added or changed
 
-The final branch reports **329 passed / 1372 assertions** in the full suite. The focused security/frontend suites report **46 passed / 119 assertions**. The original audited `main` was recorded earlier at 243 / 990; no remote CI number is claimed for PR #72.
+The final branch reports **356 passed / 1443 assertions** in the full suite. The focused security/frontend suites report **73 passed / 190 assertions**. The original audited `main` was recorded earlier at 243 / 990; no remote CI number is claimed for PR #72.
 
 | File | Added regression coverage |
 |---|---|
@@ -234,37 +236,38 @@ The final branch reports **329 passed / 1372 assertions** in the full suite. The
 | `tests/Feature/Domains/AcademicCalendar/AcademicCalendarIsolationTest.php` | Calendar year/period updates reject client `school_id`; null `school_id` cannot widen ownership; fixtures carry a calendar-capable role. |
 | `tests/Feature/Domains/AcademicStructure/AcademicStructureIsolationTest.php` | Offering create/update `school_id` rejection; foreign school context on update 403; foreign offering update 404 without leak; foreign class/year IDs generic 422; null `school_id` ignored. |
 | `tests/Feature/Domains/AcademicStructure/AcademicStructurePermissionTest.php` | Nested grade/class/stream writes and offering create/update denied for `school_member`, allowed for `school_editor`. |
-| `tests/Feature/Domains/Authorization/B04RemainingGapsTest.php` (new) | 19 tests: settings view/manage denials and grants; read-gate denials on school, identifiers, validation, years, current, periods, and calendar screens; role_viewer payload filtering; manage-link visibility; permission-aware nav visibility for member/role_viewer; Livewire persistent middleware; `SchoolPermissions::authorize()` fail-closed contract. |
+| `tests/Feature/Domains/Authorization/B04RemainingGapsTest.php` (new) | 21 tests: settings view/manage denials and grants; read-gate denials on school, identifiers, validation, years, current, periods, calendar, structure, settings and roles screens; role_viewer payload filtering; manage-link visibility; permission-aware nav visibility for member/role_viewer including academic structure; Livewire persistent middleware; `SchoolPermissions::authorize()` fail-closed contract. |
 | `tests/Feature/Domains/Authorization/TenantSignedStorageTest.php` (new) | 8 tests: signed private read/upload success; cross-school replay; unsigned/tampered tenant ID; download/upload flag misuse; path traversal and dot segments; route middleware contract. |
 | `tests/Feature/Domains/School/SchoolIsolationTest.php` | Empty header/query school IDs fail closed without widening access; fixtures carry the new read permissions. |
 | `tests/Feature/Domains/SchoolSettings/SchoolSettingsIsolationTest.php` | Existing isolation suite grants settings roles so the permission gate does not mask tenant assertions. |
 | `tests/Feature/Domains/Auth/AuthenticationTest.php`, `tests/Feature/Domains/Authorization/RolesPermissionsTest.php`, `tests/Pest.php` | Fixtures use the shared `grantSchoolRole()` helper and carry permissions required by gated reads. |
 | `tests/Feature/Frontend/FrontendFoundationTest.php` | Fixtures aligned with gated reads and duplicate role assignment removed after reconciliation. |
 | `tests/Feature/Frontend/CalendarAdministrationTest.php` | Management screen 403 for non-editor; Livewire write denial; gateway permission enforcement; unowned school selection 403 with no foreign school name. |
+| `tests/Feature/Frontend/AcademicStructureTest.php` | Merged in PR #69; included in the focused suite. The reconciled route keeps its `academic_structure.view` gate, and the navigation permission key is covered by `B04RemainingGapsTest`. |
 | `tests/Feature/Frontend/SchoolSettingsScreenTest.php` | 9 tests: auth, verified defaults, contract-field writes/provenance, revisions, validation errors, role gate, read-only UI, member Livewire denial. |
 | `tests/Feature/Frontend/RoleAssignmentsScreenTest.php` | 10 tests: auth, verified fields, role assignment/removal, non-manager denial, `roles.view` route gate matrix, component-level view hiding. |
 | `tests/Feature/Domains/AuditTrail/AuditTrailIsolationTest.php` | Existing audit fixtures use `school_editor` because calendar writes require `academic_calendar.manage`. |
 
 ## 7. Verification evidence
 
-Commands were executed locally in the isolated worktree `/home/praisetechzw/.local/share/opencode/worktree/b04-f03-f07-followup` after merging `origin/main` `81cba1d`. Final results only are listed here; earlier superseded logs remain in the evidence directory for traceability.
+Commands were executed locally in the isolated worktree `/home/praisetechzw/.local/share/opencode/worktree/b04-f03-f07-followup` after merging `origin/main` `7de682c`. Final results only are listed here; earlier superseded logs remain in the evidence directory for traceability.
 
 | Command | Result | Evidence |
 |---|---|---|
-| `make verify COMPOSE="docker compose -p b04-audit-r -f … -f /home/praisetechzw/b04-audit-evidence/compose-override.yml"` | Exit 0; Pint 224 files clean; PHPStan `[OK] No errors`; Composer audit `No security vulnerability advisories found`; **329 passed / 1372 assertions** | `/home/praisetechzw/b04-audit-evidence/followup-make-verify.log` |
-| Focused security/frontend suites (`B04RemainingGapsTest`, `TenantSignedStorageTest`, `SchoolSettingsScreenTest`, `RoleAssignmentsScreenTest`) | Exit 0; **46 passed / 119 assertions** | `/home/praisetechzw/b04-audit-evidence/followup-focused-tests.log` |
-| `php artisan route:list --except-vendor --json` | 46 app registrations; 38 permission gates; 2 tenant-storage guards | `/home/praisetechzw/b04-audit-evidence/followup-routes-app.json`, `.tsv` |
-| `php artisan route:list --json` | 52 total registrations; 6 framework/package routes; no framework `storage/{path}` route | `/home/praisetechzw/b04-audit-evidence/followup-routes-all.json`, `.tsv` |
+| `make verify COMPOSE="docker compose -p b04-audit-r -f … -f /home/praisetechzw/b04-audit-evidence/compose-override.yml"` | Exit 0; Pint 228 files clean; PHPStan `[OK] No errors`; Composer audit `No security vulnerability advisories found`; **356 passed / 1443 assertions** | `/home/praisetechzw/b04-audit-evidence/followup-make-verify.log` |
+| Focused security/frontend suites (`B04RemainingGapsTest`, `TenantSignedStorageTest`, `SchoolSettingsScreenTest`, `RoleAssignmentsScreenTest`, `AcademicStructureTest`) | Exit 0; **73 passed / 190 assertions** | `/home/praisetechzw/b04-audit-evidence/followup-focused-tests.log` |
+| `php artisan route:list --except-vendor --json` | 47 app registrations; 39 permission gates; 2 tenant-storage guards | `/home/praisetechzw/b04-audit-evidence/followup-routes-app.json`, `.tsv` |
+| `php artisan route:list --json` | 53 total registrations; 6 framework/package routes; no framework `storage/{path}` route | `/home/praisetechzw/b04-audit-evidence/followup-routes-all.json`, `.tsv` |
 | `docker compose -p b04-audit-r -f … config -q` | Exit 0 | Re-run after final merge; override at `/home/praisetechzw/b04-audit-evidence/compose-override.yml` |
 | `git diff --check` | Exit 0 | Command output captured after final merge |
-| `git ls-remote origin refs/heads/main` | `81cba1d84752b69d35a3ef91d407382c116355f5` at final reconciliation | Command output captured in this audit session |
+| `git ls-remote origin refs/heads/main` | `7de682c739ac49de5d8259732ad423fe27ef1365` at final reconciliation | Command output captured in this audit session |
 | `git push -u origin audit/b04-f03-f07-followup` | New branch pushed; no force-push | Command output captured in this audit session |
 | `gh pr create --base main --head audit/b04-f03-f07-followup` | Created PR #72 | `https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/72` |
 | `gh pr view 72 --json …` | `state: OPEN`, `mergedAt: null` at creation; final head re-checked after the documentation commit | Command output captured in this audit session |
 | `command -v mysql` | Not available; MySQL integration not run | Command output captured in this audit session |
 | `gstack-cso` static run `1795806574566-c85a630b4c8088a1` | `completeness: partial`; no findings; static snapshot only | Tool run record |
 
-No GitHub Actions check-run result, review approval, deployment, or merge is claimed for PR #72 in this document. PRs #62 and #63 merge states were verified with `gh pr list --state all`.
+No GitHub Actions check-run result, review approval, deployment, or merge is claimed for PR #72 in this document. PRs #62–#69 merge states were verified with `gh pr list --state all`.
 
 ## 8. Risks, owner actions and status
 
@@ -285,9 +288,9 @@ Deferred, not claimed as fixed here: MFA, separation of duties, time-bounded del
 
 ## 9. Integration tracker and traceability
 
-- `docs/github/integration-tracker.md` is reconciled to `origin/main` `81cba1d84752b69d35a3ef91d407382c116355f5` and the observed remote PR states: #62–#68 MERGED; #69–#71 OPEN; #72 OPEN and unmerged.
+- `docs/github/integration-tracker.md` is reconciled to `origin/main` `7de682c739ac49de5d8259732ad423fe27ef1365` and the observed remote PR states: #62–#69 MERGED; #70–#71 OPEN; #72 OPEN and unmerged.
 - Audited baseline: `c21d0a90530cc2764853e6b3eabb277501da696b`.
-- Reconciled baseline: `81cba1d84752b69d35a3ef91d407382c116355f5`.
+- Reconciled baseline: `7de682c739ac49de5d8259732ad423fe27ef1365`.
 - Change branch: `audit/b04-f03-f07-followup` (merged `origin/main`; no rebase of shared history and no force-push).
 - Review PR: [#72](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/72) — **OPEN, unmerged**; do not merge before review and remote check evidence exist.
 - Route evidence: `/home/praisetechzw/b04-audit-evidence/followup-routes-app.json`, `.tsv`, `followup-routes-all.json`, `.tsv`.
@@ -296,4 +299,4 @@ Deferred, not claimed as fixed here: MFA, separation of duties, time-bounded del
 
 ### Handoff to Audit Coverage agent
 
-Please verify that the 46-route matrix, 38 explicit permission gates, 2 tenant-signed storage guards, F03–F07 and F10 fixes, explicit role grants, rollout action R-01, and the risk register match your coverage record. Keep PR #72 open and unmerged; do not report CI, review, deployment, or merge status until fresh remote command output exists.
+Please verify that the 47-route matrix, 39 explicit permission gates, 2 tenant-signed storage guards, F03–F07 and F10 fixes, explicit role grants, rollout action R-01, and the risk register match your coverage record. Keep PR #72 open and unmerged; do not report CI, review, deployment, or merge status until fresh remote command output exists.

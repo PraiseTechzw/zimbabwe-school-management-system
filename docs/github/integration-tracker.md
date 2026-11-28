@@ -1,10 +1,10 @@
 # Phase 1 integration tracker
 
-**Verified:** 2026-11-28 (reconciled after B-04 follow-up PR #72 creation). **Scope:** current `origin/main` and all shipped platform-foundation/frontend PRs. This record distinguishes local evidence from GitHub-verified remote state; a local pass is never reported as remote CI success.
+**Verified:** 2026-11-28 (reconciled after PR #69 merged and B-04 follow-up PR #72 was updated). **Scope:** current `origin/main` and all shipped platform-foundation/frontend PRs. This record distinguishes local evidence from GitHub-verified remote state; a local pass is never reported as remote CI success.
 
 ## Current remote baseline
 
-- `origin/main`: `81cba1d84752b69d35a3ef91d407382c116355f5` — merge of PR #68 (academic-structure coverage); contains PRs #56–#68 except the open frontend/B-06/B-07/learner lines. Prior baselines in this reconciliation were `40d6c0f` (PR #67), `5e5c726` (PR #66), `6f2d868` (PR #63), `9f84acb` (PR #64), `bb79498` (PR #65), `98e8226` (PR #62), and `6844b42` (PR #61).
+- `origin/main`: `7de682c739ac49de5d8259732ad423fe27ef1365` — merge of PR #69 (frontend academic-structure screen); contains PRs #56–#69 except the open B-06/B-07/learner lines and the open B-04 follow-up. Prior baselines in this reconciliation were `81cba1d` (PR #68), `40d6c0f` (PR #67), `5e5c726` (PR #66), `6f2d868` (PR #63), `9f84acb` (PR #64), `bb79498` (PR #65), `98e8226` (PR #62), and `6844b42` (PR #61).
 - B-04 audited baseline: `c21d0a90530cc2764853e6b3eabb277501da696b` — merge of PR #59. The audit started while this was current `main`; the first remediation branch was reconciled onto `6844b42`, and PR #62 merged the calendar write-permission portion at `98e8226`.
 - Earlier recorded baselines `28079f5b9f6dbb1173ffde1585eedfd84269fb3a` (PR #54) and `fd3a6b875c1a5cfcf850f1f0229a64e8b540a0e0` (PR #60) are superseded and retained only for historical traceability.
 - Branch protection on `main`: required checks `quality`, `tests`, `docker`, strict; required conversation resolution enabled; required approving reviews `0`; `enforce_admins` enabled. This was verified earlier and is retained from the prior tracker record, not re-asserted for PR #72.
@@ -37,7 +37,7 @@
 | B-06 audit policy decision brief | — / [#66](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/66) | merge `5e5c726` | Yes | Yes | Yes | Merged | Verified at merge | No approval claimed | Yes, `2026-11-28T10:13:19Z` | Not on board |
 | Academic-structure docs accuracy | — / [#67](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/67) | merge `40d6c0f` | Yes | Yes | Yes | Merged | Verified at merge | No approval claimed | Yes, `2026-11-28T10:21:32Z` | Not on board |
 | Academic-structure coverage gaps | — / [#68](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/68) | merge `81cba1d` | Yes | Yes | Yes | Merged | Verified at merge | No approval claimed | Yes, `2026-11-28T10:30:40Z` | Not on board |
-| Frontend academic-structure UI | — / [#69](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/69) | Open branch | — | — | — | OPEN | Not claimed | Not claimed | No | Not on board |
+| Frontend academic-structure UI | — / [#69](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/69) | merge `7de682c` | Yes | Yes | Yes | Merged | Verified at merge | No approval claimed | Yes, `2026-11-28T10:41:32Z` | Not on board |
 | B-07 domain architecture audit | — / [#70](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/70) | Open branch | — | — | — | OPEN | Not claimed | Not claimed | No | Not on board |
 | Learner-management foundation | — / [#71](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/71) | Open branch | — | — | — | OPEN | Not claimed | Not claimed | No | Not on board |
 | B-04 follow-up authorization gaps | — / [#72](https://github.com/PraiseTechzw/zimbabwe-school-management-system/pull/72) | branch `audit/b04-f03-f07-followup` | Yes | Yes | Yes | **OPEN** | **Not claimed** | **Not claimed** | **No** | Not on board |
@@ -64,23 +64,23 @@ All entries below are local runs, not GitHub Actions results.
 | `b04-security-audit` at reconciled merge head `27e8c70` | `make verify`, `docker compose config -q`, `git diff --check` | All exit 0; 274 tests / 1192 assertions |
 | `b04-security-audit` at `fc0c816` plus CI-fix and review follow-ups | `make verify`, `docker compose config -q`, `git diff --check`, remote `gh pr checks` | Local all exit 0; 291 tests / 1280 assertions; remote `tests` initially failed on `ViteManifestNotFoundException`, fixed by `withoutVite()`; review findings fixed |
 | `b06-audit-policy-decisions` after `6f2d868` | `make verify`, `docker compose config -q`, `git diff --check` | All exit 0; 291 tests / 1280 assertions |
-| `b04-f03-f07-followup` at reconciled `origin/main` `81cba1d` | `make verify`, focused security/frontend suites, route-list JSON, `docker compose config -q`, `git diff --check` | All exit 0; Pint 224 files clean; PHPStan no errors; Composer audit clean; **329 tests / 1372 assertions**; focused 46 / 119; routes 46 app / 38 permission gates / 2 tenant-storage guards. Evidence: `/home/praisetechzw/b04-audit-evidence/followup-make-verify.log`, `followup-focused-tests.log`, `followup-routes-app.json` |
+| `b04-f03-f07-followup` at reconciled `origin/main` `7de682c` | `make verify`, focused security/frontend suites, route-list JSON, `docker compose config -q`, `git diff --check` | All exit 0; Pint 228 files clean; PHPStan no errors; Composer audit clean; **356 tests / 1443 assertions**; focused 73 / 190; routes 47 app / 39 permission gates / 2 tenant-storage guards. Evidence: `/home/praisetechzw/b04-audit-evidence/followup-make-verify.log`, `followup-focused-tests.log`, `followup-routes-app.json` |
 
 Logs are retained under `/tmp/opencode/` with the earlier prefixes and under `/home/praisetechzw/b04-audit-evidence/` for B-04. The authoritative current report is [`docs/reports/b04-authorization-and-tenant-isolation-audit.md`](../reports/b04-authorization-and-tenant-isolation-audit.md).
 
 ## Dependency and duplication notes
 
 - PRs #51, #49, #50, #48, #52, #54, #56, #57, #58, #59, #60, #61, #62, #65, #64, #63, #66, #67 and #68 merged in that order. All merges were verified with remote command output at the time; no shared history was force-pushed.
-- The B-04 follow-up branch was created from the merged B-04 line, then reconciled by merging `origin/main` (`6f2d868`, then `5e5c726`, then `81cba1d`) into it. PR #72 was opened from that branch; no rebase or force-push was used.
+- The B-04 follow-up branch was created from the merged B-04 line, then reconciled by merging `origin/main` (`6f2d868`, then `5e5c726`, then `81cba1d`, then `7de682c`) into it. The PR #69 academic-structure route/navigation conflict was resolved by retaining its existing `academic_structure.view` gate and the B-04 settings/roles gates. PR #72 remains open; no rebase or force-push was used.
 - PR #64 introduced the visible settings and role screens. Their original membership-only route registration is recorded as F10 in the B-04 follow-up report and fixed in PR #72.
 - The frontend navigation catalogue now mirrors route permissions for presentation only. Route middleware and gateway/domain checks remain the authorization boundary.
 - Academic structure had two competing local lines; canonical lineage is the merged `9fc4804` line. The held `d137030` line is retained for lineage only and must not be replayed.
 - Admissions has two local lines; canonical is `8a7a21d`, which remains local-only pending an explicit scope decision. Its tenant isolation is covered by `AdmissionsIsolationTest.php`.
-- No duplicate remote branch or PR exists for academic structure or admissions. PRs #69–#71 remain open and are separate review lines.
+- No duplicate remote branch or PR exists for academic structure or admissions. PR #69 is merged; PRs #70–#71 remain open and are separate review lines. PR #72 is the open B-04 follow-up review line.
 
 ## Review findings and known limitations
 
-- The older claim that all registered HTTP routes carried `EnsurePermission` was inaccurate at the merged baseline. The authoritative B-04 report now records **46 application-owned routes, 38 `EnsurePermission` gates, 2 tenant-signed storage guards, 1 membership-only no-data route, 2 auth-only routes, and 3 intentionally public routes**. See [`../reports/b04-authorization-and-tenant-isolation-audit.md`](../reports/b04-authorization-and-tenant-isolation-audit.md) for the full matrix and decisions.
+- The older claim that all registered HTTP routes carried `EnsurePermission` was inaccurate at the merged baseline. The authoritative B-04 report now records **47 application-owned routes, 39 `EnsurePermission` gates, 2 tenant-signed storage guards, 1 membership-only no-data route, 2 auth-only routes, and 3 intentionally public routes**. See [`../reports/b04-authorization-and-tenant-isolation-audit.md`](../reports/b04-authorization-and-tenant-isolation-audit.md) for the full matrix and decisions.
 - Tenant-scoped reads/writes, cross-school ID rejection, relationship ownership, IDOR, direct API access, role escalation, sensitive-data filtering, permission-aware navigation, and audit-on-write have code and test evidence; no application-layer cross-school bypass was demonstrated.
 - Domain actions and FormRequests rely on the central permission service and route/domain double-checks; future non-HTTP callers must use `SchoolPermissions::authorize()` explicitly. MFA, separation of duties, time-bounded delegation, periodic review, and permission-change audit events remain deferred and require separate decisions.
 - MySQL was unavailable in the B-04 follow-up environment; MySQL-specific integration is not claimed for PR #72. Earlier MySQL migration evidence for other PRs is retained above.
@@ -90,7 +90,7 @@ Logs are retained under `/tmp/opencode/` with the earlier prefixes and under `/h
 
 ## Remaining actions
 
-1. PRs #62–#68 are merged. PRs #69, #70, #71 and #72 are open. Do not merge PR #72 before review and remote check evidence exist.
+1. PRs #62–#69 are merged. PRs #70, #71 and #72 are open. Do not merge PR #72 before review and remote check evidence exist.
 2. Assign an explicit configured role to existing roleless school members before deployment (R-01 in the B-04 report). No schema migration is needed.
 3. Board items #34–#40 are Done. Research items #6–#24 and #53 and governance items #31/#32 remain open and are not implementation deliverables.
 4. Academic structure is merged; do not replay or re-open the held canonical line. Admissions remains local-only pending an explicit scope decision.
