@@ -16,6 +16,7 @@ use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 uses(RefreshDatabase::class);
@@ -87,6 +88,19 @@ function structureHttpStreamData(): array
         'display_order' => 1,
         'is_active' => true,
     ];
+}
+
+/**
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
+function structureHttpOfferingData(int $classDefinitionId, int $academicYearId, array $overrides = []): array
+{
+    return array_merge([
+        'class_definition_id' => $classDefinitionId,
+        'academic_year_id' => $academicYearId,
+        'name' => 'HTTP offering',
+    ], $overrides);
 }
 
 it('requires authentication and school context for academic structure endpoints', function (): void {
@@ -208,6 +222,137 @@ it('creates and filters academic year class offerings through the API', function
         ->assertJsonPath('class_offering.is_active', false);
 });
 
+it('rejects every client supplied school_id shape on offering create and update', function (): void {
+    $school = School::factory()->create();
+    $other = School::factory()->create();
+    $user = structureHttpUser($school);
+    $level = EducationalLevel::factory()->for($school)->create();
+    $grade = GradeLevel::factory()->inLevel($level)->create();
+    $class = ClassDefinition::factory()->inGrade($grade)->create();
+    $year = app(CreateAcademicYear::class)->execute($school, [
+        'name' => 'Offering shape year',
+        'start_date' => '2031-01-01',
+        'end_date' => '2031-12-31',
+        'status' => 'published',
+        'source' => 'School calendar register',
+    ]);
+    $offering = ClassOffering::factory()->forClassAndYear($class, $year)->create(['name' => 'Original offering']);
+
+    $createPayload = [
+        'class_definition_id' => $class->id,
+        'academic_year_id' => $year->id,
+        'name' => 'Tampered offering',
+    ];
+
+    $cases = [
+        'null' => [null, 422],
+        'empty string' => ['', 422],
+        'empty array' => [[], 400],
+        'non-numeric string' => ['abc', 400],
+        'authorised identifier' => [$school->id, 422],
+        'foreign identifier' => [$other->id, 403],
+    ];
+
+    foreach ($cases as [$schoolId, $status]) {
+        $this->actingAs($user)
+            ->postJson('/api/academic-structure/class-offerings', array_merge($createPayload, ['school_id' => $schoolId]))
+            ->assertStatus($status);
+
+        $this->actingAs($user)
+            ->putJson('/api/academic-structure/class-offerings/'.$offering->id, [
+                'name' => 'Tampered offering',
+                'school_id' => $schoolId,
+            ])
+            ->assertStatus($status);
+    }
+
+    expect(DB::table('class_offerings')->count())->toBe(1)
+        ->and(DB::table('class_offerings')->where('id', $offering->id)->value('name'))->toBe('Original offering')
+        ->and((int) DB::table('class_offerings')->where('id', $offering->id)->value('school_id'))->toBe((int) $school->id);
+});
+
+it('rejects foreign offering relationships and duplicate offerings without mutation', function (): void {
+    $school = School::factory()->create();
+    $other = School::factory()->create();
+    $user = structureHttpUser($school);
+
+    $level = EducationalLevel::factory()->for($school)->create();
+    $grade = GradeLevel::factory()->inLevel($level)->create();
+    $class = ClassDefinition::factory()->inGrade($grade)->create();
+    $secondClass = ClassDefinition::factory()->inGrade($grade)->create();
+    $year = app(CreateAcademicYear::class)->execute($school, [
+        'name' => 'Offering relationship year',
+        'start_date' => '2031-01-01',
+        'end_date' => '2031-12-31',
+        'status' => 'published',
+        'source' => 'School calendar register',
+    ]);
+
+    $foreignLevel = EducationalLevel::factory()->for($other)->create();
+    $foreignGrade = GradeLevel::factory()->inLevel($foreignLevel)->create();
+    $foreignClass = ClassDefinition::factory()->inGrade($foreignGrade)->create();
+    $foreignYear = app(CreateAcademicYear::class)->execute($other, [
+        'name' => 'Foreign offering year',
+        'start_date' => '2032-01-01',
+        'end_date' => '2032-12-31',
+        'status' => 'published',
+        'source' => 'School calendar register',
+    ]);
+
+    $offering = ClassOffering::factory()->forClassAndYear($class, $year)->create(['name' => 'Original offering']);
+    ClassOffering::factory()->forClassAndYear($secondClass, $year)->create();
+
+    $this->actingAs($user)
+        ->postJson('/api/academic-structure/class-offerings', [
+            'class_definition_id' => $foreignClass->id,
+            'academic_year_id' => $year->id,
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('class_definition_id');
+
+    $this->actingAs($user)
+        ->postJson('/api/academic-structure/class-offerings', [
+            'class_definition_id' => $class->id,
+            'academic_year_id' => $foreignYear->id,
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('academic_year_id');
+
+    $this->actingAs($user)
+        ->postJson('/api/academic-structure/class-offerings', [
+            'class_definition_id' => $class->id,
+            'academic_year_id' => $year->id,
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('class_definition_id');
+
+    $this->actingAs($user)
+        ->putJson('/api/academic-structure/class-offerings/'.$offering->id, [
+            'class_definition_id' => $foreignClass->id,
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('class_definition_id');
+
+    $this->actingAs($user)
+        ->putJson('/api/academic-structure/class-offerings/'.$offering->id, [
+            'academic_year_id' => $foreignYear->id,
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('academic_year_id');
+
+    $this->actingAs($user)
+        ->putJson('/api/academic-structure/class-offerings/'.$offering->id, [
+            'class_definition_id' => $secondClass->id,
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('class_definition_id');
+
+    expect(DB::table('class_offerings')->count())->toBe(2)
+        ->and((int) DB::table('class_offerings')->where('id', $offering->id)->value('class_definition_id'))->toBe((int) $class->id)
+        ->and((int) DB::table('class_offerings')->where('id', $offering->id)->value('academic_year_id'))->toBe((int) $year->id)
+        ->and(DB::table('class_offerings')->where('id', $offering->id)->value('name'))->toBe('Original offering');
+});
+
 it('rejects invalid update payloads on every structure update endpoint', function (): void {
     $school = School::factory()->create();
     $other = School::factory()->create();
@@ -261,6 +406,14 @@ it('rejects client supplied school identifiers on every write endpoint', functio
     $level = EducationalLevel::factory()->for($school)->create();
     $grade = GradeLevel::factory()->inLevel($level)->create();
     $class = ClassDefinition::factory()->inGrade($grade)->create();
+    $year = app(CreateAcademicYear::class)->execute($school, [
+        'name' => 'Offering school-id year',
+        'start_date' => '2031-01-01',
+        'end_date' => '2031-12-31',
+        'status' => 'published',
+        'source' => 'School calendar register',
+    ]);
+    $offering = ClassOffering::factory()->forClassAndYear($class, $year)->create();
 
     $endpoints = [
         ['post', '/api/academic-structure/levels', structureHttpLevelData()],
@@ -270,6 +423,14 @@ it('rejects client supplied school identifiers on every write endpoint', functio
         ['post', '/api/academic-structure/grade-levels/'.$grade->id.'/classes', structureHttpClassData()],
         ['put', '/api/academic-structure/classes/'.$class->id, structureHttpClassData()],
         ['post', '/api/academic-structure/classes/'.$class->id.'/streams', structureHttpStreamData()],
+        ['post', '/api/academic-structure/class-offerings', [
+            'class_definition_id' => $class->id,
+            'academic_year_id' => $year->id,
+            'name' => 'Offering with client school id',
+        ]],
+        ['put', '/api/academic-structure/class-offerings/'.$offering->id, [
+            'name' => 'Updated offering with client school id',
+        ]],
     ];
 
     foreach ($endpoints as [$method, $endpoint, $payload]) {
@@ -437,4 +598,148 @@ it('does not reveal foreign parent identifiers in validation messages', function
     expect((string) json_encode($response->json()))->not->toContain('Secret school level');
 
     $this->assertDatabaseCount('grade_levels', 0);
+});
+
+it('rejects a client supplied school id when creating a class offering', function (): void {
+    $school = School::factory()->create();
+    $user = structureHttpUser($school);
+    $level = EducationalLevel::factory()->for($school)->create();
+    $grade = GradeLevel::factory()->inLevel($level)->create();
+    $class = ClassDefinition::factory()->inGrade($grade)->create();
+    $year = app(CreateAcademicYear::class)->execute($school, [
+        'name' => 'Offering create year',
+        'start_date' => '2031-01-01',
+        'end_date' => '2031-12-31',
+        'status' => 'published',
+        'source' => 'School calendar register',
+    ]);
+
+    $this->actingAs($user)
+        ->postJson('/api/academic-structure/class-offerings', structureHttpOfferingData((int) $class->id, (int) $year->id, [
+            'name' => 'Rejected create offering',
+            'school_id' => $school->id,
+        ]))
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('school_id');
+
+    $this->assertDatabaseMissing('class_offerings', [
+        'school_id' => $school->id,
+        'class_definition_id' => $class->id,
+        'academic_year_id' => $year->id,
+    ]);
+});
+
+it('rejects a client supplied school id when updating a class offering', function (): void {
+    $school = School::factory()->create();
+    $other = School::factory()->create();
+    $user = structureHttpUser($school);
+    $level = EducationalLevel::factory()->for($school)->create();
+    $grade = GradeLevel::factory()->inLevel($level)->create();
+    $class = ClassDefinition::factory()->inGrade($grade)->create();
+    $year = app(CreateAcademicYear::class)->execute($school, [
+        'name' => 'Offering update year',
+        'start_date' => '2031-01-01',
+        'end_date' => '2031-12-31',
+        'status' => 'published',
+        'source' => 'School calendar register',
+    ]);
+    $offering = ClassOffering::factory()->forClassAndYear($class, $year)->create(['name' => 'Original offering']);
+
+    $this->actingAs($user)
+        ->putJson('/api/academic-structure/class-offerings/'.$offering->id, [
+            'name' => 'Tampered offering',
+            'school_id' => $school->id,
+        ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('school_id');
+
+    $this->actingAs($user)
+        ->putJson('/api/academic-structure/class-offerings/'.$offering->id, [
+            'name' => 'Tampered offering',
+            'school_id' => $other->id,
+        ])
+        ->assertForbidden();
+
+    $this->assertDatabaseHas('class_offerings', [
+        'id' => $offering->id,
+        'name' => 'Original offering',
+        'school_id' => $school->id,
+    ]);
+});
+
+it('does not update a class offering owned by another school', function (): void {
+    $school = School::factory()->create();
+    $other = School::factory()->create();
+    $user = structureHttpUser($school);
+    $foreignLevel = EducationalLevel::factory()->for($other)->create(['name' => 'Secret level']);
+    $foreignGrade = GradeLevel::factory()->inLevel($foreignLevel)->create();
+    $foreignClass = ClassDefinition::factory()->inGrade($foreignGrade)->create();
+    $foreignYear = app(CreateAcademicYear::class)->execute($other, [
+        'name' => 'Foreign offering year',
+        'start_date' => '2032-01-01',
+        'end_date' => '2032-12-31',
+        'status' => 'published',
+        'source' => 'School calendar register',
+    ]);
+    $foreignOffering = ClassOffering::factory()->forClassAndYear($foreignClass, $foreignYear)->create(['name' => 'Foreign offering']);
+
+    $response = $this->actingAs($user)
+        ->putJson('/api/academic-structure/class-offerings/'.$foreignOffering->id, [
+            'name' => 'Tampered foreign offering',
+        ])
+        ->assertNotFound();
+
+    expect((string) json_encode($response->json()))->not->toContain('Secret level')
+        ->and((string) json_encode($response->json()))->not->toContain('Foreign offering');
+
+    $this->assertDatabaseHas('class_offerings', [
+        'id' => $foreignOffering->id,
+        'name' => 'Foreign offering',
+        'school_id' => $other->id,
+    ]);
+});
+
+it('rejects foreign class and year identifiers when creating an offering through the API', function (): void {
+    $school = School::factory()->create();
+    $other = School::factory()->create();
+    $user = structureHttpUser($school);
+    $level = EducationalLevel::factory()->for($school)->create();
+    $grade = GradeLevel::factory()->inLevel($level)->create();
+    $ownedClass = ClassDefinition::factory()->inGrade($grade)->create();
+    $ownedYear = app(CreateAcademicYear::class)->execute($school, [
+        'name' => 'Owned offering year',
+        'start_date' => '2031-01-01',
+        'end_date' => '2031-12-31',
+        'status' => 'published',
+        'source' => 'School calendar register',
+    ]);
+    $foreignLevel = EducationalLevel::factory()->for($other)->create(['name' => 'Secret foreign level']);
+    $foreignGrade = GradeLevel::factory()->inLevel($foreignLevel)->create();
+    $foreignClass = ClassDefinition::factory()->inGrade($foreignGrade)->create();
+    $foreignYear = app(CreateAcademicYear::class)->execute($other, [
+        'name' => 'Foreign offering year',
+        'start_date' => '2032-01-01',
+        'end_date' => '2032-12-31',
+        'status' => 'published',
+        'source' => 'School calendar register',
+    ]);
+
+    $foreignClassResponse = $this->actingAs($user)
+        ->postJson('/api/academic-structure/class-offerings', structureHttpOfferingData((int) $foreignClass->id, (int) $ownedYear->id, [
+            'name' => 'Foreign class offering',
+        ]))
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('class_definition_id');
+
+    $foreignYearResponse = $this->actingAs($user)
+        ->postJson('/api/academic-structure/class-offerings', structureHttpOfferingData((int) $ownedClass->id, (int) $foreignYear->id, [
+            'name' => 'Foreign year offering',
+        ]))
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('academic_year_id');
+
+    expect((string) json_encode($foreignClassResponse->json()))->not->toContain('Secret foreign level')
+        ->and((string) json_encode($foreignYearResponse->json()))->not->toContain('Foreign offering year');
+
+    $this->assertDatabaseCount('class_offerings', 0);
 });

@@ -21,7 +21,7 @@ final class StoreAcademicPeriodRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'school_id' => ['prohibited'],
+            'school_id' => ['missing'],
             'academic_year_id' => [
                 'required',
                 'integer',

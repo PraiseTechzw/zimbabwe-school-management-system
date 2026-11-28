@@ -15,9 +15,11 @@ final class SchoolProfileController extends Controller
     public function index(): View
     {
         return view('frontend.school-profile', [
+            'title' => 'School profile',
             'user' => $this->data->user(),
             'school' => $this->data->school(),
             'identifiers' => $this->data->identifiers(),
+            'academicYear' => $this->data->currentYear(),
         ]);
     }
 }
