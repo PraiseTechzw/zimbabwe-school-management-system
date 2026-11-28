@@ -40,7 +40,9 @@ Route::middleware(['auth', 'school.context'])->prefix('app')->group(function ():
     Route::get('/school-settings', SchoolSettings::class)
         ->middleware(EnsurePermission::class.':school_settings.view')
         ->name('frontend.school-settings');
-    Route::get('/roles', RoleAssignments::class)->name('frontend.roles');
+    Route::get('/roles', RoleAssignments::class)
+        ->middleware(EnsurePermission::class.':roles.view')
+        ->name('frontend.roles');
     Route::get('/modules/{module}', [ModuleNoticeController::class, 'show'])
         ->where('module', '[a-z0-9-]+')
         ->name('frontend.module');

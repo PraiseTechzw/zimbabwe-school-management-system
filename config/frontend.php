@@ -7,8 +7,10 @@ declare(strict_types=1);
  *
  * Every destination is declared here so navigation stays configurable per
  * deployment. `available` items have a working screen; planned items lead to
- * an honest "not built yet" screen rather than a dead link. This is UI state,
- * not authorisation: the backend remains responsible for access control.
+ * an honest "not built yet" screen rather than a dead link. The optional
+ * `permission` key mirrors the backend route gate so navigation does not link
+ * to a page the actor cannot open; it is not an authorisation boundary. The
+ * backend remains responsible for access control.
  */
 return [
     /*
@@ -27,12 +29,12 @@ return [
 
     'navigation' => [
         'Overview' => [
-            ['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'dashboard', 'available' => true, 'route' => 'frontend.dashboard'],
+            ['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'dashboard', 'available' => true, 'route' => 'frontend.dashboard', 'permission' => 'school.view'],
         ],
         'School' => [
-            ['key' => 'school-profile', 'label' => 'School profile', 'icon' => 'school', 'available' => true, 'route' => 'frontend.school-profile'],
-            ['key' => 'academic-calendar', 'label' => 'Academic calendar', 'icon' => 'calendar', 'available' => true, 'route' => 'frontend.academic-calendar'],
-            ['key' => 'school-settings', 'label' => 'School settings', 'icon' => 'cog', 'available' => true, 'route' => 'frontend.school-settings'],
+            ['key' => 'school-profile', 'label' => 'School profile', 'icon' => 'school', 'available' => true, 'route' => 'frontend.school-profile', 'permission' => 'school.view'],
+            ['key' => 'academic-calendar', 'label' => 'Academic calendar', 'icon' => 'calendar', 'available' => true, 'route' => 'frontend.academic-calendar', 'permission' => 'academic_calendar.view'],
+            ['key' => 'school-settings', 'label' => 'School settings', 'icon' => 'cog', 'available' => true, 'route' => 'frontend.school-settings', 'permission' => 'school_settings.view'],
         ],
         'Learners' => [
             ['key' => 'admissions', 'label' => 'Admissions', 'icon' => 'users'],
@@ -106,7 +108,7 @@ return [
         ],
         'System' => [
             ['key' => 'users', 'label' => 'Users', 'icon' => 'users'],
-            ['key' => 'roles', 'label' => 'Roles', 'icon' => 'cog', 'available' => true, 'route' => 'frontend.roles'],
+            ['key' => 'roles', 'label' => 'Roles', 'icon' => 'cog', 'available' => true, 'route' => 'frontend.roles', 'permission' => 'roles.view'],
             ['key' => 'audit-logs', 'label' => 'Audit logs', 'icon' => 'clipboard'],
         ],
     ],

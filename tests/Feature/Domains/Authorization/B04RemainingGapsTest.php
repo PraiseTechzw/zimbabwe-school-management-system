@@ -89,9 +89,13 @@ it('enforces catalogued read permissions on school and calendar endpoints', func
     'calendar years require academic_calendar.view' => ['/api/academic-years', 'role_viewer', 403],
     'calendar validation requires academic_calendar.view' => ['/api/academic-calendar/validation', 'role_viewer', 403],
     'calendar screen requires academic_calendar.view' => ['/app/academic-calendar', 'role_viewer', 403],
+    'settings screen requires school_settings.view' => ['/app/school-settings', 'role_viewer', 403],
+    'roles screen requires roles.view' => ['/app/roles', 'school_member', 403],
     'members may read school context' => ['/api/school', 'school_member', 200],
     'members may read identifiers' => ['/api/school/identifiers', 'school_member', 200],
     'members may read calendar years' => ['/api/academic-years', 'school_member', 200],
+    'members may read the settings screen' => ['/app/school-settings', 'school_member', 200],
+    'role viewers may read the roles screen' => ['/app/roles', 'role_viewer', 200],
 ]);
 
 it('does not leak identifiers or calendar records to a role viewer on frontend screens', function (): void {
@@ -142,6 +146,30 @@ it('hides the calendar management link from members and shows it to editors', fu
         ->get('/app/academic-calendar')
         ->assertOk()
         ->assertSee('Manage calendar');
+});
+
+it('shows only navigation links the actor is permitted to open', function (): void {
+    $school = School::factory()->create();
+
+    $member = User::factory()->create();
+    $member->schools()->attach($school);
+    grantSchoolRole($member, $school, 'school_member');
+
+    $viewer = User::factory()->create();
+    $viewer->schools()->attach($school);
+    grantSchoolRole($viewer, $school, 'role_viewer');
+
+    $this->actingAs($member)
+        ->get('/app')
+        ->assertOk()
+        ->assertSee(route('frontend.school-settings'), false)
+        ->assertDontSee(route('frontend.roles'), false);
+
+    $this->actingAs($viewer)
+        ->get('/app')
+        ->assertOk()
+        ->assertDontSee(route('frontend.school-settings'), false)
+        ->assertSee(route('frontend.roles'), false);
 });
 
 it('replays route permission middleware on Livewire updates', function (): void {

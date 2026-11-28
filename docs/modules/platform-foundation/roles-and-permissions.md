@@ -81,6 +81,9 @@ Academic Structure (#59) opts in with `academic_structure.view` for reads and `a
 | `GET` | `/api/role-assignments` | `roles.view` |
 | `POST` | `/api/role-assignments` | `roles.manage` |
 | `DELETE` | `/api/role-assignments/{roleAssignment}` | `roles.manage` |
+| `GET` | `/app/roles` | `roles.view` |
+
+The `/app/school-settings` screen uses `school_settings.view`; its save action rechecks `school_settings.manage` in the gateway so a Livewire update cannot bypass the route gate. Navigation links mirror the configured permission for presentation only; the route and gateway checks remain authoritative.
 
 All routes use `web`, `auth` and `school.context`. Client-supplied `school_id` is rejected. Assignment output contains identifiers, role and source; it does not expose names or email addresses. JSON responses use `Cache-Control: no-store` and vary on school selection inputs.
 

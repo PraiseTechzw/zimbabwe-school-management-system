@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace App\Livewire;
 
+use App\Domains\Authorization\Services\SchoolPermissions;
+use App\Domains\School\Context\SchoolContext;
 use App\Frontend\Contracts\FrontendDataProvider;
 use App\Frontend\Contracts\SchoolSettingsGateway;
+use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -25,6 +30,8 @@ final class SchoolSettings extends Component
 
     public bool $formLoaded = false;
 
+    public bool $canManage = false;
+
     /** @var array<string, string> */
     public array $errorsByField = [];
 
@@ -35,6 +42,7 @@ final class SchoolSettings extends Component
     public function render(SchoolSettingsGateway $gateway, FrontendDataProvider $data): View
     {
         $current = $gateway->current();
+        $this->canManage = $this->hasManagePermission();
 
         if (! $this->formLoaded) {
             $this->applySettings($current);
@@ -49,7 +57,20 @@ final class SchoolSettings extends Component
             'revisions' => $gateway->revisions(),
             'localeOptions' => $this->localeOptions(),
             'timezoneOptions' => $this->timezoneOptions(),
+            'canManage' => $this->canManage,
         ]);
+    }
+
+    private function hasManagePermission(): bool
+    {
+        $user = Auth::user();
+
+        return $user instanceof User
+            && app(SchoolPermissions::class)->has(
+                $user,
+                app(SchoolContext::class)->assertCurrent(),
+                'school_settings.manage',
+            );
     }
 
     public function save(): void
@@ -63,6 +84,10 @@ final class SchoolSettings extends Component
         } catch (ValidationException $exception) {
             $this->errorsByField = $this->validationErrors($exception);
             $this->formError = 'Check the highlighted fields and try again.';
+
+            return;
+        } catch (AuthorizationException) {
+            $this->formError = 'Your account cannot manage school settings in this school.';
 
             return;
         } catch (Throwable) {

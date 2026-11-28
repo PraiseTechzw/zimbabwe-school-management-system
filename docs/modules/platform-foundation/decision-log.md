@@ -61,7 +61,8 @@ The proposed specification and research documents were merged into `main` as PR 
 - `EnsurePermission` reads the actor from authentication and the school from `SchoolContext`, never from client input. Domain actions repeat the authorization check for trusted server-side callers.
 - Role-management endpoints are permission-protected and tenant-scoped. `AssignSchoolRole` refuses to grant a role containing permissions the actor does not hold, preventing privilege escalation through role assignment.
 - A CLI bootstrap command creates the first assignment with an allow-listed `cli` source. HTTP inputs cannot set the source or school.
-- B-04 completes the opt-in for school-context, identifier, calendar and settings endpoints using the catalogued permissions. MFA, separation of duties, time-bounded delegation, periodic review, permission-change audit and a role UI remain deferred. See [roles-and-permissions.md](roles-and-permissions.md).
+- B-04 completes the opt-in for school-context, identifier, calendar and settings endpoints using the catalogued permissions. The visible role-assignment screen added in PR #64 also requires `roles.view`, and its writes recheck `roles.manage` in the domain actions. MFA, separation of duties, time-bounded delegation, periodic review and permission-change audit remain deferred. See [roles-and-permissions.md](roles-and-permissions.md).
+
 ## Slice 5: implemented school settings mechanism
 
 - One structured `school_settings` row is stored per server-resolved school. There is no generic key/value API; only allow-listed locale and timezone fields are writable and unknown fields are not persisted.
